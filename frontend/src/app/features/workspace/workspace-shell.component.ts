@@ -14,6 +14,7 @@ export class WorkspaceShellComponent {
   private readonly authSession = inject(AuthSessionService);
   private readonly router = inject(Router);
 
+  readonly user = this.authSession.user;
   readonly logoutError = signal('');
 
   logout(): void {

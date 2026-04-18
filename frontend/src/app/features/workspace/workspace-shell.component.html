@@ -4,14 +4,15 @@
     <span class="workspace-header__logo">Architectural Workspace</span>
     <nav class="workspace-header__nav">
       <a routerLink="/app/rooms" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" data-testid="go-to-rooms">Public Rooms</a>
-      <a routerLink="/app/rooms" routerLinkActive="active">Private Rooms</a>
+      <a routerLink="/app/invitations" routerLinkActive="active">Invitations</a>
       <a routerLink="/app/contacts" routerLinkActive="active">Contacts</a>
+      <a routerLink="/app/admin" routerLinkActive="active">Admin</a>
       <a routerLink="/app/sessions" routerLinkActive="active" data-testid="go-to-sessions">Sessions</a>
     </nav>
   </div>
   <div class="workspace-header__right">
     <div class="workspace-header__actions">
-      <span class="material-symbols-outlined workspace-header__icon">settings</span>
+      <a routerLink="/app/settings" class="material-symbols-outlined workspace-header__icon">settings</a>
       <span class="material-symbols-outlined workspace-header__icon">help</span>
     </div>
     <img
