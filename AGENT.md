@@ -39,6 +39,7 @@ Format:
 - **Async:** All I/O is `async/await`. No `.Result` or `.Wait()` calls.
 - **Nullable:** Enable `<Nullable>enable</Nullable>` in every project. No `!` suppression without a comment.
 - **Dependency rule:** `Domain` → no external deps. `Application` → `Domain` only. `Infrastructure` → implements `Application` ports. `API` → wires DI, calls `Application`.
+- **TDD mandatory:** Write the failing test first, run to confirm RED, implement minimum code to GREEN, then refactor. See §21 for test project locations, naming conventions, and which layer to test at which level.
 
 ### 3.2 Frontend (Angular 21)
 
@@ -637,3 +638,76 @@ The AFK test (`03-presence.spec.ts`) calls `hub.invoke('SetAfk')` directly from 
 **`data-testid` contract:** All Playwright selectors use `data-testid` attributes. Full list in `TESTING_SETUP.md §5`. Angular components must declare these — tests will fail at selector resolution if missing.
 
 **Infrastructure:** `Dockerfile.e2e` (Playwright/Chromium container), `e2e` Docker Compose service (profile `e2e`, `depends_on: service_healthy`). Reports at `e2e-reports/index.html`.
+
+---
+
+## 21. Unit & Integration Testing — TDD Discipline
+
+**TDD is mandatory.** Red → Green → Refactor. Write the failing test first, run it to confirm failure, implement minimum code to pass, then refactor. Never write implementation code without a failing test preceding it.
+
+### Test projects
+
+| Project | Location | Purpose |
+|---------|----------|---------|
+| `ChatHerder.Unit.Tests` | `tests/ChatHerder.Unit.Tests/` | Domain logic, Application use-case behaviour, pure class tests — no I/O |
+| `ChatHerder.Integration.Tests` | `tests/ChatHerder.Integration.Tests/` | EF Core + Npgsql against a real Postgres (Testcontainers), Redis against a real Redis, Infrastructure implementations |
+
+Both projects use **xUnit 2.x** and **NSubstitute** for mocking. No Moq. No AutoFixture.
+
+### Adding test projects
+
+```bash
+dotnet new xunit -o tests/ChatHerder.Unit.Tests --framework net10.0
+dotnet new xunit -o tests/ChatHerder.Integration.Tests --framework net10.0
+dotnet sln add tests/ChatHerder.Unit.Tests/ChatHerder.Unit.Tests.csproj
+dotnet sln add tests/ChatHerder.Integration.Tests/ChatHerder.Integration.Tests.csproj
+dotnet add tests/ChatHerder.Unit.Tests/ package NSubstitute
+dotnet add tests/ChatHerder.Integration.Tests/ package NSubstitute
+dotnet add tests/ChatHerder.Integration.Tests/ package Testcontainers.PostgreSql
+dotnet add tests/ChatHerder.Integration.Tests/ package Testcontainers.Redis
+dotnet add tests/ChatHerder.Integration.Tests/ reference src/ChatHerder.Infrastructure/ChatHerder.Infrastructure.csproj
+```
+
+### Naming convention
+
+```
+<SystemUnderTest>_<Scenario>_<ExpectedOutcome>
+```
+
+Examples:
+- `ArgonPasswordHasher_Verify_ReturnsFalseForWrongPassword`
+- `Login_UnknownEmail_TakesFullArgon2idTime` (timing assertion using `Stopwatch`)
+- `RedisSessionStore_RevokeAll_ExceptedSessionRemainsInSet`
+
+### What to test at each layer
+
+| Layer | Test project | What |
+|-------|-------------|------|
+| Domain entities / value objects | Unit | Invariants, equality, computed properties |
+| Application ports (interfaces) | Unit | Contract tests via NSubstitute stubs |
+| ArgonPasswordHasher | Unit | Hash uniqueness per call, Verify correctness, timing parity, sentinel hash resilience |
+| JwtTokenService | Unit | Claims present, expiry correct, refresh token entropy (length) |
+| RedisSessionStore | Integration | SADD/SISMEMBER/SREM round-trips, RevokeAll atomicity with Testcontainers Redis |
+| AppDbContext | Integration | Unique index enforcement, composite PK, jsonb write/read, migration clean run |
+| AuthEndpoints | Unit | Handler logic with NSubstitute mocks for all ports; verify user-enumeration sentinel path |
+
+### Running tests
+
+```bash
+dotnet test ChatHerder.sln
+# Unit only:
+dotnet test tests/ChatHerder.Unit.Tests/
+# Integration only (requires Docker):
+dotnet test tests/ChatHerder.Integration.Tests/
+```
+
+### TDD workflow per plan task
+
+Every plan task that creates or modifies backend code **must** follow this step sequence:
+
+1. Write the failing test (xUnit `[Fact]` or `[Theory]`)
+2. Run `dotnet test` — confirm RED with the expected failure message
+3. Write minimum implementation code
+4. Run `dotnet test` — confirm GREEN
+5. Refactor if needed, run again
+6. Commit (tests + implementation together)

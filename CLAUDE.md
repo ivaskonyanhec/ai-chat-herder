@@ -25,6 +25,7 @@ Memory files live at `.claude/projects/…/memory/`. Do not store architecture d
 - Use `superpowers:writing-plans` before starting any multi-step implementation.
 - Use `superpowers:systematic-debugging` before proposing a fix to any bug.
 - Use `superpowers:verification-before-completion` before claiming any task is done.
+- **TDD is mandatory.** Every plan task that creates or modifies backend code must write the failing test first. See `AGENT.md` §21 for test project layout, naming conventions, and the 6-step per-task TDD workflow.
 
 ### Tool Preferences
 - Use `codegraph_search` / `codegraph_callers` / `codegraph_impact` for symbol lookup when `.codegraph/` exists.
@@ -79,6 +80,15 @@ See `AGENT.md` §19 and `DESIGN.md`.
 - Pixel-accurate HTML mockups: `designs/*.html` (open in browser before implementing any screen)
 - CSS custom properties: `designs/tokens.css` (import globally — no hardcoded hex values in components)
 - Design rules (No-Line, Glass & Gradient, roundness limits, component specs): `DESIGN.md`
+
+## Unit & Integration Testing (TDD)
+
+See `AGENT.md` §21.
+
+- **Projects:** `tests/ChatHerder.Unit.Tests/` (xUnit + NSubstitute, no I/O) and `tests/ChatHerder.Integration.Tests/` (xUnit + Testcontainers for Postgres + Redis)
+- **Run all:** `dotnet test ChatHerder.sln`
+- **TDD step sequence per task:** Write failing test → confirm RED → implement → confirm GREEN → refactor → commit (tests + impl together)
+- Never write implementation code without a preceding failing test.
 
 ## E2E Testing
 
