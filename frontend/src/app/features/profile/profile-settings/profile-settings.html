@@ -1,0 +1,138 @@
+<div class="profile-settings">
+  <header class="profile-settings__header">
+    <h2 class="profile-settings__title">Account Settings</h2>
+    <p class="profile-settings__subtitle">Manage your professional presence and workspace preferences.</p>
+  </header>
+
+  <div class="profile-settings__content">
+    <div class="profile-grid">
+      <!-- Profile Identity Card -->
+      <section class="profile-grid__sidebar">
+        <div class="card identity-card">
+          <div class="identity-card__avatar-container">
+            <div class="identity-card__avatar-box">
+              <img
+                [src]="user()?.avatarUrl || 'https://lh3.googleusercontent.com/aida-public/AB6AXuB4BQF6R94p2c-RGScZkvhvtRCAwLkFZavcdhUaO_d33ro5mtIlXhx_w96jAw7gxTD7ZwQuvD8N22XqKRbYS8L1Ck1O6AG9kCH3V1XZT8fO7CEy6CDxtxCgOOsX6MashMBXeJhcwCpNTMOUIpGIn5Sgmb5tqFuTokhuKNryqP78rIuft1-mluiuQl0LLqS9VwGb_rjSEUYSUgMhC93CXM4pUnwRZT4EQDUEB69YWK3GND-FYiChdZq8HDBqI1oHlPCAF9Q6gE7P4zM'"
+                alt="Current Avatar"
+                class="identity-card__avatar"
+              />
+            </div>
+            <button class="identity-card__avatar-btn" type="button">
+              <span class="material-symbols-outlined">photo_camera</span>
+            </button>
+          </div>
+          <div class="identity-card__info">
+            <h3 class="identity-card__name">{{ user()?.username }}</h3>
+            <p class="identity-card__role">Lead Architect</p>
+          </div>
+          <div class="identity-card__footer">
+            <span>Workspace ID: AW-9021</span>
+            <button class="btn-text">Verify Identity</button>
+          </div>
+        </div>
+
+        <div class="card theme-card">
+          <h4 class="theme-card__label">Workspace Environment</h4>
+          <div class="theme-card__options">
+            <div class="theme-option theme-option--active">
+              <div class="theme-option__info">
+                <span class="material-symbols-outlined theme-option__icon">light_mode</span>
+                <span class="theme-option__name">Light View</span>
+              </div>
+              <div class="toggle toggle--active"><div class="toggle__handle"></div></div>
+            </div>
+            <div class="theme-option">
+              <div class="theme-option__info">
+                <span class="material-symbols-outlined theme-option__icon">dark_mode</span>
+                <span class="theme-option__name">Deep Contrast</span>
+              </div>
+              <div class="toggle"><div class="toggle__handle"></div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Main Form Area -->
+      <section class="profile-grid__main">
+        <div class="card form-card">
+          <form class="settings-form">
+            <div class="settings-form__section">
+              <div class="settings-form__section-header">
+                <span class="material-symbols-outlined">person</span>
+                <h3 class="settings-form__section-title">Identity Details</h3>
+              </div>
+              <div class="settings-form__grid">
+                <div class="form-field">
+                  <label class="form-field__label">Display Name</label>
+                  <input class="form-field__control" type="text" [value]="user()?.username" />
+                </div>
+                <div class="form-field">
+                  <label class="form-field__label">Professional Role</label>
+                  <input class="form-field__control" placeholder="e.g. Lead Developer" type="text" />
+                </div>
+              </div>
+              <div class="form-field">
+                <label class="form-field__label">Email Address</label>
+                <input class="form-field__control" disabled type="email" [value]="user()?.email" />
+                <p class="form-field__hint">Contact administrator to modify workspace credentials.</p>
+              </div>
+            </div>
+
+            <div class="settings-form__section">
+              <div class="settings-form__section-header">
+                <span class="material-symbols-outlined">lock</span>
+                <h3 class="settings-form__section-title">Access Security</h3>
+              </div>
+              <div class="form-field">
+                <label class="form-field__label">Current Password</label>
+                <input class="form-field__control" placeholder="••••••••••••" type="password" />
+              </div>
+              <div class="settings-form__grid">
+                <div class="form-field">
+                  <label class="form-field__label">New Password</label>
+                  <input class="form-field__control" type="password" />
+                </div>
+                <div class="form-field">
+                  <label class="form-field__label">Confirm Password</label>
+                  <input class="form-field__control" type="password" />
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-form__footer">
+              <button class="btn-ghost" type="button">Discard Changes</button>
+              <button class="btn-primary" type="submit">Save Profile</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card danger-card">
+          <div class="danger-card__icon-box">
+            <span class="material-symbols-outlined">warning</span>
+          </div>
+          <div class="danger-card__content">
+            <h4 class="danger-card__title">Critical Actions: Account Deletion</h4>
+            <p class="danger-card__text">
+              Deleting your workspace account is an irreversible action. This will permanently remove your messages, files, and architectural contributions from the Main Office directory.
+            </p>
+            <button class="btn-danger-outline" type="button">Initiate Permanent Deletion</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <footer class="profile-settings__footer">
+    <div class="footer-stats">
+      <div class="footer-stat">
+        <span class="footer-stat__dot"></span>
+        <span class="footer-stat__label">System Latency: 14ms</span>
+      </div>
+      <div class="footer-divider"></div>
+      <span class="footer-stat__label">Archived Threads: 1,204</span>
+    </div>
+    <div class="footer-copy">
+      © 2024 Architectural Workspace Inc.
+    </div>
+  </footer>
+</div>

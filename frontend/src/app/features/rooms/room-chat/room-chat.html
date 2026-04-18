@@ -1,0 +1,170 @@
+<div class="room-chat">
+  <div class="room-chat__main">
+    <header class="chat-header">
+      <div class="chat-header__info">
+        <h1 class="chat-header__title">#engineering-room</h1>
+        <span class="chat-header__tag">Public</span>
+      </div>
+      <div class="chat-header__actions">
+        <a routerLink="manage" class="btn-link">Manage room</a>
+        <span class="material-symbols-outlined chat-header__icon">star</span>
+      </div>
+    </header>
+
+    <div class="chat-messages">
+      <div class="chat-messages__divider">
+        <div class="chat-messages__divider-line"></div>
+        <span class="chat-messages__divider-label">Monday, May 22</span>
+        <div class="chat-messages__divider-line"></div>
+      </div>
+
+      <article class="message">
+        <img
+          src="https://lh3.googleusercontent.com/aida-public/AB6AXuDgR0cakxo5MGQ3h4wC7R4Nh-6T8WZ_Har8cvDtMUEdzU0z5V5PQEhW0GOxdIJlY0AKAzBHjdEH9DncP3m9DsBQRbmxC8SyAPhWAXXwIoDpNvmFk13ns_SD0AKRvS_lNEDDof2OjI_Cccui5hDXJ4O8mujgbrEcfTVzJ8Zhmd0FNwZiLwpbgoKQDisPqQHLbMU6ecAXG3sDXoMqIJLpWhJnonJKFgFjZzBeWRhDumBOFyvXnvcgn5nWegZWXxet6btgWVGGbU-IXyQ"
+          alt="Alice Chen"
+          class="message__avatar"
+        />
+        <div class="message__body">
+          <div class="message__meta">
+            <span class="message__author">Alice Chen</span>
+            <span class="message__time">10:24 AM</span>
+          </div>
+          <div class="message__text">
+            Hey team, has anyone had a chance to review the new CI/CD pipeline architectural diagrams for the workspace migration?
+          </div>
+        </div>
+      </article>
+
+      <article class="message">
+        <img
+          src="https://lh3.googleusercontent.com/aida-public/AB6AXuD1lUUBRJVeIGrgAGC6RcwMKnOmCiDUumR9P_O_oAGK8_8tNp2xAJkqP5a1Phxs23VBZji4ha8vGb34hpFpKdtxhOO1CmU7EhxAywz6cDkAQuNReLG0cG5W_GGFIYJxdx-4lSIs0lanSbAjuEY7gHNXDGzO21jll-jdG5Ovc182sFeFmwuNG1f3jjzpeP0iWO6V91EKyTHikT7eT1SsfCPVfNnqoj_GLlFXbp3dw4Zmz0qsBhgIYmWC5RulGng4Ct0VFfiFMcnAYJs"
+          alt="Bob Miller"
+          class="message__avatar"
+        />
+        <div class="message__body">
+          <div class="message__meta">
+            <span class="message__author">Bob Miller</span>
+            <span class="message__time">10:28 AM</span>
+          </div>
+          <div class="message__reply">
+            <p class="message__reply-text">"Hey team, has anyone had a chance to review the new CI/CD pipeline..."</p>
+          </div>
+          <div class="message__text">
+            Just finished looking at them. The logic for the staging deployment looks solid, but we might need to increase the timeout for the integration tests.
+            <span class="message__edited">(edited)</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="message">
+        <div class="message__avatar message__avatar--placeholder">
+          <span class="material-symbols-outlined">person_outline</span>
+        </div>
+        <div class="message__body">
+          <div class="message__meta">
+            <span class="message__author">Carol Vance</span>
+            <span class="message__time">10:45 AM</span>
+          </div>
+          <div class="message__text">
+            Here is the updated documentation for the containerization strategy.
+          </div>
+          <div class="file-card">
+            <div class="file-card__icon-box">
+              <span class="material-symbols-outlined">description</span>
+            </div>
+            <div class="file-card__info">
+              <p class="file-card__name">Container_Strategy_V2.pdf</p>
+              <p class="file-card__meta">12.4 MB • PDF Document</p>
+            </div>
+            <button class="file-card__download" type="button">
+              <span class="material-symbols-outlined">download</span>
+            </button>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <footer class="chat-composer">
+      <div class="composer">
+        <textarea class="composer__input" placeholder="Message #engineering-room..." rows="3"></textarea>
+        <div class="composer__toolbar">
+          <div class="composer__tools">
+            <button class="composer__tool-btn" type="button"><span class="material-symbols-outlined">add_circle</span></button>
+            <button class="composer__tool-btn" type="button"><span class="material-symbols-outlined">mood</span></button>
+            <button class="composer__tool-btn" type="button"><span class="material-symbols-outlined">format_bold</span></button>
+            <button class="composer__tool-btn" type="button"><span class="material-symbols-outlined">alternate_email</span></button>
+          </div>
+          <button class="btn btn--primary" type="button">Send</button>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <aside class="room-sidebar">
+    <div class="room-sidebar__section">
+      <h3 class="room-sidebar__label">Room Details</h3>
+      <p class="room-sidebar__sublabel">Admin Managed</p>
+      
+      <div class="room-sidebar__info-box">
+        <div class="room-sidebar__info-item">
+          <span class="room-sidebar__info-label">Room Owner</span>
+          <div class="room-sidebar__owner">
+            <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBaw27m6aY1fDnaMf8NXEeVW1PfVLzsIZCx8HM2iL0ZFccTu_8q5yTZs8gHWYU0DCIvfdXAYYRbfhX1vX8pTgeoJ1471jrq2vOygNK7v3PfTlPk5-TPWSS6Kgly8Fc3GnjAAMiBO0Fpuzb76r6WzfpObqk73o24zfqfyztebcrxeRkRK-K_VAJDCKzMCn4u_0ixuzS0iZfUjs0wRsbSXYUuogj5FvUbfRLNxWfsqXfDLPhW_qB-txkopLrlBKwTw03jDF8bhluY-zI" alt="Owner" class="room-sidebar__owner-avatar">
+            <span class="room-sidebar__owner-name">Sarah Jenkins</span>
+          </div>
+        </div>
+        <div class="room-sidebar__info-item">
+          <span class="room-sidebar__info-label">Created</span>
+          <span class="room-sidebar__info-value">Jan 14, 2023</span>
+        </div>
+      </div>
+    </div>
+
+    <nav class="room-sidebar__tabs">
+      <button class="room-sidebar__tab room-sidebar__tab--active" type="button">
+        <span class="material-symbols-outlined">info</span>
+        <span>Info</span>
+      </button>
+      <button class="room-sidebar__tab" type="button">
+        <span class="material-symbols-outlined">group</span>
+        <span>Members</span>
+      </button>
+      <button class="room-sidebar__tab" type="button">
+        <span class="material-symbols-outlined">description</span>
+        <span>Files</span>
+      </button>
+    </nav>
+
+    <div class="room-sidebar__content">
+      <p class="room-sidebar__content-label">Members — 24</p>
+      <div class="room-sidebar__member-list">
+        <div class="member-item">
+          <div class="member-item__avatar-box">
+            <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuChXa2Pev6zaTOaHNbkZaoYhqKjX0M4-6_a6u-ErpEbaurYY-5N5TW9QnGfEXW0HXx7JJ5_TqW7rkirmZ2L4O7mYmzq91zW4sBIAMz_MS6VmpIaWJMzp7Wre8wS1hwDnGtYSsZnMRzwcpZmfFzwpnniSAXtFMMP1l7szuKYhrD6tzbiKzbCbcazmMeaXClJDoPVwXNL0LtxFGGPhFIcy4L8JVftu4_CeBXQHVFM59ckmkEBkEUFEACnWM3gBspPMnH91F-F3vdRNUE" alt="Alice" class="member-item__avatar">
+            <div class="member-item__status member-item__status--online"></div>
+          </div>
+          <span class="member-item__name">Alice Chen</span>
+          <span class="member-item__badge">Admin</span>
+        </div>
+        
+        <div class="member-item">
+          <div class="member-item__avatar-box">
+            <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCgkf-nk8-fdI9wzQnuz9kQaZDIZhlcUi7TykF59XcWwXRvgbiiSJBV8cuBRA-RzWkzenyZYQ9-cq5tpA9gOqV9Rgozc_vbdxrk1Gye9f8_3Q3kxAr8A8sWpe2GRbf3MESbnXlfXDf67DJ69_ZI53nQaIpjdm7YE-ogRHxyD-A2wR1WXkPx7JqmqJsUBgK3Zu2NfizB1MMDGoolpwLh_70tWPPOOxZaWcTGk7qsTKlMklcvM_IDE_5d7PRbBJqxwroo-4GF2gTxiek" alt="Bob" class="member-item__avatar">
+            <div class="member-item__status member-item__status--afk"></div>
+          </div>
+          <span class="member-item__name">Bob Miller</span>
+        </div>
+
+        <div class="member-item">
+          <div class="member-item__avatar-box">
+            <div class="member-item__avatar member-item__avatar--placeholder">
+              <span class="material-symbols-outlined">person</span>
+            </div>
+            <div class="member-item__status member-item__status--offline"></div>
+          </div>
+          <span class="member-item__name member-item__name--offline">Carol Vance</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+</div>

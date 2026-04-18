@@ -1,0 +1,124 @@
+<div class="requests">
+  <header class="requests__header">
+    <h2 class="requests__title">Friend Requests</h2>
+    <p class="requests__subtitle">Manage your professional network and pending connections.</p>
+  </header>
+
+  <div class="requests__content">
+    <div class="requests-grid">
+      <!-- Left Column: Incoming Requests -->
+      <section class="requests-grid__incoming">
+        <div class="section-header">
+          <h3 class="section-header__title">
+            <span class="material-symbols-outlined">inbox</span>
+            Incoming Requests
+            <span class="badge">3</span>
+          </h3>
+        </div>
+
+        <div class="requests-list">
+          <!-- Request 1 -->
+          <div class="request-card group">
+            <div class="request-card__avatar-box">
+              <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCM7dGc7KxhhTlTtNGwJaa40hJIIY_qJIpXkZakHx8akeLXJTg3upFDAkCK1bGyaa4Z1KmJDp5YI8Haino57CICzqVCcDTdNLz3XB0E-xxZo2WYUuNE3hbw6sIoMvPRj3cW04kbWQLEDXfXlKzOoskCswHtTI4YLtZy2UIUxZw1F_A5y3SG2pEcGbMNBzUB0HkwPJuSNTezsdoZ5rAlVOYcd6m3b0VZbI-uwEuBwkcHb4JuTpNzefa-qgPePf8PxNnzsYqwr7NMBs0" alt="Elena" class="request-card__avatar">
+              <span class="request-card__status request-card__status--online"></span>
+            </div>
+            <div class="request-card__body">
+              <div class="request-card__header">
+                <div>
+                  <h4 class="request-card__name">Elena Rodriguez</h4>
+                  <p class="request-card__role">Senior Architect at UrbanFlow</p>
+                </div>
+                <span class="request-card__time">2h ago</span>
+              </div>
+              <p class="request-card__note">"Hey, worked with you on the API project last quarter. Would love to stay in touch!"</p>
+              <div class="request-card__actions">
+                <button class="btn btn--primary btn--sm">Accept</button>
+                <button class="btn btn--ghost btn--sm">Decline</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Request 2 -->
+          <div class="request-card group">
+            <div class="request-card__avatar-box">
+              <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAaUK2-Y3YoCfu_onVfCzaqmriyuBQ0mC6LyH-KEisUGcsNlBX3mEESoume_Q8o3WbQInpC7XxGKcR3mgvL_6OyGzwCtT27sGITXqLUsxdXte1KKu3TQ7X5pB5VFP54mPe-TtbfRU8J0fhW9Zkue7HfuPI9OFJp6TjFFLtKNV2XYTa4vrXT0GVLU1Thm-_LhKq3Hk1-Is6563Uqu9gSteQZCE5ELus8LfR6qtlYk5Y0bBIXaTzIMkfc7rm2DxJSY9q6Y8ozg_k6mPk" alt="Marcus" class="request-card__avatar">
+              <span class="request-card__status request-card__status--offline"></span>
+            </div>
+            <div class="request-card__body">
+              <div class="request-card__header">
+                <div>
+                  <h4 class="request-card__name">Marcus Chen</h4>
+                  <p class="request-card__role">Lead Developer at Nexus</p>
+                </div>
+                <span class="request-card__time">Yesterday</span>
+              </div>
+              <p class="request-card__note">"Interested in discussing the upcoming structural integration specs."</p>
+              <div class="request-card__actions">
+                <button class="btn btn--primary btn--sm">Accept</button>
+                <button class="btn btn--ghost btn--sm">Decline</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Column: Sent Requests & Stats -->
+      <aside class="requests-grid__sent">
+        <div class="section-header">
+          <h3 class="section-header__title">
+            <span class="material-symbols-outlined">send</span>
+            Sent Requests
+          </h3>
+        </div>
+
+        <div class="sent-list card">
+          <div class="sent-item">
+            <div class="sent-item__info">
+              <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuChskIclIApvQKzLchkrF0iVT4c-Rvo2RmNzobBpJKIBvUWMUsZE-lOcm4mDWrr1-mHjJ7oGUzspO_63eTnvel6Cq8ZXxAWjv3ywNPc2wQbWgeyGWdC7GhcHyqnXLmIt4cPDMfEQaLr9LqUd-wA0Eoinvp05jaJ3YeydT9_gjAnkMjbtLYtXOH9XA60Ku5yBH2kUq1P3bfUfc6_hL1ANp8SWbHEo8560__EvAZGZjEaiV-XxGjl3k5Vk_-B3FES40ZfOe0OEVuxBAE" alt="Jordan" class="sent-item__avatar">
+              <div>
+                <p class="sent-item__name">Jordan Whitmore</p>
+                <div class="sent-item__status">
+                  <span class="sent-item__status-dot"></span>
+                  <span class="sent-item__status-label">Pending</span>
+                </div>
+              </div>
+            </div>
+            <button class="btn-cancel">Cancel</button>
+          </div>
+
+          <div class="sent-item sent-item--declined">
+            <div class="sent-item__info">
+              <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAa_iK09DI1F50NA8V554xVJAoxyURcpC3ERBpzwp1VdBTCAY1sR4yGWTfEtj4P0-i5M0vge4ptCUr4MeNazimOJpFbwsz6VPc8rKahIEsq7Q6G5NjwYzkL4GVW_rqxXOiVsxyLbLd-1K0cI5dW2CGAn3qq7u1aBQyLICIJFUc1U9gjwxxyQkGkExo7J7SSinsY7a72MYeTtMFC_wmP7gSyOy0XYCbJCaECK_5pdRQ4vDXa9Go-kwy-okPwBpVlnC8vbZ4WOYfEZcA" alt="Aria" class="sent-item__avatar">
+              <div>
+                <p class="sent-item__name">Aria Stark</p>
+                <div class="sent-item__status">
+                  <span class="sent-item__status-dot sent-item__status-dot--error"></span>
+                  <span class="sent-item__status-label sent-item__status-label--error">Declined</span>
+                </div>
+              </div>
+            </div>
+            <button class="btn-remove">Remove</button>
+          </div>
+        </div>
+
+        <div class="insight-card">
+          <div class="insight-card__content">
+            <h4 class="insight-card__label">Network Insights</h4>
+            <p class="insight-card__value">12% Growth</p>
+            <p class="insight-card__text">Your professional network grew by 4 active connections this week.</p>
+            <div class="insight-card__mutuals">
+              <div class="avatar-stack">
+                <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBZUbKmpxdfqU5oPAY9ihOU7MpszwMN4QyuVWkQ1cEOl0gCROgU0cCVth1Q7T6WafeDd0QNLcMMSwQ79o21I38UkbJBEcDk7MVGmh6n4WR6yyS-KHrmCQTNZQfdVXDTF6iea2NwRGXIseTW54-XwOupKxnkFv6AL-iFGK1s23ZLN6fXDnUNZ7oZE4k-zgePx2TVhhuPaGxOZxlDg4skf-RIMLH_xyB5zUbgUVCAsBH-xOp5sU5udbf2jO28PRH6-oX_CH9ZG-3pzL0" alt="">
+                <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAU7WKmHnTbrVsoh3DkbI1erME2gb6LWUDx6Z5kyjnqIFrmcjZlhIKCAjCtnNrNDxdTZAJByC7zcKLCd_icticAcUHCvVeahvKBZtLDjgM_7G8us9kKcZ3oJomUQiC-mrEBAfYyOddVJanlCGsEaVPtLe1ihEp5GtBHpWFR4jVn5cMz-u9y_C6oieParVAocGmNIeHYh-z345835muj_VXkR5L0vxcI8jNbJRmoLsZ8H5XrM31XwyPwkdkwwUyR7r6cC_Ok8l5GEU0" alt="">
+                <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-RvdmVlMHssSDfJ1PmG0P8J9oUK1EHGC5S92ty9iH9ZfgehwYT4N-1jf5Fw2HHb37jJONpswOzvWpWFxu5qpR7RCbDGTg5K1A6U7WI3Oc4vaHbgphLlgQh3Nh1p6RVGlRjzVzqEY2pFHOQs8MWogqRIDa17niuSbVBUtOoT2lSTczQWdB5e5tnqmSOt9vvZbTGZ5B8URAYPovsWN8gUbPXS3GqOXbDNjEaXKPvQZC-jBUd-d9KKhRtsgloIf4E5SMOeATIRvSYPc" alt="">
+              </div>
+              <span class="insight-card__mutuals-label">+28 mutuals</span>
+            </div>
+          </div>
+          <span class="material-symbols-outlined insight-card__bg-icon">hub</span>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>

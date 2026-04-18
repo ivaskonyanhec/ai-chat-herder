@@ -12,6 +12,7 @@ import { FriendRequestsComponent } from './features/contacts/friend-requests/fri
 import { RoomInvitationsComponent } from './features/rooms/room-invitations/room-invitations';
 import { PlatformBansComponent } from './features/admin/platform-bans/platform-bans';
 import { ManageRoomComponent } from './features/rooms/manage-room/manage-room';
+import { DirectMessagesComponent } from './features/dialogs/direct-messages/direct-messages';
 
 export const routes: Routes = [
   {
@@ -61,6 +62,10 @@ export const routes: Routes = [
       {
         path: 'invitations',
         component: RoomInvitationsComponent,
+      },
+      {
+        path: 'messages/:id',
+        component: DirectMessagesComponent,
       },
       {
         path: 'admin',

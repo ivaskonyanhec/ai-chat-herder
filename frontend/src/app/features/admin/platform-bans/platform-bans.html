@@ -1,0 +1,112 @@
+<div class="admin">
+  <header class="admin__header">
+    <div class="admin__title-group">
+      <h2 class="admin__title">Platform Administration</h2>
+      <p class="admin__subtitle">Manage global bans, user restrictions, and security overrides.</p>
+    </div>
+    <button class="btn btn--error">
+      <span class="material-symbols-outlined">add_moderator</span>
+      <span>Create Global Ban</span>
+    </button>
+  </header>
+
+  <div class="admin__content">
+    <div class="admin-grid">
+      <section class="admin-grid__list">
+        <div class="card ban-list">
+          <div class="ban-list__header">
+            <h3 class="ban-list__title">Active Platform Bans</h3>
+            <div class="search-box">
+              <span class="material-symbols-outlined">search</span>
+              <input type="text" placeholder="Search by ID or reason..." />
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Target User</th>
+                  <th>Reason</th>
+                  <th>Issued By</th>
+                  <th>Expires</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <div class="user-cell">
+                      <div class="user-avatar">SR</div>
+                      <div>
+                        <p class="user-name">spammer_reid</p>
+                        <p class="user-meta">ID: 90214</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="reason-tag">Automated Spam</span>
+                  </td>
+                  <td>System Admin</td>
+                  <td>Permanent</td>
+                  <td>
+                    <button class="btn-text">Revoke</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="user-cell">
+                      <div class="user-avatar">TK</div>
+                      <div>
+                        <p class="user-name">troll_king</p>
+                        <p class="user-meta">ID: 10485</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="reason-tag">Harassment</span>
+                  </td>
+                  <td>Julian Thorne</td>
+                  <td>May 24, 2024</td>
+                  <td>
+                    <button class="btn-text">Revoke</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <aside class="admin-grid__sidebar">
+        <div class="card status-card">
+          <h4 class="status-card__title">System Health</h4>
+          <div class="status-metrics">
+            <div class="metric">
+              <span class="metric__label">Active Bans</span>
+              <span class="metric__value">142</span>
+            </div>
+            <div class="metric">
+              <span class="metric__label">Flagged Content</span>
+              <span class="metric__value text-error">12</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card logs-card">
+          <h4 class="logs-card__title">Recent Audit Logs</h4>
+          <div class="logs-list">
+            <div class="log-item">
+              <p class="log-item__text"><strong>Admin</strong> banned <strong>user_123</strong></p>
+              <p class="log-item__time">14 minutes ago</p>
+            </div>
+            <div class="log-item">
+              <p class="log-item__text"><strong>System</strong> flagged message <strong>#902</strong></p>
+              <p class="log-item__time">1 hour ago</p>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>

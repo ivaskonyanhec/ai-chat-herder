@@ -1,0 +1,105 @@
+<div class="manage-room">
+  <aside class="manage-room__sidebar">
+    <div class="manage-room__sidebar-header">
+      <h3 class="manage-room__sidebar-title">Room Details</h3>
+      <p class="manage-room__sidebar-status">Admin Managed</p>
+    </div>
+    <nav class="manage-room__nav">
+      <div class="manage-room__nav-item manage-room__nav-item--active">
+        <span class="material-symbols-outlined">group</span>
+        <span>Members</span>
+      </div>
+      <div class="manage-room__nav-item">
+        <span class="material-symbols-outlined">shield_person</span>
+        <span>Admins</span>
+      </div>
+      <div class="manage-room__nav-item">
+        <span class="material-symbols-outlined">block</span>
+        <span>Banned users</span>
+      </div>
+      <div class="manage-room__nav-item">
+        <span class="material-symbols-outlined">mail</span>
+        <span>Invitations</span>
+      </div>
+      <div class="manage-room__nav-item">
+        <span class="material-symbols-outlined">settings</span>
+        <span>Settings</span>
+      </div>
+    </nav>
+    <div class="manage-room__sidebar-footer">
+      <button class="btn-delete">
+        <span class="material-symbols-outlined">delete</span>
+        <span>Delete room</span>
+      </button>
+    </div>
+  </aside>
+
+  <section class="manage-room__main">
+    <header class="manage-room__header">
+      <div>
+        <h2 class="manage-room__title">#engineering-room</h2>
+        <p class="manage-room__subtitle">Manage members and permissions</p>
+      </div>
+      <button class="btn-close">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </header>
+
+    <div class="manage-room__search">
+      <div class="search-input">
+        <span class="material-symbols-outlined">search</span>
+        <input type="text" placeholder="Search members..." />
+      </div>
+    </div>
+
+    <div class="manage-room__content">
+      <div class="member-list">
+        <!-- Member 1 -->
+        <div class="member-row group">
+          <div class="member-row__info">
+            <div class="member-avatar">
+              <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCZxRgw05Zvn_rZXkx8ypS6nB8_fnCcLyeXJrWzAFEPO6RC8KX8hVy_tyL3pbk2OSK16IX46oOG0Jrnh06pxdbUzFGDVQQOacu3zJKSrScOLpPW-Tp5Zggm690zKXu9LPNIj8S9vymfkWJ9hhU60wRMWt0DgkdwCF2GhrvRlUjHa-VJDY0B0vXec3h7hJ_pUxC6knR4ClyCvZk4X_urETMAivwWwDmjpIHH8OdKjyE6as_FAOXnSGd_P1wa6sUS139McBhVZ2JcavQ" alt="Alex">
+              <span class="member-status member-status--online"></span>
+            </div>
+            <div>
+              <h4 class="member-name">Alex Rivera</h4>
+              <p class="member-email">alex.r@workspace.com</p>
+            </div>
+          </div>
+          <div class="member-row__actions">
+            <button class="btn-text btn-text--primary">Make admin</button>
+            <button class="btn-text">Ban</button>
+            <button class="btn-text btn-text--error">Remove</button>
+          </div>
+        </div>
+
+        <!-- Member 2 -->
+        <div class="member-row group">
+          <div class="member-row__info">
+            <div class="member-avatar">
+              <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCYLvekKKK4CRjv4EmCf7HsuVKshQKj9dKGIrFo5na6gQjfa26GUjjTFPXgn1vHRztJWAVOYNED60PGDDteMoNQP7ldb1B4c9xB0oTvSGKi60rnmzcT4pNEMSvl2xHOQ-FIoi6jCB0wyZmCiFbILyT0fsJ5-xUNQLvAFu8BDXTstsAp-bhWe2jc8kb5hB1CGle2IAUJ8jx-4aHCbkqGJK53RGkNVE4U8svku7-uVIoxqrIzs8UyeB6yhsgA45ioo-m1U2cGA-y94lk" alt="Sarah">
+              <span class="member-status member-status--afk"></span>
+            </div>
+            <div>
+              <div class="name-badge-group">
+                <h4 class="member-name">Sarah Chen</h4>
+                <span class="admin-badge">Admin</span>
+              </div>
+              <p class="member-email">sarah.c@workspace.com</p>
+            </div>
+          </div>
+          <div class="member-row__actions">
+            <button class="btn-text">Demote</button>
+            <button class="btn-text">Ban</button>
+            <button class="btn-text btn-text--error">Remove</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="manage-room__footer">
+      <button class="btn btn--ghost">Cancel</button>
+      <button class="btn btn--primary">Save changes</button>
+    </footer>
+  </section>
+</div>
