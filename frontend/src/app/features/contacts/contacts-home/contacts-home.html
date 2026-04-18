@@ -28,87 +28,48 @@
           </div>
 
           <!-- Connections Grid -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- Card 1: Online -->
-            <div class="bg-surface-container-lowest p-5 rounded-xl border border-transparent hover:border-outline-variant/20 transition-all flex items-center group relative">
-              <div class="relative">
-                <img
-                  class="w-14 h-14 rounded-full object-cover border-2 border-surface-container-lowest shadow-sm"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuC-I_gxqBAL7fXUZD6FNnbWCRc0bxZD0uVUbeho8f6uwvk1sbaPNbtBhORZaIN1n1l-VE6MlAuyxllcZ6-dOHVPRNjZznLrJ8t4kuLp4jCAPfhvBSY-bOWhwWvdxiojvHlxjJHAfCW1jQfDODigE7JTor9-9JNsr3FQZBMIdI-3yrxZF-pN5MbWll_Ltcb_01bYanAPNA9wCkKkypvpP-3Wp4hZxKaBYK-Md6WueUMa3HbwimKZIrliqJl3r41hwxPXKUXpQ9Y8RQc"
-                  alt="Marcus Sterling"
-                />
-                <span class="absolute bottom-0 right-0 w-4 h-4 bg-[#4caf50] border-2 border-surface-container-lowest rounded-full"></span>
-              </div>
-              <div class="ml-4 flex-1">
-                <h3 class="text-sm font-semibold text-on-surface">Marcus Sterling</h3>
-                <p class="text-xs text-outline">Lead Architect • New York</p>
-              </div>
-              <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button class="p-2 text-outline hover:text-primary"><span class="material-symbols-outlined text-[20px]">chat</span></button>
-                <button class="p-2 text-outline hover:text-error"><span class="material-symbols-outlined text-[20px]">person_remove</span></button>
-              </div>
+          @if (isLoading()) {
+            <div class="flex justify-center py-8">
+              <span class="material-symbols-outlined text-2xl text-outline animate-spin">progress_activity</span>
             </div>
-
-            <!-- Card 2: Away -->
-            <div class="bg-surface-container-lowest p-5 rounded-xl border border-transparent hover:border-outline-variant/20 transition-all flex items-center group relative">
-              <div class="relative">
-                <img
-                  class="w-14 h-14 rounded-full object-cover border-2 border-surface-container-lowest shadow-sm"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9HsfqO8Wnm7YIo8Kw7LEhRjx0qRZMN5UW49TWTjKuY-10q-mhS3ZRGhv6Os9cj8kOl-F0YMdLGuPmKMwcDcllfGnI8W8unyUtMsxFbcw2IIW2otmw9ep_-T4UGqmbFaCdeYHjtUsUmGh_1p4WyTTXn0LObVvmc6pNWDzGS0S6_imEYEtU8qRQNZof_0o5vxAn6ndd43ulDsiB087dOLjl0R6lioTw9MnTGKbQsZRtoCSy0BcJ_M6FV9JiWHs_0TtM8IOb8CVA9r8"
-                  alt="Elena Vance"
-                />
-                <span class="absolute bottom-0 right-0 w-4 h-4 bg-[#ffb300] border-2 border-surface-container-lowest rounded-full"></span>
-              </div>
-              <div class="ml-4 flex-1">
-                <h3 class="text-sm font-semibold text-on-surface">Elena Vance</h3>
-                <p class="text-xs text-outline">Operations Manager • London</p>
-              </div>
-              <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button class="p-2 text-outline hover:text-primary"><span class="material-symbols-outlined text-[20px]">chat</span></button>
-                <button class="p-2 text-outline hover:text-error"><span class="material-symbols-outlined text-[20px]">person_remove</span></button>
-              </div>
+          } @else if (errorMessage()) {
+            <p class="text-error text-sm bg-error-container/20 border border-error/20 rounded-xl px-4 py-3">{{ errorMessage() }}</p>
+          } @else if (friends().length === 0) {
+            <div class="text-center py-8 text-on-surface-variant text-sm">No connections yet. Send a friend request to connect.</div>
+          } @else {
+            <div class="grid grid-cols-2 gap-4">
+              @for (friend of friends(); track friend.userId) {
+                <div class="group relative bg-surface-container-lowest rounded-xl p-4 border border-outline-variant/10 hover:shadow-sm transition-shadow">
+                  <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 rounded-full bg-surface-container overflow-hidden shrink-0">
+                      @if (friend.avatarUrl) {
+                        <img [src]="friend.avatarUrl" class="w-full h-full object-cover" alt="" />
+                      } @else {
+                        <div class="w-full h-full flex items-center justify-center">
+                          <span class="material-symbols-outlined text-on-surface-variant" style="font-size:1.25rem">person</span>
+                        </div>
+                      }
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="font-bold text-on-surface text-sm truncate">{{ friend.username }}</p>
+                    </div>
+                  </div>
+                  <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      class="flex-1 py-1.5 bg-primary text-on-primary text-xs font-bold rounded-lg hover:bg-primary-dim transition-colors disabled:opacity-50"
+                      [disabled]="openingChatId() === friend.userId"
+                      (click)="openChat(friend.userId)"
+                    >Chat</button>
+                    <button
+                      class="flex-1 py-1.5 bg-error-container text-on-error-container text-xs font-bold rounded-lg hover:bg-error hover:text-on-error transition-colors disabled:opacity-50"
+                      [disabled]="removingId() === friend.userId"
+                      (click)="removeFriend(friend.userId)"
+                    >Remove</button>
+                  </div>
+                </div>
+              }
             </div>
-
-            <!-- Card 3: Offline -->
-            <div class="bg-surface-container-lowest p-5 rounded-xl border border-transparent hover:border-outline-variant/20 transition-all flex items-center group relative opacity-75 grayscale-[0.5]">
-              <div class="relative">
-                <img
-                  class="w-14 h-14 rounded-full object-cover border-2 border-surface-container-lowest shadow-sm"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuDvXRbYqCruD3ME8Wni9TDdv9AgitA0laRpNqkVoHTv0uXDuuH6oNViC9eH2UaPp_Y09pTPLWJWIRSCjLDtCiFxamjxXvDC02dbSWGkWAPnz24RIsjYLtP_GjOaNwCD0uricR2pbUht6k7q5nm9AdXVgASSH_Xa2muAUNmeVq2KI_29jx5GfuinKH208pFbumWriisUz4d-68n1DzC2BltOGvZWcr2xFHC5TDEtXhAn4K-zfAeZwiyeY3g6NTvFPkEJgdLl5J-ZFPY"
-                  alt="Julian Rossi"
-                />
-                <span class="absolute bottom-0 right-0 w-4 h-4 bg-outline border-2 border-surface-container-lowest rounded-full"></span>
-              </div>
-              <div class="ml-4 flex-1">
-                <h3 class="text-sm font-semibold text-on-surface">Julian Rossi</h3>
-                <p class="text-xs text-outline">Urban Planner • Milan</p>
-              </div>
-              <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button class="p-2 text-outline hover:text-primary"><span class="material-symbols-outlined text-[20px]">chat</span></button>
-                <button class="p-2 text-outline hover:text-error"><span class="material-symbols-outlined text-[20px]">person_remove</span></button>
-              </div>
-            </div>
-
-            <!-- Card 4: Online -->
-            <div class="bg-surface-container-lowest p-5 rounded-xl border border-transparent hover:border-outline-variant/20 transition-all flex items-center group relative">
-              <div class="relative">
-                <img
-                  class="w-14 h-14 rounded-full object-cover border-2 border-surface-container-lowest shadow-sm"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuAIGFDj_La2WyeVbILmr3GOpz2DOkCImvx1vGGc96bgrq3rNuErVmgwWPyfWIc-_kL3i-d6n2WsvhNpIk_rcamxc7hGGnqVVaE6Z6SFTcvP2ePPFvGgZYruvcOSHjarkxDV6eQq3B2SeNZIonKZokmaRLusXfYmUq2F9w3deF1w_8yd_XQGQiTXk9ImR4-xNs9dmr66JNX3sEQskFTBrZ5iq_ljt862GWr-gagkxxr0lKvW87Q4KAvW9t7lbwZKYT1ynxXmMBwMjG4"
-                  alt="Sarah Chen"
-                />
-                <span class="absolute bottom-0 right-0 w-4 h-4 bg-[#4caf50] border-2 border-surface-container-lowest rounded-full"></span>
-              </div>
-              <div class="ml-4 flex-1">
-                <h3 class="text-sm font-semibold text-on-surface">Sarah Chen</h3>
-                <p class="text-xs text-outline">Structural Lead • Singapore</p>
-              </div>
-              <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button class="p-2 text-outline hover:text-primary"><span class="material-symbols-outlined text-[20px]">chat</span></button>
-                <button class="p-2 text-outline hover:text-error"><span class="material-symbols-outlined text-[20px]">person_remove</span></button>
-              </div>
-            </div>
-          </div>
+          }
         </div>
 
         <!-- Right Sidebar -->
