@@ -15,6 +15,7 @@ function buildMockConnection() {
     start: vi.fn().mockResolvedValue(undefined),
     stop: vi.fn().mockResolvedValue(undefined),
     onreconnected: vi.fn(),
+    onclose: vi.fn(),
     state: 'Connected',
     _trigger: (event: string, ...args: unknown[]) => handlers[event]?.(...args),
   };

@@ -56,6 +56,10 @@ export class PresenceService {
       this.rejoinAllRooms();
     });
 
+    this.connection.onclose(() => {
+      this._connected.set(false);
+    });
+
     if (isDevMode()) {
       (window as unknown as Record<string, unknown>)['__presenceHub'] = this.connection;
     }

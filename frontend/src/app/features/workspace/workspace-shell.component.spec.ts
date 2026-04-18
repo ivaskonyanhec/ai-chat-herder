@@ -8,6 +8,7 @@ import { AuthApiService } from '../../core/auth/auth-api.service';
 import { AuthSessionService } from '../../core/auth/auth-session.service';
 import { PresenceService } from '../../core/signalr/presence.service';
 import { ChatService } from '../../core/signalr/chat.service';
+import { UnreadService } from '../../core/signalr/unread.service';
 
 type HubStub = { connect: ReturnType<typeof vi.fn>; disconnect: ReturnType<typeof vi.fn> };
 type AuthSessionStub = { user: Signal<null>; accessToken?: Signal<null>; clearSession: ReturnType<typeof vi.fn> };
@@ -41,6 +42,7 @@ function buildProviders(overrides: {
       { provide: AuthSessionService, useValue: authSession },
       { provide: PresenceService, useValue: presenceService },
       { provide: ChatService, useValue: chatService },
+      UnreadService,
     ],
     authApi,
     authSession,
@@ -117,5 +119,16 @@ describe('WorkspaceShellComponent', () => {
     expect(presenceService.disconnect).toHaveBeenCalledTimes(1);
     expect(chatService.disconnect).toHaveBeenCalledTimes(1);
     expect(authSession.clearSession).toHaveBeenCalled();
+  });
+
+  it('calls presence and chat disconnect on destroy', async () => {
+    const { providers, presenceService, chatService } = buildProviders();
+    TestBed.configureTestingModule({ imports: [WorkspaceShellComponent], providers });
+    const fixture = TestBed.createComponent(WorkspaceShellComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.destroy();
+    expect((presenceService as { disconnect: ReturnType<typeof vi.fn> }).disconnect).toHaveBeenCalledTimes(1);
+    expect((chatService as { disconnect: ReturnType<typeof vi.fn> }).disconnect).toHaveBeenCalledTimes(1);
   });
 });

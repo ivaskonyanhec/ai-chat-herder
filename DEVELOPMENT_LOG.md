@@ -4,6 +4,8 @@ Format: `[Timestamp] | Task | Reasoning | Changes`
 
 ---
 
+`[2026-04-18 T100]` | **Fix Phase 4c review issues** | ChatService null-token guard, WorkspaceShellComponent OnDestroy, PresenceService onclose signal, UnreadService.clearAll on logout | frontend/src/app/core/signalr/chat.service.ts, presence.service.ts, workspace-shell.component.ts, workspace-shell.component.spec.ts
+
 
 ## 2026-04-18 — Architecture Planning Session
 
@@ -507,3 +509,5 @@ The scaffold sets `AllowedHosts` to wildcard. Per AGENT.md §7 (Security Model),
 `[2026-04-18 T98]` | **Add ChatService** | SignalR /hubs/chat client with all hub invocations and message event signals | frontend/src/app/core/signalr/chat.service.ts, chat.service.spec.ts
 
 `[2026-04-18 T99]` | **Wire hub services into WorkspaceShellComponent** | Connect PresenceService and ChatService on ngOnInit; disconnect before logout clears session | frontend/src/app/features/workspace/workspace-shell.component.ts, workspace-shell.component.spec.ts
+
+`[2026-04-18 21:49 CEST]` | **[QA][Codex] E2E/UAT Playwright harness and requirement audit** | Implemented Playwright + TypeScript E2E/UAT setup with Docker Compose profile wiring, report output to `./e2e-reports/index.html`, helper modules, fixtures, five E2E suites, five UAT suites, coverage matrix, and QA self-audit. Local verification: `cd e2e && npm install` succeeded; `npm run typecheck` passed; `npx playwright test --list` found 44 tests in 10 files. Execution status: `docker compose` could not be run in this environment because Docker is not installed (`docker: command not found`). Current matrix is conservative: supported auth/presence/room-ban API paths are covered or partially covered; static chat UI, attachment endpoints, friend/contact flows, visible live-message rendering, and admin modals are marked BLOCKED/NOT COVERED. | Files created/updated: `e2e/*`, `docs/TEST_COVERAGE_MATRIX.md`, `docs/QA_SELF_AUDIT.md`, `Dockerfile.e2e`, `docker-compose.yml`. | **[BLOCKED]**

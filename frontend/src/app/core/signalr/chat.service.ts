@@ -33,7 +33,8 @@ export class ChatService {
   readonly lastTypingEvent = this._lastTypingEvent.asReadonly();
 
   async connect(): Promise<void> {
-    if (this.connection) return;
+    const token = this.authSession.accessToken();
+    if (!token || this.connection) return;
 
     this.connection = this.factory('/hubs/chat', () => this.authSession.accessToken() ?? '');
     this.registerHandlers(this.connection);

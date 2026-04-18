@@ -57,6 +57,7 @@ function configureRouterTestBed(): Router {
       avatarUrl: null,
     }).asReadonly(),
     isAuthenticated: signal(true).asReadonly(),
+    accessToken: signal(null).asReadonly(),
     clearSession: vi.fn(),
   };
   const authApi = {
