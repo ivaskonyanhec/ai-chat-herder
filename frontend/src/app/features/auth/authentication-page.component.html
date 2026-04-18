@@ -1,0 +1,152 @@
+<main class="auth-page">
+  <section class="auth-page__hero">
+    <p class="auth-page__eyebrow">{{ eyebrowLabel() }}</p>
+    <h1 class="auth-page__headline">{{ title() }}</h1>
+    <p class="auth-page__supporting-copy">
+      {{ supportingCopy() }}
+    </p>
+
+    <div class="auth-page__hero-card">
+      <p class="auth-page__hero-label">Workspace Standard</p>
+      <p class="auth-page__hero-text">
+        Heavy slate framing, bright white content planes, and high-density typography define every screen.
+      </p>
+    </div>
+  </section>
+
+  <section class="auth-card">
+    <header class="auth-card__header">
+      <div>
+        <p class="auth-card__eyebrow">Access Control</p>
+        <h2 class="auth-card__title">
+          {{ mode() === 'login' ? 'Sign In' : 'Create Account' }}
+        </h2>
+      </div>
+
+      <div class="auth-card__mode-toggle" aria-label="Authentication mode">
+        <button
+          type="button"
+          class="auth-card__mode-button"
+          [class.auth-card__mode-button--active]="mode() === 'login'"
+          data-testid="go-to-login"
+          (click)="setMode('login')"
+        >
+          Sign In
+        </button>
+        <button
+          type="button"
+          class="auth-card__mode-button"
+          [class.auth-card__mode-button--active]="mode() === 'register'"
+          data-testid="go-to-register"
+          (click)="setMode('register')"
+        >
+          Register
+        </button>
+      </div>
+    </header>
+
+    @if (errorMessage()) {
+      <p class="auth-card__error" data-testid="login-error" role="alert">{{ errorMessage() }}</p>
+    }
+
+    @if (mode() === 'login') {
+      <form class="auth-form" [formGroup]="loginForm" (ngSubmit)="submitLogin()">
+        <label class="auth-form__field">
+          <span class="auth-form__label">Email</span>
+          <input
+            data-testid="login-email"
+            class="auth-form__control"
+            type="email"
+            formControlName="email"
+            placeholder="name@workspace.com"
+          />
+          @if (loginFieldHasError('email')) {
+            <span class="auth-form__hint">Enter a valid email address.</span>
+          }
+        </label>
+
+        <label class="auth-form__field">
+          <span class="auth-form__label">Password</span>
+          <input
+            data-testid="login-password"
+            class="auth-form__control"
+            type="password"
+            formControlName="password"
+            placeholder="••••••••"
+          />
+          @if (loginFieldHasError('password')) {
+            <span class="auth-form__hint">Password must be at least 8 characters.</span>
+          }
+        </label>
+
+        <label class="auth-form__checkbox">
+          <input type="checkbox" formControlName="keepSignedIn" />
+          <span>Keep me signed in on this device</span>
+        </label>
+
+        <button data-testid="login-submit" class="auth-form__submit" type="submit">
+          {{ isSubmitting() ? 'Signing In…' : 'Sign In' }}
+        </button>
+      </form>
+    } @else {
+      <form class="auth-form" [formGroup]="registerForm" (ngSubmit)="submitRegister()">
+        <label class="auth-form__field">
+          <span class="auth-form__label">Username</span>
+          <input
+            data-testid="register-username"
+            class="auth-form__control"
+            type="text"
+            formControlName="username"
+            placeholder="architect_smith"
+          />
+          @if (registerFieldHasError('username')) {
+            <span class="auth-form__hint">Username must be 1 to 32 characters.</span>
+          }
+        </label>
+
+        <label class="auth-form__field">
+          <span class="auth-form__label">Email</span>
+          <input
+            data-testid="register-email"
+            class="auth-form__control"
+            type="email"
+            formControlName="email"
+            placeholder="name@workspace.com"
+          />
+          @if (registerFieldHasError('email')) {
+            <span class="auth-form__hint">Enter a valid email address.</span>
+          }
+        </label>
+
+        <label class="auth-form__field">
+          <span class="auth-form__label">Password</span>
+          <input
+            data-testid="register-password"
+            class="auth-form__control"
+            type="password"
+            formControlName="password"
+            placeholder="••••••••"
+          />
+          @if (registerFieldHasError('password')) {
+            <span class="auth-form__hint">Password must be at least 8 characters.</span>
+          }
+        </label>
+
+        <label class="auth-form__checkbox">
+          <input type="checkbox" formControlName="keepSignedIn" />
+          <span>Keep me signed in on this device</span>
+        </label>
+
+        <button data-testid="register-submit" class="auth-form__submit" type="submit">
+          {{ isSubmitting() ? 'Creating Account…' : 'Create Account' }}
+        </button>
+      </form>
+    }
+
+    <footer class="auth-card__footer">
+      <p class="auth-card__footer-copy">
+        Secure session control and token-based API access are now wired into the Angular entrypoint.
+      </p>
+    </footer>
+  </section>
+</main>

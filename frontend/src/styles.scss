@@ -1,1 +1,42 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+  color-scheme: light;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(
+      circle at top left,
+      color-mix(in srgb, var(--color-primary-container) 90%, transparent),
+      transparent 30%
+    ),
+    linear-gradient(180deg, var(--color-surface) 0%, var(--color-surface-container-high) 100%);
+  color: var(--color-on-background);
+  font-family: var(--font-family);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
