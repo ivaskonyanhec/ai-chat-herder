@@ -9,6 +9,12 @@ namespace ChatHerder.API.Endpoints;
 
 public static class AuthEndpoints
 {
+    // 16 zero bytes (salt) + 32 zero bytes (hash) in self-describing base64 format.
+    // ArgonPasswordHasher.Verify always runs a full Argon2id against this when the
+    // email is not found, making missing vs. wrong-password timing indistinguishable.
+    private const string SentinelHash =
+        "AAAAAAAAAAAAAAAAAAAAAA==.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==";
+
     public static RouteGroupBuilder MapAuthEndpoints(this RouteGroupBuilder group)
     {
         group.MapPost("/register",        Register)       .AllowAnonymous();
@@ -91,8 +97,12 @@ public static class AuthEndpoints
         var user = await db.Users
             .FirstOrDefaultAsync(u => u.Email == req.Email && u.DeletedAt == null, ct);
 
-        // Constant-time path — always attempt verify to prevent user enumeration
-        if (user is null || !hasher.Verify(req.Password, user.PasswordHash))
+        // Sentinel forces full Argon2id computation even for unknown emails,
+        // preventing timing side-channel user enumeration (~100ms path always runs).
+        var hashToVerify = user?.PasswordHash ?? SentinelHash;
+        var passwordValid = hasher.Verify(req.Password, hashToVerify);
+
+        if (user is null || !passwordValid)
             return Results.Unauthorized();
 
         var rawRefresh = jwt.GenerateRawRefreshToken();
