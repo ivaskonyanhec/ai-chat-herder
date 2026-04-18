@@ -2,203 +2,84 @@
 
   <!-- Center: Active Chat Canvas -->
   <section class="flex flex-col flex-1 bg-surface-container-lowest min-w-0">
+
     <!-- Chat Header -->
     <div class="h-16 px-6 flex items-center justify-between bg-surface-container-lowest shadow-sm z-10">
       <div class="flex items-center gap-3">
-        <h1 class="text-lg font-bold text-on-surface">#engineering-room</h1>
-        <span class="px-2 py-0.5 bg-surface-container text-on-surface-variant text-[10px] rounded uppercase font-bold tracking-widest">Public</span>
+        <h1 class="text-lg font-bold text-on-surface">#{{ room()?.name ?? '…' }}</h1>
+        @if (room()) {
+          <span class="px-2 py-0.5 bg-surface-container text-on-surface-variant text-[10px] rounded uppercase font-bold tracking-widest">{{ room()!.visibility }}</span>
+        }
       </div>
       <div class="flex items-center gap-4">
-        <button class="text-primary text-sm font-semibold px-4 py-2 hover:bg-surface-container transition-colors rounded-lg">Manage room</button>
-        <span class="material-symbols-outlined text-outline cursor-pointer hover:text-primary">star</span>
+        <span class="text-on-surface-variant text-xs">{{ room()?.memberCount }} members</span>
       </div>
     </div>
 
     <!-- Messages Area -->
-    <div class="flex-1 overflow-y-auto p-6 space-y-8" data-testid="chat-area">
-      <!-- Date Divider -->
-      <div class="flex items-center gap-4 py-4">
-        <div class="flex-1 h-px bg-surface-variant"></div>
-        <span class="text-[10px] font-bold text-outline-variant uppercase tracking-widest">Monday, May 22</span>
-        <div class="flex-1 h-px bg-surface-variant"></div>
-      </div>
+    <div class="flex-1 overflow-y-auto p-6 space-y-6" data-testid="chat-area">
 
-      <!-- Message: Alice -->
-      <div class="flex gap-4 group">
-        <img alt="Alice Profile" class="w-10 h-10 rounded-lg object-cover shrink-0"
-          src="https://lh3.googleusercontent.com/aida-public/AB6AXuDgR0cakxo5MGQ3h4wC7R4Nh-6T8WZ_Har8cvDtMUEdzU0z5V5PQEhW0GOxdIJlY0AKAzBHjdEH9DncP3m9DsBQRbmxC8SyAPhWAXXwIoDpNvmFk13ns_SD0AKRvS_lNEDDof2OjI_Cccui5hDXJ4O8mujgbrEcfTVzJ8Zhmd0FNwZiLwpbgoKQDisPqQHLbMU6ecAXG3sDXoMqIJLpWhJnonJKFgFjZzBeWRhDumBOFyvXnvcgn5nWegZWXxet6btgWVGGbU-IXyQ" />
-        <div class="flex-1 min-w-0">
-          <div class="flex items-baseline gap-2 mb-1">
-            <span class="text-sm font-bold text-on-surface">Alice Chen</span>
-            <span class="text-[10px] text-outline tracking-wider">10:24 AM</span>
-          </div>
-          <div class="text-sm text-on-surface leading-relaxed max-w-2xl">
-            Hey team, has anyone had a chance to review the new CI/CD pipeline architectural diagrams for the workspace migration?
-          </div>
+      @if (isLoading()) {
+        <div class="flex justify-center py-16">
+          <span class="material-symbols-outlined text-3xl text-outline animate-spin">progress_activity</span>
         </div>
-      </div>
-
-      <!-- Message: Bob (with reply quote) -->
-      <div class="flex gap-4 group">
-        <img alt="Bob Profile" class="w-10 h-10 rounded-lg object-cover shrink-0"
-          src="https://lh3.googleusercontent.com/aida-public/AB6AXuD1lUUBRJVeIGrgAGC6RcwMKnOmCiDUumR9P_O_oAGK8_8tNp2xAJkqP5a1Phxs23VBZji4ha8vGb34hpFpKdtxhOO1CmU7EhxAywz6cDkAQuNReLG0cG5W_GGFIYJxdx-4lSIs0lanSbAjuEY7gHNXDGzO21jll-jdG5Ovc182sFeFmwuNG1f3jjzpeP0iWO6V91EKyTHikT7eT1SsfCPVfNnqoj_GLlFXbp3dw4Zmz0qsBhgIYmWC5RulGng4Ct0VFfiFMcnAYJs" />
-        <div class="flex-1 min-w-0">
-          <div class="flex items-baseline gap-2 mb-1">
-            <span class="text-sm font-bold text-on-surface">Bob Miller</span>
-            <span class="text-[10px] text-outline tracking-wider">10:28 AM</span>
-          </div>
-          <div class="border-l-4 border-surface-variant pl-3 mb-2 py-1 bg-surface-container-low rounded-r-lg max-w-xl">
-            <p class="text-xs text-on-surface-variant line-clamp-1 italic">"Hey team, has anyone had a chance to review the new CI/CD pipeline..."</p>
-          </div>
-          <div class="text-sm text-on-surface leading-relaxed max-w-2xl">
-            Just finished looking at them. The logic for the staging deployment looks solid, but we might need to increase the timeout for the integration tests.
-            <span class="text-[10px] text-outline ml-1 italic">(edited)</span>
-          </div>
+      } @else if (errorMessage()) {
+        <p class="text-error text-sm bg-error-container/20 border border-error/20 rounded-xl px-4 py-3">{{ errorMessage() }}</p>
+      } @else if (messages().length === 0) {
+        <div class="flex flex-col items-center justify-center py-24 gap-3">
+          <span class="material-symbols-outlined text-5xl text-outline">chat_bubble_outline</span>
+          <p class="text-on-surface-variant text-sm">No messages yet. Say hello!</p>
         </div>
-      </div>
-
-      <!-- Message: Carol (with file attachment) -->
-      <div class="flex gap-4 group">
-        <div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center shrink-0">
-          <span class="material-symbols-outlined text-outline">person_outline</span>
-        </div>
-        <div class="flex-1 min-w-0">
-          <div class="flex items-baseline gap-2 mb-1">
-            <span class="text-sm font-bold text-on-surface">Carol Vance</span>
-            <span class="text-[10px] text-outline tracking-wider">10:45 AM</span>
-          </div>
-          <div class="text-sm text-on-surface leading-relaxed mb-3">
-            Here is the updated documentation for the containerization strategy.
-          </div>
-          <!-- File Card -->
-          <div class="flex items-center gap-4 p-4 bg-surface-container-low rounded-xl border border-outline-variant/15 w-fit">
-            <div class="w-10 h-12 bg-primary/10 rounded flex items-center justify-center">
-              <span class="material-symbols-outlined text-primary">description</span>
+      } @else {
+        @for (msg of messages(); track msg.id) {
+          <div class="flex gap-4 group">
+            @if (msg.sender.avatarUrl) {
+              <img [alt]="msg.sender.username" [src]="msg.sender.avatarUrl"
+                class="w-10 h-10 rounded-lg object-cover shrink-0" />
+            } @else {
+              <div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center shrink-0">
+                <span class="text-sm font-bold text-on-surface-variant">{{ msg.sender.username[0].toUpperCase() }}</span>
+              </div>
+            }
+            <div class="flex-1 min-w-0">
+              <div class="flex items-baseline gap-2 mb-1">
+                <span class="text-sm font-bold text-on-surface">{{ msg.sender.username }}</span>
+                <span class="text-[10px] text-outline tracking-wider">{{ formatTime(msg.sentAt) }}</span>
+                @if (msg.editedAt) {
+                  <span class="text-[10px] text-outline italic">(edited)</span>
+                }
+              </div>
+              @if (msg.isDeleted) {
+                <p class="text-sm text-outline italic">Message deleted.</p>
+              } @else {
+                <p class="text-sm text-on-surface leading-relaxed max-w-2xl">{{ msg.content }}</p>
+              }
             </div>
-            <div class="pr-8">
-              <p class="text-sm font-bold text-on-surface">Container_Strategy_V2.pdf</p>
-              <p class="text-[10px] text-outline">12.4 MB • PDF Document</p>
-            </div>
-            <button class="material-symbols-outlined text-outline hover:text-primary transition-colors">download</button>
           </div>
-        </div>
-      </div>
+        }
+      }
     </div>
 
     <!-- Composer -->
-    <div class="p-6 bg-surface-container-lowest">
-      <div class="bg-surface-container-low rounded-xl p-3 border border-outline-variant/15 focus-within:border-primary/50 transition-all">
+    <div class="border-t border-outline-variant/10 p-4 bg-surface-container-lowest">
+      <div class="flex gap-3 items-end">
         <textarea
           pTextarea
-          class="w-full bg-transparent border-none focus:ring-0 text-sm p-2 h-24 resize-none placeholder:text-outline overflow-y-auto"
-          placeholder="Message #engineering-room..."
-          rows="3"
           data-testid="message-input"
+          class="flex-1 resize-none bg-surface-container rounded-lg px-4 py-3 text-sm text-on-surface focus:outline-none min-h-[48px] max-h-32"
+          rows="1"
+          placeholder="Type a message…"
+          [ngModel]="messageText()"
+          (ngModelChange)="messageText.set($event)"
+          (keydown.enter)="$event.preventDefault(); sendMessage()"
         ></textarea>
-        <div class="flex items-center justify-between mt-2 pt-2 border-t border-outline-variant/10">
-          <div class="flex items-center gap-1">
-            <button class="p-2 hover:bg-surface-container rounded transition-colors text-outline">
-              <span class="material-symbols-outlined text-xl">add_circle</span>
-            </button>
-            <button class="p-2 hover:bg-surface-container rounded transition-colors text-outline">
-              <span class="material-symbols-outlined text-xl">mood</span>
-            </button>
-            <button class="p-2 hover:bg-surface-container rounded transition-colors text-outline">
-              <span class="material-symbols-outlined text-xl">format_bold</span>
-            </button>
-            <button class="p-2 hover:bg-surface-container rounded transition-colors text-outline">
-              <span class="material-symbols-outlined text-xl">alternate_email</span>
-            </button>
-          </div>
-          <p-button label="Send" icon="pi pi-send" iconPos="right" type="button" />
-        </div>
+        <p-button
+          label="Send"
+          [disabled]="!messageText().trim() || isSending()"
+          (onClick)="sendMessage()"
+        ></p-button>
       </div>
     </div>
+
   </section>
-
-  <!-- Right Sidebar: Room Details -->
-  <aside class="flex flex-col h-full w-64 shrink-0 overflow-y-auto border-l border-surface-container bg-surface-container-low">
-    <!-- Room Info -->
-    <div class="p-6 border-b border-surface-container">
-      <h3 class="text-base font-bold text-on-surface mb-1">Room Details</h3>
-      <p class="text-xs text-on-surface-variant mb-6 uppercase tracking-widest">Admin Managed</p>
-      <div class="space-y-4">
-        <div>
-          <span class="text-[10px] text-outline uppercase font-bold tracking-widest block mb-1">Room Owner</span>
-          <div class="flex items-center gap-2">
-            <img alt="Owner" class="w-6 h-6 rounded-full object-cover"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuBaw27m6aY1fDnaMf8NXEeVW1PfVLzsIZCx8HM2iL0ZFccTu_8q5yTZs8gHWYU0DCIvfdXAYYRbfhX1vX8pTgeoJ1471jrq2vOygNK7v3PfTlPk5-TPWSS6Kgly8Fc3GnjAAMiBO0Fpuzb76r6WzfpObqk73o24zfqfyztebcrxeRkRK-K_VAJDCKzMCn4u_0ixuzS0iZfUjs0wRsbSXYUuogj5FvUbfRLNxWfsqXfDLPhW_qB-txkopLrlBKwTw03jDF8bhluY-zI" />
-            <span class="text-sm font-medium text-on-surface">Sarah Jenkins</span>
-          </div>
-        </div>
-        <div>
-          <span class="text-[10px] text-outline uppercase font-bold tracking-widest block mb-1">Created</span>
-          <span class="text-sm text-on-surface">Jan 14, 2023</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Tabs -->
-    <nav class="flex px-4 py-2 bg-surface-container gap-4">
-      <div class="text-on-surface border-l-4 border-outline pl-2 py-2 flex items-center gap-2 cursor-pointer">
-        <span class="material-symbols-outlined text-sm">info</span>
-        <span class="font-bold text-sm">Info</span>
-      </div>
-      <div class="text-outline pl-3 py-2 flex items-center gap-2 hover:text-on-surface transition-all cursor-pointer">
-        <span class="material-symbols-outlined text-sm">group</span>
-        <span class="text-sm">Members</span>
-      </div>
-      <div class="text-outline pl-3 py-2 flex items-center gap-2 hover:text-on-surface transition-all cursor-pointer">
-        <span class="material-symbols-outlined text-sm">description</span>
-        <span class="text-sm">Files</span>
-      </div>
-    </nav>
-
-    <!-- Members List -->
-    <div class="flex-1 overflow-y-auto p-4 space-y-4">
-      <div class="text-[10px] text-outline uppercase font-bold tracking-widest mb-4">Members — 24</div>
-
-      <!-- Alice (Online) -->
-      <div class="flex items-center justify-between group cursor-pointer">
-        <div class="flex items-center gap-3">
-          <div class="relative">
-            <img class="w-8 h-8 rounded-full border-2 border-surface-container-low object-cover"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuChXa2Pev6zaTOaHNbkZaoYhqKjX0M4-6_a6u-ErpEbaurYY-5N5TW9QnGfEXW0HXx7JJ5_TqW7rkirmZ2L4O7mYmzq91zW4sBIAMz_MS6VmpIaWJMzp7Wre8wS1hwDnGtYSsZnMRzwcpZmfFzwpnniSAXtFMMP1l7szuKYhrD6tzbiKzbCbcazmMeaXClJDoPVwXNL0LtxFGGPhFIcy4L8JVftu4_CeBXQHVFM59ckmkEBkEUFEACnWM3gBspPMnH91F-F3vdRNUE"
-              alt="Alice Chen" />
-            <div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-status-online rounded-full border-2 border-surface-container-low"></div>
-          </div>
-          <span class="text-sm font-medium text-on-surface group-hover:text-primary transition-colors">Alice Chen</span>
-        </div>
-        <span class="px-1.5 py-0.5 bg-surface-container text-[9px] rounded font-bold text-on-surface-variant uppercase tracking-tighter">Admin</span>
-      </div>
-
-      <!-- Bob (AFK) -->
-      <div class="flex items-center group cursor-pointer">
-        <div class="flex items-center gap-3">
-          <div class="relative">
-            <img class="w-8 h-8 rounded-full border-2 border-surface-container-low object-cover"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuD1lUUBRJVeIGrgAGC6RcwMKnOmCiDUumR9P_O_oAGK8_8tNp2xAJkqP5a1Phxs23VBZji4ha8vGb34hpFpKdtxhOO1CmU7EhxAywz6cDkAQuNReLG0cG5W_GGFIYJxdx-4lSIs0lanSbAjuEY7gHNXDGzO21jll-jdG5Ovc182sFeFmwuNG1f3jjzpeP0iWO6V91EKyTHikT7eT1SsfCPVfNnqoj_GLlFXbp3dw4Zmz0qsBhgIYmWC5RulGng4Ct0VFfiFMcnAYJs"
-              alt="Bob Miller" />
-            <div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-status-afk rounded-full border-2 border-surface-container-low"></div>
-          </div>
-          <span class="text-sm font-medium text-on-surface group-hover:text-primary transition-colors">Bob Miller</span>
-        </div>
-      </div>
-
-      <!-- Carol (Offline) -->
-      <div class="flex items-center group cursor-pointer">
-        <div class="flex items-center gap-3">
-          <div class="relative">
-            <div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center border-2 border-surface-container-low">
-              <span class="material-symbols-outlined text-sm text-outline">person</span>
-            </div>
-            <div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-status-offline rounded-full border-2 border-surface-container-low"></div>
-          </div>
-          <span class="text-sm font-medium text-outline group-hover:text-primary transition-colors">Carol Vance</span>
-        </div>
-      </div>
-
-      <button class="mt-4 text-primary text-xs font-semibold hover:underline">View all members</button>
-    </div>
-  </aside>
 </div>
