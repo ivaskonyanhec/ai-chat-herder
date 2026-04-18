@@ -1,7 +1,8 @@
-# AI Chat Herder — Architecture Design
+# AI Chat Herder — Architecture
 
-**Date:** 2026-04-18
-**Status:** Approved
+**Date:** 2026-04-18 (revised — requirement-complete rewrite)
+**Status:** Active
+**Requirements source:** `requirements.md`
 
 ---
 
@@ -11,26 +12,38 @@
 2. [Tech Stack](#2-tech-stack)
 3. [System Design — Clean Architecture](#3-system-design--clean-architecture)
 4. [Security — Auth, Sessions & Ban Enforcement](#4-security--auth-sessions--ban-enforcement)
-5. [Presence Engine](#5-presence-engine)
+5. [Domain Model](#5-domain-model)
 6. [Database Schema](#6-database-schema)
-7. [Real-time Protocol — SignalR Hubs](#7-real-time-protocol--signalr-hubs)
-8. [Message Queue — RabbitMQ](#8-message-queue--rabbitmq)
-9. [File Storage](#9-file-storage)
-10. [Frontend — Angular 21](#10-frontend--angular-21)
-11. [Infrastructure — Docker Compose](#11-infrastructure--docker-compose)
+7. [API Design](#7-api-design)
+8. [Real-time Protocol — SignalR Hubs](#8-real-time-protocol--signalr-hubs)
+9. [Messaging Model](#9-messaging-model)
+10. [Attachments](#10-attachments)
+11. [Notifications System](#11-notifications-system)
+12. [Presence Engine](#12-presence-engine)
+13. [Room System](#13-room-system)
+14. [Moderation](#14-moderation)
+15. [UI Mapping](#15-ui-mapping)
+16. [Non-Functional Requirements](#16-non-functional-requirements)
+17. [Jabber / XMPP](#17-jabber--xmpp-optional--implement-last-on-explicit-request)
+18. [Decision Log](#18-decision-log)
 
 ---
 
 ## 1. Overview
 
-AI Chat Herder is a real-time online chat server supporting public rooms, multi-tab presence tracking, file attachments, session management, and activity logging. The system is designed for horizontal scaling from day one: multiple API replicas share state exclusively through Redis and PostgreSQL, with no in-process shared memory.
+AI Chat Herder is a classic web-based real-time chat server supporting:
 
-**Core constraints:**
-- Public rooms only (DMs and private rooms are schema-stubbed for future expansion)
-- Maximum file attachment size: 20 MB
-- AFK threshold: 60 seconds without a heartbeat
-- Session granularity: one session per browser tab group; multiple concurrent sessions supported and independently revocable
-- Bans take effect immediately, within milliseconds of issuance
+- User registration, authentication, and session management
+- Public and private chat rooms with owner/admin roles
+- One-to-one personal messaging (DMs) between mutual friends
+- Contacts/friends system with request/confirmation workflow
+- User-to-user blocking
+- File and image sharing with access control
+- Persistent message history with infinite scroll
+- Unread notification indicators
+- Online/AFK/offline presence with multi-tab support
+
+**Target scale:** 300 simultaneous users. Up to 1,000 participants per room. Typical user: ~20 rooms, ~50 contacts.
 
 ---
 
@@ -38,12 +51,12 @@ AI Chat Herder is a real-time online chat server supporting public rooms, multi-
 
 | Layer | Technology |
 |-------|-----------|
-| Backend API | .NET 10 Web API — Minimal APIs |
+| Backend API | .NET 10 — Minimal APIs (no controllers) |
 | Real-time | ASP.NET Core SignalR |
 | ORM | Entity Framework Core 10 + Npgsql |
 | Database | PostgreSQL 17 |
 | Cache / Presence | Redis 7 |
-| Message Broker | RabbitMQ 3.13 |
+| Message Broker | RabbitMQ 3.13 (activity logging) |
 | Frontend | Angular 21 (Signals, Standalone Components, Control Flow) |
 | Containerisation | Docker & Docker Compose |
 
@@ -56,22 +69,20 @@ AI Chat Herder is a real-time online chat server supporting public rooms, multi-
 ```
 ai-chat-herder/
 ├── src/
-│   ├── ChatHerder.Domain/           # Entities, Value Objects, Domain Events, Interfaces
-│   ├── ChatHerder.Application/      # Use Cases, DTOs, port interfaces
+│   ├── ChatHerder.Domain/           # Entities, enums, domain events, port interfaces
+│   ├── ChatHerder.Application/      # Use cases, DTOs, IFileStorage, IMessageBus
 │   ├── ChatHerder.Infrastructure/   # EF Core, Redis, RabbitMQ, LocalFileStorage
 │   └── ChatHerder.API/              # Minimal API endpoints, SignalR Hubs, DI wiring
-└── frontend/                        # Angular 21 standalone app
+└── frontend/                        # Angular 21 standalone SPA
 ```
 
-**Dependency rule (inward only):**
-- `Domain` has zero external dependencies — pure C# entities and domain interfaces.
-- `Application` depends only on `Domain` — no EF, no Redis, no SignalR, no RabbitMQ.
-- `Infrastructure` implements all port interfaces from `Application` using concrete adapters.
-- `API` wires DI, hosts Minimal API routes and SignalR hubs, calls `Application` services.
+**Dependency rule (strictly inward):**
+- `Domain` — zero external dependencies; pure C# entities and interface definitions.
+- `Application` — depends on `Domain` only; no EF, Redis, or SignalR imports.
+- `Infrastructure` — implements all Application port interfaces with concrete adapters.
+- `API` — wires DI, hosts routes and hubs, calls Application use cases.
 
 ### Application Port Interfaces
-
-Defined in `ChatHerder.Application`, implemented in `ChatHerder.Infrastructure`:
 
 ```
 IFileStorage        → LocalFileStorage (MVP) / S3FileStorage (future)
@@ -79,48 +90,45 @@ IMessageBus         → RabbitMqMessageBus
 IActivityLogger     → publishes ActivityEvent to RabbitMQ
 IPresenceStore      → RedisPresenceStore
 ISessionStore       → RedisSessionStore + EF Session persistence
-IBanStore           → RedisBanStore + EF Bans persistence
+IUnreadStore        → RedisUnreadStore + EF ReadMarker persistence
+IEmailSender        → SmtpEmailSender (password reset)
 ```
 
 ### API Layer — Minimal API Structure
 
 ```
 ChatHerder.API/
-├── Program.cs                          # Builder + app pipeline wiring only
+├── Program.cs
 ├── Endpoints/
-│   ├── AuthEndpoints.cs                # POST /auth/login, /auth/refresh, /auth/logout
-│   ├── RoomEndpoints.cs                # GET/POST /rooms, GET /rooms/{id}/messages
-│   ├── SessionEndpoints.cs             # GET /sessions, DELETE /sessions/{id}, DELETE /sessions/current
-│   └── FileEndpoints.cs                # POST /files/upload, GET /files/{id}
+│   ├── AuthEndpoints.cs
+│   ├── RoomEndpoints.cs
+│   ├── RoomInvitationEndpoints.cs
+│   ├── MessageEndpoints.cs
+│   ├── DialogEndpoints.cs
+│   ├── FriendEndpoints.cs
+│   ├── BlockEndpoints.cs
+│   ├── SessionEndpoints.cs
+│   ├── FileEndpoints.cs
+│   └── UserEndpoints.cs
 ├── Hubs/
 │   ├── ChatHub.cs
 │   └── PresenceHub.cs
 └── Middleware/
-    ├── BanCheckMiddleware.cs           # Runs first — Redis ban gate
-    └── SessionValidationMiddleware.cs  # Validates session_id claim against Redis
-```
-
-Each `*Endpoints.cs` is a static class with a single `Map(RouteGroupBuilder group)` method. `Program.cs` composes them:
-
-```csharp
-app.MapGroup("/api")
-   .MapAuth()
-   .MapRooms()
-   .MapSessions()
-   .MapFiles();
+    ├── BanCheckMiddleware.cs           # Platform-level ban gate (admin use)
+    └── SessionValidationMiddleware.cs
 ```
 
 ### Middleware Pipeline Order
 
 ```
-JWT Bearer Authentication    ← UseAuthentication() — validates token, populates HttpContext.User
-BanCheckMiddleware           ← reads userId claim from User, checks ban:{userId} in Redis → 403
-SessionValidationMiddleware  ← reads session_id claim, checks sessions:valid:{userId} in Redis → 401
-Authorization                ← UseAuthorization() — policy-based checks
-Endpoints / Hubs             ← business logic
+UseAuthentication()              ← populates HttpContext.User from JWT
+BanCheckMiddleware               ← reads userId claim → checks ban:{userId} in Redis → 403
+SessionValidationMiddleware      ← reads session_id claim → SISMEMBER sessions:valid → 401
+UseAuthorization()
+Endpoints / Hubs
 ```
 
-`BanCheckMiddleware` and `SessionValidationMiddleware` both depend on `HttpContext.User` being populated, so they must run after `UseAuthentication()`. Unauthenticated requests (missing/invalid JWT) are rejected by `UseAuthentication()` before either middleware is reached.
+Both `BanCheckMiddleware` and `SessionValidationMiddleware` require `HttpContext.User` claims and must therefore run after `UseAuthentication()`.
 
 ---
 
@@ -128,119 +136,98 @@ Endpoints / Hubs             ← business logic
 
 ### JWT Strategy
 
-- **Access token:** short-lived (15 minutes), carries `user_id`, `session_id`, `jti` claims.
-- **Refresh token:** opaque, 7-day TTL, stored as a column on the `Sessions` row in PostgreSQL.
-- JWT is passed as `?access_token=` query string on SignalR WebSocket connections (browser WebSocket API limitation).
+- **Access token:** 15-minute TTL. Claims: `user_id`, `session_id`, `jti`.
+- **Refresh token:** opaque, stored as a column on the `Sessions` row.
+  - TTL = **7 days** if `keepSignedIn = true` (persistent login across browser close).
+  - TTL = **24 hours** if `keepSignedIn = false`.
+- JWT passed as `?access_token=` on WebSocket connections (browser limitation).
 
 ### Session Materialisation
 
-Each login creates a `Sessions` row recording `UserAgent`, `IpAddress`, `CreatedAt`, `ExpiresAt`. Active session IDs are cached in Redis:
+Each login creates a `Sessions` row (`UserAgent`, `IpAddress`, `CreatedAt`, `ExpiresAt`, `KeepSignedIn`). Active session IDs cached in Redis:
 
 ```
 sessions:valid:{userId}  →  Set<sessionId>
 ```
 
-`SessionValidationMiddleware` checks `SISMEMBER sessions:valid:{userId} {session_id}` on every request. Revocation removes the session ID from the set instantly — no wait for token expiry.
+`SessionValidationMiddleware` calls `SISMEMBER sessions:valid:{userId} {session_id}` on every request. Revocation removes the entry instantly. Associated SignalR connections receive `ForceDisconnect` within milliseconds via `IHubContext<PresenceHub>`.
 
-On session revoke, all SignalR connections associated with that session are force-disconnected via:
-```
-IHubContext<PresenceHub>.Clients.Clients(connectionIds)
-    .SendAsync("ForceDisconnect", "session_revoked")
-```
-Connection IDs for the session are retrieved from `presence:session:{connectionId}` Redis keys scanned by session ID.
-
-### Immediate Ban Enforcement
-
-Pure stateless JWT cannot enforce bans within the access token lifetime. The solution is a **Redis ban gate**:
+### Password Reset Flow
 
 ```
-ban:{userId}  →  "1"   TTL = ban duration (no TTL for permanent bans)
+POST /api/auth/forgot-password
+  → Generate secure random token
+  → INSERT PasswordResetTokens (expires in 1 hour)
+  → IEmailSender.SendResetEmailAsync(email, token)
+
+POST /api/auth/reset-password  { token, newPassword }
+  → Validate token exists, not expired, not used
+  → UPDATE Users.PasswordHash
+  → SET PasswordResetTokens.UsedAt
+  → Revoke all existing sessions (force re-login everywhere)
 ```
 
-`BanCheckMiddleware` (first in pipeline) checks this key before any session or JWT logic runs. If present, the request is rejected with `403 Forbidden`.
+### Three Ban Types (Strictly Separated)
 
-**When a ban is issued, four operations execute:**
+| Type | Storage | Effect |
+|------|---------|--------|
+| **Platform ban** | Redis `ban:{userId}` (TTL) + `PlatformBans` table | Global 403 on all API requests. Admin-level moderation. |
+| **Room ban** | `RoomBans` table | User removed from room; cannot rejoin; loses file access. |
+| **User block** | `UserBlocks` table | DMs frozen/read-only; friend relationship terminated; presence hidden. |
 
-1. Write `Bans` row to PostgreSQL.
-2. `SET ban:{userId} 1 EX {durationSeconds}` in Redis.
-3. Revoke all active sessions: `DEL sessions:valid:{userId}`.
-4. Force-disconnect all SignalR connections: read `presence:tabs:{userId}` Sorted Set members, call `ForceDisconnect` on each `connectionId`.
+**Room ban immediate enforcement:** Revoke room membership in DB + broadcast `RemovedFromRoom` via SignalR to the banned user's connections in that room group.
 
-**Temporary ban expiry** is handled automatically by Redis TTL — no background job required. Manual early un-bans: `DEL ban:{userId}` + set `Bans.RevokedAt`.
+**User block immediate enforcement:** Broadcast `DialogFrozen` to both parties' connections.
+
+### Account Deletion
+
+```
+DELETE /api/auth/account
+  1. Load all rooms owned by user
+     → for each: delete messages + files + room record
+  2. DELETE RoomMembership WHERE UserId = userId (remove from all other rooms)
+  3. DELETE FriendRequest, Friendship, UserBlock involving user
+  4. SET Users.DeletedAt = now (soft delete; username + email reserved to prevent reuse)
+  5. Revoke all sessions + ForceDisconnect all SignalR connections
+```
 
 ---
 
-## 5. Presence Engine
+## 5. Domain Model
 
-### Redis Data Structures
+**User** — registered account. `Username` immutable after creation. Soft-deleted on removal (email/username reserved).
 
-```
-# Global set of connected userIds (for PresenceMonitorService enumeration)
-active:users                    Set        members=userId[]
+**Session** — materialised login session per browser. Tracks UserAgent and IP. Independently revocable.
 
-# Per-user tab registry
-presence:tabs:{userId}          SortedSet  member="{connectionId}:{tabId}"  score=Unix timestamp (last heartbeat)
+**PasswordResetToken** — single-use, 1-hour TTL token for password reset flow.
 
-# Reverse lookup for disconnect cleanup
-presence:conn:{connectionId}    String     value=userId    TTL=70s
+**Room** — chat room. Visibility: `Public` or `Private`. Exactly one owner who is always an admin and cannot leave.
 
-# Derived status (rebuilt on every tab change)
-presence:status:{userId}        String     value="online"|"afk"|"offline"   TTL=90s
+**RoomMembership** — persistent record of which users belong to which room, with role (`Owner` / `Admin` / `Member`). **This is the authoritative source of truth for membership** — Redis tracks only currently-connected users for presence, not membership.
 
-# connectionId → sessionId (for session-revoke forced disconnect)
-presence:session:{connectionId} String     value=sessionId    TTL=70s
+**RoomBan** — a user banned from a specific room by an admin. Prevents rejoin. Created whenever a member is removed by an admin.
 
-# Room membership
-room:members:{roomId}           Set        members=userId[]
-```
+**RoomInvitation** — invitation to a private room. States: `Pending` / `Accepted` / `Rejected`.
 
-`active:users` is maintained by `OnConnectedAsync` (`SADD`) and `OnDisconnectedAsync` (`SREM` when tab count reaches zero). The `PresenceMonitorService` calls `SMEMBERS active:users` once per poll cycle to get the enumerable set — avoiding a `SCAN` over all Redis keys.
+**Message** — room chat message. Supports reply reference (`ReplyToMessageId`), soft delete, and edit timestamp.
 
-### Tab Lifecycle
+**PersonalDialog** — a 1:1 conversation between exactly two mutual friends. Created on first DM. Can be frozen by a UserBlock.
 
-**OnConnectedAsync (PresenceHub):**
-1. Extract `userId` + `sessionId` from JWT claims; generate `tabId = Guid.NewGuid()`.
-2. `ZADD presence:tabs:{userId} {now} "{connectionId}:{tabId}"`.
-3. `SET presence:conn:{connectionId} {userId} EX 70`.
-4. `SET presence:session:{connectionId} {sessionId} EX 70`.
-5. Recompute `presence:status:{userId}` → `"online"`.
-6. Broadcast `UserStatusChanged` to all rooms the user currently occupies.
+**PersonalDialogMessage** — message within a dialog. Same feature set as room messages (replies, edit, delete by sender only).
 
-**OnDisconnectedAsync (PresenceHub):**
-1. `GET presence:conn:{connectionId}` → `userId`.
-2. `ZREM presence:tabs:{userId} "{connectionId}:{tabId}"`.
-3. `DEL presence:conn:{connectionId}`.
-4. If `ZCARD presence:tabs:{userId} == 0` → set status `"offline"`, broadcast.
-5. `SREM room:members:{roomId} userId` for each joined room.
+**Attachment** — uploaded file or image. Linked to one Message or PersonalDialogMessage. Includes optional `Comment`.
 
-### Heartbeat Mechanism
+**FriendRequest** — outbound request with optional message text. States: `Pending` / `Accepted` / `Rejected`.
 
-The Angular client sends `Heartbeat()` to `PresenceHub` every **30 seconds** from each active tab (2× safety margin before the 60s AFK threshold).
+**Friendship** — active friend relationship (created when FriendRequest is accepted). Gating condition for DMs and friend-list presence.
 
-**Server-side handler:**
-1. `ZADD presence:tabs:{userId} {now} "{connectionId}:{tabId}"` (update score).
-2. `SET presence:conn:{connectionId} {userId} EX 70` (refresh TTL).
-3. If current status is `"afk"` → recompute to `"online"`, broadcast `UserStatusChanged`.
+**UserBlock** — unidirectional block. Freezes DMs. Terminates friendship. Hides mutual presence.
 
-### AFK Detection — `PresenceMonitorService`
+**ReadMarker** — per-user per-context (room or dialog) last-read position. Durable unread count source.
 
-`IHostedService` polling every **20 seconds**:
+**ActivityLog** — audit record, written by `ActivityConsumer` from RabbitMQ events.
 
-```
-afk_threshold = now − 60s
-
-for each userId with active presence:status key:
-    stale = ZRANGEBYSCORE presence:tabs:{userId} 0 {afk_threshold}
-    live  = ZRANGEBYSCORE presence:tabs:{userId} {afk_threshold} +inf
-
-    if ZCARD(presence:tabs:{userId}) > 0 AND count(live) == 0:
-        SET presence:status:{userId} "afk"
-        broadcast UserStatusChanged(userId, "afk")
-```
-
-Complexity is O(stale connections), not O(all connections) — `ZRANGEBYSCORE` filters at the data structure level.
-
-The 70-second TTL on `presence:conn:*` keys acts as a self-healing backstop: if the monitor crashes, ghost-online users expire automatically within 70 seconds.
+**PlatformBan** — admin-issued platform-wide ban (optional moderation feature).
 
 ---
 
@@ -249,127 +236,380 @@ The 70-second TTL on `presence:conn:*` keys acts as a self-healing backstop: if 
 ```mermaid
 erDiagram
     Users {
-        uuid      Id              PK
-        string    Username        UK
-        string    Email           UK
+        uuid      Id                  PK
+        string    Username            UK
+        string    Email               UK
         string    PasswordHash
         string    AvatarUrl
         timestamp CreatedAt
-        timestamp UpdatedAt
+        timestamp DeletedAt
     }
 
     Sessions {
-        uuid      Id              PK
-        uuid      UserId          FK
-        string    RefreshToken    UK
+        uuid      Id                  PK
+        uuid      UserId              FK
+        string    RefreshToken        UK
         string    UserAgent
         string    IpAddress
+        bool      KeepSignedIn
         timestamp CreatedAt
         timestamp LastUsedAt
         timestamp ExpiresAt
         timestamp RevokedAt
     }
 
-    Rooms {
-        uuid      Id              PK
-        string    Name            UK
-        string    Description
-        uuid      CreatedByUserId FK
+    PasswordResetTokens {
+        uuid      Id                  PK
+        uuid      UserId              FK
+        string    Token               UK
         timestamp CreatedAt
-        bool      IsArchived
+        timestamp ExpiresAt
+        timestamp UsedAt
+    }
+
+    Rooms {
+        uuid      Id                  PK
+        string    Name                UK
+        string    Description
+        string    Visibility
+        uuid      OwnerId             FK
+        timestamp CreatedAt
+        timestamp DeletedAt
+    }
+
+    RoomMembership {
+        uuid      Id                  PK
+        uuid      RoomId              FK
+        uuid      UserId              FK
+        string    Role
+        timestamp JoinedAt
+    }
+
+    RoomBans {
+        uuid      Id                  PK
+        uuid      RoomId              FK
+        uuid      BannedUserId        FK
+        uuid      BannedByUserId      FK
+        string    Reason
+        timestamp CreatedAt
+        timestamp RevokedAt
+        uuid      RevokedByUserId     FK
+    }
+
+    RoomInvitations {
+        uuid      Id                  PK
+        uuid      RoomId              FK
+        uuid      InvitedByUserId     FK
+        uuid      InvitedUserId       FK
+        string    Status
+        timestamp CreatedAt
+        timestamp RespondedAt
     }
 
     Messages {
-        uuid      Id              PK
-        uuid      RoomId          FK
-        uuid      SenderId        FK
+        uuid      Id                  PK
+        uuid      RoomId              FK
+        uuid      SenderId            FK
         string    Content
-        uuid      AttachmentId    FK
+        uuid      ReplyToMessageId    FK
+        uuid      AttachmentId        FK
+        timestamp SentAt
+        timestamp EditedAt
+        timestamp DeletedAt
+        uuid      DeletedByUserId     FK
+    }
+
+    PersonalDialogs {
+        uuid      Id                  PK
+        uuid      User1Id             FK
+        uuid      User2Id             FK
+        timestamp CreatedAt
+        timestamp FrozenAt
+    }
+
+    PersonalDialogMessages {
+        uuid      Id                  PK
+        uuid      DialogId            FK
+        uuid      SenderId            FK
+        string    Content
+        uuid      ReplyToMessageId    FK
+        uuid      AttachmentId        FK
         timestamp SentAt
         timestamp EditedAt
         timestamp DeletedAt
     }
 
+    FriendRequests {
+        uuid      Id                  PK
+        uuid      SenderId            FK
+        uuid      ReceiverId          FK
+        string    Message
+        string    Status
+        timestamp CreatedAt
+        timestamp RespondedAt
+    }
+
+    Friendships {
+        uuid      Id                  PK
+        uuid      User1Id             FK
+        uuid      User2Id             FK
+        timestamp CreatedAt
+    }
+
+    UserBlocks {
+        uuid      Id                  PK
+        uuid      BlockerId           FK
+        uuid      BlockedUserId       FK
+        timestamp CreatedAt
+    }
+
     Attachments {
-        uuid      Id              PK
-        uuid      UploadedByUserId FK
+        uuid      Id                  PK
+        uuid      UploadedByUserId    FK
         string    FileName
         string    StoragePath
         string    ContentType
         bigint    SizeBytes
+        string    Comment
         timestamp UploadedAt
     }
 
-    Friendships {
-        uuid      Id              PK
-        uuid      RequesterId     FK
-        uuid      AddresseeId     FK
-        string    Status
-        timestamp CreatedAt
-        timestamp UpdatedAt
-    }
-
-    Bans {
-        uuid      Id              PK
-        uuid      BannedUserId    FK
-        uuid      BannedByUserId  FK
-        uuid      RoomId          FK
-        string    Reason
-        timestamp ExpiresAt
-        timestamp CreatedAt
-        timestamp RevokedAt
+    ReadMarkers {
+        uuid      Id                  PK
+        uuid      UserId              FK
+        string    ContextType
+        uuid      ContextId
+        uuid      LastReadMessageId   FK
+        timestamp LastReadAt
     }
 
     ActivityLogs {
-        uuid      Id              PK
-        uuid      UserId          FK
+        uuid      Id                  PK
+        uuid      UserId              FK
         string    EventType
         jsonb     Payload
         string    IpAddress
         timestamp OccurredAt
     }
 
-    Users      ||--o{ Sessions     : "owns"
-    Users      ||--o{ Messages     : "sends"
-    Users      ||--o{ Rooms        : "creates"
-    Users      ||--o{ Attachments  : "uploads"
-    Users      ||--o{ Friendships  : "requests"
-    Users      ||--o{ Friendships  : "receives"
-    Users      ||--o{ Bans         : "receives"
-    Users      ||--o{ Bans         : "issues"
-    Users      ||--o{ ActivityLogs : "generates"
-    Rooms      ||--o{ Messages     : "contains"
-    Rooms      ||--o| Bans         : "scopes"
-    Messages   ||--o| Attachments  : "carries"
+    PlatformBans {
+        uuid      Id                  PK
+        uuid      BannedUserId        FK
+        uuid      BannedByUserId      FK
+        string    Reason
+        timestamp ExpiresAt
+        timestamp CreatedAt
+        timestamp RevokedAt
+    }
+
+    Users                  ||--o{ Sessions                 : "owns"
+    Users                  ||--o{ PasswordResetTokens      : "requests"
+    Users                  ||--o{ RoomMembership           : "has"
+    Users                  ||--o{ RoomBans                 : "receives"
+    Users                  ||--o{ RoomBans                 : "issues"
+    Users                  ||--o{ RoomInvitations          : "sends"
+    Users                  ||--o{ RoomInvitations          : "receives"
+    Users                  ||--o{ Messages                 : "sends"
+    Users                  ||--o{ PersonalDialogs          : "participant-1"
+    Users                  ||--o{ PersonalDialogs          : "participant-2"
+    Users                  ||--o{ PersonalDialogMessages   : "sends"
+    Users                  ||--o{ FriendRequests           : "sends"
+    Users                  ||--o{ FriendRequests           : "receives"
+    Users                  ||--o{ Friendships              : "user-1"
+    Users                  ||--o{ Friendships              : "user-2"
+    Users                  ||--o{ UserBlocks               : "blocks"
+    Users                  ||--o{ UserBlocks               : "blocked-by"
+    Users                  ||--o{ Attachments              : "uploads"
+    Users                  ||--o{ ReadMarkers              : "tracks"
+    Rooms                  ||--o{ RoomMembership           : "has"
+    Rooms                  ||--o{ RoomBans                 : "enforces"
+    Rooms                  ||--o{ RoomInvitations          : "issues"
+    Rooms                  ||--o{ Messages                 : "contains"
+    Messages               ||--o| Messages                 : "replies-to"
+    Messages               ||--o| Attachments              : "carries"
+    PersonalDialogs        ||--o{ PersonalDialogMessages   : "contains"
+    PersonalDialogMessages ||--o| PersonalDialogMessages   : "replies-to"
+    PersonalDialogMessages ||--o| Attachments              : "carries"
 ```
 
 ### Indexes
 
 ```sql
--- Hot read path: paginated room history (partial — excludes soft-deleted rows)
-CREATE INDEX idx_messages_room_sent
-    ON Messages (RoomId, SentAt DESC)
-    WHERE DeletedAt IS NULL;
+-- Unique membership: one row per user per room
+CREATE UNIQUE INDEX idx_membership_room_user   ON RoomMembership (RoomId, UserId);
 
--- Session management: list active sessions per user
-CREATE INDEX idx_sessions_user_active
-    ON Sessions (UserId, ExpiresAt)
+-- Active ban check on room join / file access
+CREATE INDEX idx_roombans_room_user            ON RoomBans (RoomId, BannedUserId)
     WHERE RevokedAt IS NULL;
 
--- Refresh token lookup (single-row, must be O(1))
-CREATE UNIQUE INDEX idx_sessions_refresh ON Sessions (RefreshToken);
+-- Pending invitations for a user
+CREATE INDEX idx_invitations_user_pending      ON RoomInvitations (InvitedUserId)
+    WHERE Status = 'Pending';
 
--- Activity log: user history and event-type filtering
-CREATE INDEX idx_activity_user_time  ON ActivityLogs (UserId, OccurredAt DESC);
-CREATE INDEX idx_activity_event_time ON ActivityLogs (EventType, OccurredAt DESC);
+-- Hot read: paginated room history (cursor-based, excludes soft-deleted)
+CREATE INDEX idx_messages_room_cursor          ON Messages (RoomId, SentAt DESC, Id DESC)
+    WHERE DeletedAt IS NULL;
 
--- Ban check on every connect and message send
-CREATE INDEX idx_bans_user_expiry ON Bans (BannedUserId, ExpiresAt);
+-- Hot read: paginated dialog history
+CREATE INDEX idx_dm_messages_dialog_cursor     ON PersonalDialogMessages (DialogId, SentAt DESC, Id DESC)
+    WHERE DeletedAt IS NULL;
+
+-- Normalised friendship lookup (User1Id < User2Id enforced in application)
+CREATE UNIQUE INDEX idx_friendship_pair        ON Friendships (User1Id, User2Id);
+
+-- Normalised dialog lookup (User1Id < User2Id enforced in application)
+CREATE UNIQUE INDEX idx_dialog_pair            ON PersonalDialogs (User1Id, User2Id);
+
+-- Block lookup (both directions needed for DM gate check)
+CREATE UNIQUE INDEX idx_block_pair             ON UserBlocks (BlockerId, BlockedUserId);
+CREATE INDEX        idx_block_reverse          ON UserBlocks (BlockedUserId, BlockerId);
+
+-- Session management
+CREATE INDEX        idx_sessions_user_active   ON Sessions (UserId, ExpiresAt)
+    WHERE RevokedAt IS NULL;
+CREATE UNIQUE INDEX idx_sessions_refresh       ON Sessions (RefreshToken);
+
+-- Unread markers (unique per user per context)
+CREATE UNIQUE INDEX idx_readmarker_user_ctx    ON ReadMarkers (UserId, ContextType, ContextId);
+
+-- Activity log
+CREATE INDEX idx_activity_user_time            ON ActivityLogs (UserId, OccurredAt DESC);
+CREATE INDEX idx_activity_event_time           ON ActivityLogs (EventType, OccurredAt DESC);
+
+-- Public room catalog full-text search
+CREATE INDEX idx_rooms_public_name             ON Rooms (Name)
+    WHERE Visibility = 'Public' AND DeletedAt IS NULL;
+
+-- Password reset token lookup
+CREATE UNIQUE INDEX idx_prt_token              ON PasswordResetTokens (Token)
+    WHERE UsedAt IS NULL;
 ```
 
 ---
 
-## 7. Real-time Protocol — SignalR Hubs
+## 7. API Design
+
+All routes prefixed `/api`. Authentication required unless marked `(public)`.
+
+### Auth
+
+```
+POST   /auth/register              (public)  { email, username, password }
+POST   /auth/login                 (public)  { email, password, keepSignedIn }
+POST   /auth/logout                           revoke current session only
+POST   /auth/refresh               (public)  { refreshToken } → { accessToken, refreshToken }
+POST   /auth/forgot-password       (public)  { email }
+POST   /auth/reset-password        (public)  { token, newPassword }
+POST   /auth/change-password                 { currentPassword, newPassword }
+DELETE /auth/account                          cascade account deletion
+```
+
+### Sessions
+
+```
+GET    /sessions                   list active sessions (browser, IP, current flag)
+DELETE /sessions/{id}              revoke specific session
+DELETE /sessions/current           logout current session only
+```
+
+### Users
+
+```
+GET    /users/me                   current user profile
+PATCH  /users/me                   { avatarUrl }
+GET    /users/by-username/{name}   user lookup for friend request
+```
+
+### Rooms
+
+```
+GET    /rooms                      public catalog (?search=&page=&limit=)
+POST   /rooms                      { name, description, visibility }
+GET    /rooms/{id}                 room detail + caller membership status
+PATCH  /rooms/{id}                 { name?, description?, visibility? }  [owner]
+DELETE /rooms/{id}                 cascade messages + files  [owner]
+POST   /rooms/{id}/join            join public room
+DELETE /rooms/{id}/leave           leave (owner cannot leave)
+GET    /rooms/{id}/messages        cursor-based history (?before={messageId}&limit=50)
+GET    /rooms/{id}/members         member list enriched with presence status
+```
+
+### Room Admin
+
+```
+GET    /rooms/{id}/bans                         [admin]  list active bans (username, banned-by, date)
+POST   /rooms/{id}/members/{userId}/ban         [admin]  ban = remove member
+DELETE /rooms/{id}/bans/{userId}                [admin]  lift ban
+POST   /rooms/{id}/members/{userId}/make-admin  [owner]  promote to admin
+DELETE /rooms/{id}/members/{userId}/admin       [owner]  demote admin
+DELETE /rooms/{id}/messages/{messageId}         [admin]  delete any room message
+```
+
+### Room Invitations
+
+```
+GET    /rooms/{id}/invitations      [admin]  list pending invitations
+POST   /rooms/{id}/invitations      [admin]  { username }  send invitation
+GET    /invitations                           pending invitations for current user
+POST   /invitations/{id}/accept
+POST   /invitations/{id}/reject
+```
+
+### Messages (room)
+
+```
+PATCH  /messages/{id}              { content }  [author only, max 3 KB]
+DELETE /messages/{id}              [author or room admin]
+```
+
+### Friends
+
+```
+GET    /friends                    friend list with current presence status
+GET    /friends/requests           incoming pending requests
+POST   /friends/requests           { username, message? }  send request
+POST   /friends/requests/{id}/accept
+POST   /friends/requests/{id}/reject
+DELETE /friends/{userId}           remove friend
+```
+
+### Blocks
+
+```
+GET    /blocks                     list of users blocked by current user
+POST   /blocks                     { userId }  block user
+DELETE /blocks/{userId}            unblock user
+```
+
+### Personal Dialogs (DMs)
+
+```
+GET    /dialogs                    all dialogs sorted by last message timestamp
+POST   /dialogs                    { userId }  create or retrieve existing dialog
+GET    /dialogs/{id}               dialog detail
+GET    /dialogs/{id}/messages      cursor-based history (?before={messageId}&limit=50)
+PATCH  /dm-messages/{id}           { content }  [sender only]
+DELETE /dm-messages/{id}           [sender only]
+```
+
+### Files
+
+```
+POST   /files/upload               multipart/form-data; enforces 20 MB / 3 MB (image) limits
+GET    /files/{attachmentId}       access-controlled stream download
+```
+
+### Notifications
+
+```
+GET    /unread                     all unread counts for current user (rooms + dialogs)
+POST   /rooms/{id}/read            mark room read → clear unread counter
+POST   /dialogs/{id}/read          mark dialog read → clear unread counter
+```
+
+---
+
+## 8. Real-time Protocol — SignalR Hubs
 
 ### Connection
 
@@ -378,7 +618,7 @@ CREATE INDEX idx_bans_user_expiry ON Bans (BannedUserId, ExpiresAt);
 /hubs/chat       →  ChatHub       RequireAuthorization()
 ```
 
-JWT is passed as `?access_token=` query string — the only mechanism available for browser WebSocket upgrades. Angular's `SignalRService` manages both connections, refreshes the access token before reconnect, and applies exponential backoff with jitter.
+JWT as `?access_token=` query string. Angular `SignalRService` manages both connections with token refresh on reconnect and exponential backoff (base 1s, cap 30s).
 
 ---
 
@@ -388,278 +628,653 @@ JWT is passed as `?access_token=` query string — the only mechanism available 
 
 | Method | Parameters | Description |
 |--------|-----------|-------------|
-| `Heartbeat` | — | Updates tab timestamp in Redis Sorted Set every 30s |
-| `JoinRoom` | `roomId: string` | Adds user to SignalR group + `room:members:{roomId}` Redis Set; server broadcasts `RoomMembersSnapshot` |
-| `LeaveRoom` | `roomId: string` | Removes from group + Redis Set |
+| `Heartbeat` | — | Updates tab score in Redis Sorted Set; resets AFK timer |
+| `JoinRoom` | `roomId` | Add connection to SignalR group `room:{roomId}` |
+| `LeaveRoom` | `roomId` | Remove connection from room group |
+
+**OnConnectedAsync:**
+1. Register tab in Redis Sorted Set (`ZADD presence:tabs:{userId}`).
+2. Set `presence:status:{userId}` → `"online"`. Broadcast `UserStatusChanged` to `user-presence:{userId}` group.
+3. Load user's active room memberships from DB → `Groups.AddToGroupAsync` for each `room:{roomId}`.
+4. Load user's friends from DB → for each friend F, `Groups.AddToGroupAsync(connId, "user-presence:{F.UserId}")`. This subscribes the connecting user to all friends' future status broadcasts.
+5. Send unread counts from Redis (or recompute from DB if Redis is cold) → `UnreadCountChanged` events.
+
+**OnDisconnectedAsync:**
+1. Remove tab from Redis Sorted Set. If tab count → 0: status → `"offline"`, broadcast `UserStatusChanged` to `user-presence:{userId}`.
 
 **Server → Client:**
 
 | Method | Payload | Description |
 |--------|---------|-------------|
 | `UserStatusChanged` | `{ userId, status }` | `"online"` \| `"afk"` \| `"offline"` |
-| `RoomMembersSnapshot` | `{ roomId, members[] }` | Full member list snapshot on room join |
-| `ForceDisconnect` | `{ reason }` | Session revoked or ban issued; client clears auth state and redirects to `/login` |
+| `RoomMembersSnapshot` | `{ roomId, members[] }` | Full member list on JoinRoom (each entry includes presence status) |
+| `MemberJoined` | `{ roomId, user }` | Another user joined the room |
+| `MemberLeft` | `{ roomId, userId }` | Another user left or was removed |
+| `RemovedFromRoom` | `{ roomId, reason }` | Current user was banned; client removes room from list |
+| `FriendRequestReceived` | `{ requestId, fromUserId, fromUsername, message }` | Incoming friend request |
+| `FriendRequestAccepted` | `{ userId, username }` | Friend accepted current user's request |
+| `RoomInvitationReceived` | `{ invitationId, roomId, roomName, fromUserId }` | Incoming private room invitation |
+| `DialogFrozen` | `{ dialogId }` | User block applied; DM is now read-only |
+| `ForceDisconnect` | `{ reason }` | Session revoked or platform ban; client redirects to `/login` |
 
 ---
 
 ### ChatHub — `/hubs/chat`
 
-**Client → Server:**
+**Client → Server (rooms):**
 
 | Method | Parameters | Description |
 |--------|-----------|-------------|
-| `SendMessage` | `roomId, content, attachmentId?` | Validates ban + room membership; persists; broadcasts; publishes `message.sent` to RabbitMQ |
-| `EditMessage` | `messageId, newContent` | Own messages only; server enforces ownership |
-| `DeleteMessage` | `messageId` | Soft delete — sets `DeletedAt`; own messages only |
+| `SendMessage` | `roomId, content, replyToId?, attachmentId?` | Validate membership + ban; enforce 3 KB limit; persist; broadcast |
+| `EditMessage` | `messageId, newContent` | Author only; enforce 3 KB limit; update `EditedAt` |
+| `DeleteMessage` | `messageId` | Author or room admin |
 | `StartTyping` | `roomId` | Ephemeral — never persisted, never queued |
 | `StopTyping` | `roomId` | Ephemeral |
+
+**Client → Server (DMs):**
+
+| Method | Parameters | Description |
+|--------|-----------|-------------|
+| `SendDirectMessage` | `dialogId, content, replyToId?, attachmentId?` | Validate friendship + no block; enforce 3 KB limit; persist; deliver |
+| `EditDirectMessage` | `messageId, newContent` | Sender only |
+| `DeleteDirectMessage` | `messageId` | Sender only |
+| `StartTypingDM` | `dialogId` | Ephemeral |
+| `StopTypingDM` | `dialogId` | Ephemeral |
 
 **Server → Client:**
 
 | Method | Payload | Description |
 |--------|---------|-------------|
-| `MessageReceived` | `MessageDto` | New message; fan-out via Redis SignalR backplane across replicas |
-| `MessageEdited` | `MessageDto` | Edited message |
-| `MessageDeleted` | `{ messageId, roomId }` | Soft-deleted message |
-| `UserTyping` | `{ roomId, userId, isTyping }` | Typing indicator |
+| `MessageReceived` | `MessageDto` | New room message; fan-out via Redis backplane |
+| `MessageEdited` | `MessageDto` | Edited room message |
+| `MessageDeleted` | `{ messageId, roomId }` | Soft-deleted room message |
+| `UserTyping` | `{ roomId, userId, isTyping }` | Room typing indicator (ephemeral) |
+| `DirectMessageReceived` | `DialogMessageDto` | New DM |
+| `DirectMessageEdited` | `DialogMessageDto` | Edited DM |
+| `DirectMessageDeleted` | `{ messageId, dialogId }` | Deleted DM |
+| `UserTypingInDialog` | `{ dialogId, userId, isTyping }` | DM typing indicator |
+| `UnreadCountChanged` | `{ contextType, contextId, count }` | Badge update |
 
-### Cross-Replica Message Flow
+### DM Delivery
+
+DMs are delivered by looking up both participants' `connectionId` entries from `presence:tabs:{userId}` and using `IHubContext<ChatHub>.Clients.Clients(connectionIds)`. No SignalR group is needed — dialogs have exactly two fixed participants. The Redis backplane propagates delivery across replicas.
+
+### Cross-Replica Room Message Flow
 
 ```
-Client Tab A → Replica 1
-  ChatHub.SendMessage()
-    → Application.SendMessageUseCase
-        → EF Core → PostgreSQL           (persist)
-        → Groups.All(roomId).SendAsync() (Redis backplane fans out to all replicas)
-        → RabbitMQ publish "message.sent" (ActivityConsumer logs async)
+Client → Replica 1: ChatHub.SendMessage()
+  → Application.SendMessageUseCase
+      → Validate RoomMembership (DB)
+      → Validate no active RoomBan (DB)
+      → EF Core INSERT Messages
+      → Groups.All("room:{roomId}").SendAsync("MessageReceived")  ← Redis backplane
+      → RabbitMQ publish "message.sent"                           ← ActivityConsumer
 
-Client Tab B → Replica 2
-  ← receives MessageReceived via backplane
+Client on Replica 2 ← receives MessageReceived via Redis backplane
 ```
 
-Typing indicators bypass RabbitMQ entirely — they are ephemeral, have no audit value, and the Redis backplane delivers them cross-replica for free.
+Typing indicators bypass RabbitMQ — ephemeral, no audit value, delivered cross-replica by backplane for free.
 
 ---
 
-## 8. Message Queue — RabbitMQ
+## 9. Messaging Model
 
-### Topology
+### Text Constraints
 
-```
-Exchange: chat.events   (topic, durable)
+- Maximum: **3 KB** (3,072 bytes UTF-8). Enforced server-side in hub methods before persistence; returns `HubException` if exceeded. Also validated at REST edit endpoints.
+- Encoding: UTF-8. PostgreSQL `text` column requires no additional configuration.
+- Emoji: natively supported (Unicode code points stored as UTF-8).
 
-Routing keys published by the API:
-  message.sent
-  message.edited
-  message.deleted
-  user.connected
-  user.disconnected
-  user.joined_room
-  user.left_room
-  user.banned
-  session.revoked
+### Message Replies
 
-Queue: activity.log     binding: chat.events.#
-  Consumer: ActivityConsumer (IHostedService in Infrastructure)
-  → Deserialises ActivityEvent
-  → INSERT ActivityLogs row via EF Core
-```
-
-### ActivityEvent Shape
+`Messages.ReplyToMessageId` and `PersonalDialogMessages.ReplyToMessageId` are nullable self-referential FKs. The server embeds a `ReplyTo` snapshot in the returned DTO rather than a live FK chain — this preserves the quoted text even if the original message is later soft-deleted.
 
 ```csharp
-record ActivityEvent(
-    Guid      UserId,
-    string    EventType,
-    JsonNode  Payload,
-    string?   IpAddress,
-    DateTime  OccurredAt
+record MessageDto(
+    Guid        Id,
+    string      Content,
+    UserSummary Sender,
+    DateTime    SentAt,
+    DateTime?   EditedAt,
+    bool        IsDeleted,
+    MessageDto? ReplyTo,        // embedded snapshot; not a recursive FK chain
+    AttachmentDto? Attachment
 );
 ```
 
-`Payload` is event-specific JSON — `message.sent` includes `roomId` + `messageId`; `user.banned` includes `bannedByUserId` + `reason` + `expiresAt`.
+### Edit Indicator
+
+When `EditedAt` is set, the UI renders a grey "edited" label next to the timestamp. No edit history is stored — only the current content and timestamp.
+
+### Delete Rules
+
+| Context | Who Can Delete |
+|---------|---------------|
+| Room message | Author (own) or any room Admin / Owner |
+| DM message | Sender only (no admin concept in DMs) |
+
+Deletion is soft (`DeletedAt` + `DeletedByUserId` set). The DTO sets `IsDeleted = true` and omits `Content`; the UI renders `"Message deleted"` in place. Reply snapshots of deleted messages still render as quotes with the original content (captured at reply time).
+
+### History Pagination (Cursor / Keyset)
+
+```
+GET /api/rooms/{id}/messages?before={messageId}&limit=50
+```
+
+Server query (PostgreSQL):
+```sql
+SELECT * FROM Messages
+WHERE RoomId = {id}
+  AND DeletedAt IS NULL
+  AND (SentAt, Id) < (SELECT SentAt, Id FROM Messages WHERE Id = {cursor})
+ORDER BY SentAt DESC, Id DESC
+LIMIT 50
+```
+
+Returns newest-first; Angular reverses for display. First load omits `before`. Supports 10,000+ message rooms with O(log N) index scan. Same pattern applies to dialog messages.
 
 ---
 
-## 9. File Storage
+## 10. Attachments
 
-### Interface
+### Size Limits
 
-```csharp
-public interface IFileStorage
-{
-    Task<StoredFile> SaveAsync(Stream content, string fileName, string contentType, CancellationToken ct);
-    Task<Stream>     ReadAsync(string storagePath, CancellationToken ct);
-    Task             DeleteAsync(string storagePath, CancellationToken ct);
-}
-```
+| Content type | Limit |
+|---|---|
+| `image/*` (detected by `Content-Type`) | **3 MB** |
+| All other types | **20 MB** |
 
-`LocalFileStorage` (MVP) reads the base path from `IConfiguration["Storage:BasePath"]` (Docker volume mount). A future `S3FileStorage` swaps the implementation with no changes to Application or Domain layers.
+Enforced at upload before streaming to disk. Returns `413 Payload Too Large` with a body describing the applicable limit.
 
-### Local Filesystem Layout
+### Upload Methods
 
-```
-/app/uploads/
-└── {year}/
-    └── {month}/
-        └── {userId}/
-            └── {attachmentId}_{originalFileName}
-```
+1. **Explicit button:** `multipart/form-data` POST to `/api/files/upload` with optional `comment` field.
+2. **Copy/paste:** Angular intercepts `ClipboardEvent` on the message input, reads `image/*` blobs from `clipboardData.items`, and POSTs them as `multipart/form-data` automatically. No server-side changes required.
 
-`Attachments.StoragePath` stores the relative path from `/app/uploads/`.
+### Attachment Metadata
 
-### Upload Flow
+`Attachments` row stores: `FileName` (original name from `Content-Disposition`), `ContentType`, `SizeBytes`, `StoragePath`, and optional `Comment` (sent as a `comment` form field alongside the file).
 
-```
-POST /api/files/upload
-  → BanCheckMiddleware
-  → SessionValidationMiddleware
-  → 413 if Content-Length > 20 MB
-  → IFileStorage.SaveAsync()
-  → INSERT Attachments row (UploadedByUserId = current user)
-  → return { attachmentId, fileName, contentType, sizeBytes }
-```
+### Access Control
 
-The returned `attachmentId` is passed to `ChatHub.SendMessage()`. Upload and send are decoupled — the file exists before the message is created. `OrphanCleanupService` (IHostedService, runs nightly) deletes `Attachments` rows with no linked `Message` older than 24 hours and calls `IFileStorage.DeleteAsync()`.
-
-### Download Flow
+Files are never served from a static path. All access goes through the download endpoint.
 
 ```
 GET /api/files/{attachmentId}
-  → BanCheckMiddleware
-  → SessionValidationMiddleware
-  → Load Attachments row by Id → 404 if absent
-  → Verify linked Message exists and is not soft-deleted
-  → IFileStorage.ReadAsync() → stream response with Content-Type header
+  → Load Attachments row → 404 if absent
+  → Determine context (room message or dialog message)
+  → If room message:
+      Check RoomMembership: user must be an active (non-banned) member → 403 if not
+  → If dialog message:
+      Check PersonalDialogs.User1Id / User2Id → 403 if not a participant
+      Frozen dialogs: allow download (history visible, read-only)
+  → IFileStorage.ReadAsync() → stream with Content-Type header
 ```
 
-Files are **never served from a static path**. All access goes through the API endpoint to enforce authorisation on every request.
+### Filesystem Layout
+
+```
+/app/uploads/{year}/{month}/{userId}/{attachmentId}_{originalFileName}
+```
+
+`Attachments.StoragePath` stores the relative path. Base path from `IConfiguration["Storage:BasePath"]`.
+
+`IFileStorage` abstraction enables zero-code migration to S3/MinIO by swapping the DI registration.
+
+### Orphan Cleanup
+
+`OrphanCleanupService` (IHostedService, nightly): finds `Attachments` rows with no linked message that are older than 24 hours, calls `IFileStorage.DeleteAsync()`, and deletes the DB row.
+
+### Room / Dialog Deletion Cascade
+
+On room delete: load all `Messages` with `AttachmentId IS NOT NULL` → `IFileStorage.DeleteAsync()` per file → delete messages → delete room.
+
+On account delete (owned rooms): same cascade per owned room.
 
 ---
 
-## 10. Frontend — Angular 21
+## 11. Notifications System
 
-### Architecture
+### Unread Count Model
+
+Two-tier: Redis for fast increments/reads; PostgreSQL `ReadMarkers` for durable last-read position.
 
 ```
-frontend/
-├── app/
-│   ├── core/
-│   │   ├── auth/           # AuthService (JWT store via Signals), AuthInterceptor
-│   │   ├── signalr/        # SignalRService (manages ChatHub + PresenceHub connections)
-│   │   └── guards/         # authGuard (functional)
-│   ├── features/
-│   │   ├── rooms/          # RoomListComponent, RoomViewComponent (standalone)
-│   │   ├── chat/           # MessageListComponent, MessageInputComponent
-│   │   ├── presence/       # PresenceBadgeComponent, RoomMembersComponent
-│   │   ├── sessions/       # SessionsComponent (active session list + revoke)
-│   │   └── files/          # FileUploadComponent, FilePreviewComponent
-│   └── app.routes.ts       # Standalone route config with lazy-loaded feature routes
+# Redis — unread counters (integer strings)
+unread:{userId}:room:{roomId}        →  count
+unread:{userId}:dialog:{dialogId}    →  count
 ```
 
-### Key Patterns
+### Increment Flow (on new message)
 
-- **Signals throughout:** `AuthService` exposes `currentUser = signal<User | null>(null)`. `PresenceService` exposes `roomMembers = signal<Map<string, UserPresence[]>>(new Map())`.
-- **Control Flow:** `@if`, `@for`, `@switch` replace `*ngIf`/`*ngFor` directives in all templates.
-- **SignalRService** manages both hub connections, handles token refresh before reconnect, and applies exponential backoff with jitter (base 1s, cap 30s).
-- **SessionsComponent:** reads `session_id` claim from the decoded access token to mark the current session in the list. Each row has a standalone "Log out" button that calls `DELETE /api/sessions/{id}` and listens for `ForceDisconnect` to redirect if the current session was revoked from another device.
+```
+New message persisted
+  → For each member of the room (or dialog participant) who is NOT the sender:
+      IF user is not actively viewing the context:
+          INCR unread:{userId}:room:{roomId}
+          Publish UnreadCountChanged to user's connections via IHubContext<ChatHub>
+```
+
+"Actively viewing" = tracked client-side via a `POST /api/rooms/{id}/read` call when the user opens a chat, and a `POST /api/rooms/{id}/read` call on window focus if the chat is already open.
+
+### Clear Flow (on open)
+
+```
+Client opens room or dialog
+  → POST /api/rooms/{id}/read  or  POST /api/dialogs/{id}/read
+      → DEL unread:{userId}:room:{roomId}
+      → UPSERT ReadMarkers (LastReadMessageId = latest, LastReadAt = now)
+      → Publish UnreadCountChanged { count: 0 } to client connections
+```
+
+### On Reconnect / Cold Start
+
+`PresenceHub.OnConnectedAsync` rehydrates unread counts:
+1. Load `ReadMarkers` for current user.
+2. For each context, count messages with `SentAt > LastReadAt` from DB.
+3. Write counts to Redis.
+4. Send `UnreadCountChanged` for each context with count > 0.
 
 ---
 
-## 11. Infrastructure — Docker Compose
+## 12. Presence Engine
+
+### Redis Data Structures
+
+```
+active:users                    Set        members=userId[]
+                                           Maintained by OnConnected/OnDisconnected;
+                                           enumerated by PresenceMonitorService
+
+presence:tabs:{userId}          SortedSet  member="{connId}:{tabId}"
+                                           score=Unix timestamp of last heartbeat
+
+presence:conn:{connId}          String     value=userId    TTL=70s
+
+presence:status:{userId}        String     value="online"|"afk"|"offline"   TTL=90s
+
+presence:session:{connId}       String     value=sessionId    TTL=70s
+
+sessions:valid:{userId}         Set        members=sessionId[]
+```
+
+Note: `room:members:{roomId}` is **not** in Redis. Room membership lives in the `RoomMembership` PostgreSQL table. Redis tracks only which users are currently *connected*, not who *belongs* to a room. This distinction is critical: file access control and room membership checks query PostgreSQL, never Redis.
+
+### Heartbeat
+
+Client sends `Heartbeat()` to PresenceHub every **30 seconds** per active tab (2× margin before 60s AFK threshold). Server:
+1. `ZADD presence:tabs:{userId} {now} "{connId}:{tabId}"`.
+2. `SET presence:conn:{connId} {userId} EX 70`.
+3. If current status was `"afk"` → recompute to `"online"`, broadcast `UserStatusChanged` to `user-presence:{userId}`.
+
+### AFK Detection — `PresenceMonitorService`
+
+`IHostedService` polling every **20 seconds**:
+
+```
+afk_threshold = now − 60s
+
+for each userId in SMEMBERS active:users:
+    live  = ZRANGEBYSCORE presence:tabs:{userId} {afk_threshold} +inf
+    total = ZCARD presence:tabs:{userId}
+
+    if total > 0 AND count(live) == 0 AND status != "afk":
+        SET presence:status:{userId} "afk"
+        broadcast UserStatusChanged to user-presence:{userId}
+        broadcast UserStatusChanged to each room group (room:{roomId}) per user's memberships
+```
+
+`ZRANGEBYSCORE` is O(log N + M) where M is only the matching entries — O(stale connections), not O(all connections). The 70s TTL on `presence:conn:*` self-heals ghost-online users if the monitor stops.
+
+### Friend Presence Subscription
+
+Pattern: `user-presence:{userId}` is a SignalR group that receives status updates *about* `userId`. When user A connects, for each friend F, `Groups.AddToGroupAsync(A.connId, "user-presence:{F.UserId}")`. Broadcasting status changes to `user-presence:{userId}` reaches all online friends across all replicas via the Redis backplane.
+
+---
+
+## 13. Room System
+
+### Membership Lifecycle
+
+```
+User joins public room (POST /rooms/{id}/join):
+  1. Check RoomBans — 403 if active ban
+  2. INSERT RoomMembership (Role = Member)
+  3. Broadcast MemberJoined to "room:{id}" SignalR group
+  4. Client calls PresenceHub.JoinRoom(roomId) → added to SignalR group
+
+User leaves room (DELETE /rooms/{id}/leave):
+  1. 400 if user is Owner (owners cannot leave, only delete)
+  2. DELETE RoomMembership
+  3. Broadcast MemberLeft to "room:{id}"
+  4. Client calls PresenceHub.LeaveRoom(roomId)
+
+Admin bans member (POST /rooms/{id}/members/{userId}/ban):
+  1. INSERT RoomBans
+  2. DELETE RoomMembership
+  3. Broadcast MemberLeft to "room:{id}"
+  4. Broadcast RemovedFromRoom directly to banned user's connections
+  5. Remove banned user's connections from "room:{id}" via IHubContext<PresenceHub>
+```
+
+### Private Room Invitations
+
+```
+Admin sends invitation (POST /rooms/{id}/invitations { username }):
+  1. Verify invitee not already a member and not banned
+  2. INSERT RoomInvitations (Status = Pending)
+  3. Broadcast RoomInvitationReceived SignalR event to invitee's connections via IHubContext<PresenceHub>
+
+Invitee accepts (POST /invitations/{id}/accept):
+  1. UPDATE RoomInvitations.Status = Accepted
+  2. INSERT RoomMembership (Role = Member)
+  3. Broadcast MemberJoined to "room:{id}"
+
+Invitee rejects (POST /invitations/{id}/reject):
+  1. UPDATE RoomInvitations.Status = Rejected
+```
+
+### Owner / Admin Permission Matrix
+
+| Action | Owner | Admin | Member |
+|--------|:-----:|:-----:|:------:|
+| Delete room | ✓ | — | — |
+| Change room settings | ✓ | — | — |
+| Promote member to admin | ✓ | — | — |
+| Demote admin | ✓ (not self) | — | — |
+| Ban / remove member | ✓ | ✓ | — |
+| Unban member | ✓ | ✓ | — |
+| Delete any message | ✓ | ✓ | — |
+| Delete own message | ✓ | ✓ | ✓ |
+| View ban list | ✓ | ✓ | — |
+| Invite to private room | ✓ | ✓ | — |
+| Leave room | — | ✓ | ✓ |
+
+### Room Deletion Cascade
+
+```
+DELETE /rooms/{id}  [owner only]
+  1. Load all Attachments via Messages WHERE RoomId = id
+     → IFileStorage.DeleteAsync() for each file
+  2. DELETE Messages WHERE RoomId = id
+  3. DELETE RoomMembership, RoomBans, RoomInvitations WHERE RoomId = id
+  4. SET Rooms.DeletedAt = now
+  5. Broadcast room-deleted event to "room:{id}" → clients navigate away
+```
+
+### Public Room Catalog
+
+`GET /api/rooms?search=term&page=1&limit=20`
+
+Returns only public, non-deleted rooms. Each entry includes `memberCount` (COUNT from RoomMembership). `search` applies `ILIKE '%term%'` on `Name` using `idx_rooms_public_name`. Member count is a live aggregate — no denormalised counter needed at 300-user scale.
+
+---
+
+## 14. Moderation
+
+### Room Bans
+
+Removing a member equals banning. `RoomBans` table is the authoritative record.
+
+- On ban: INSERT RoomBans → DELETE RoomMembership → `RemovedFromRoom` SignalR event → remove from room SignalR group.
+- Access to room messages and files revoked immediately (enforced by RoomMembership check at query time — no Redis dependency).
+- Unban: SET `RoomBans.RevokedAt`; user may rejoin the public room freely.
+
+### User-to-User Blocks
+
+`UserBlocks` table. Unidirectional (A blocks B ≠ B blocks A).
+
+**On block:**
+1. INSERT UserBlocks.
+2. DELETE Friendship (if exists).
+3. SET `PersonalDialogs.FrozenAt = now` (if dialog exists).
+4. Broadcast `DialogFrozen` to both parties' connections.
+
+**Frozen dialog rules:**
+- History visible to both parties (read-only).
+- No new messages or attachments can be sent.
+- Existing attachments remain downloadable (history access preserved).
+- A new DM cannot be initiated until the block is lifted.
+
+**Block check on `SendDirectMessage`:**
+```
+1. Verify both parties are dialog participants
+2. Check UserBlocks in BOTH directions → HubException("blocked") if any row found
+3. Check PersonalDialogs.FrozenAt → HubException("frozen") if set
+4. Persist and deliver
+```
+
+### Three Ban Types — Separation Summary
+
+| Concept | Table | Who Issues | Scope | Effect |
+|---------|-------|-----------|-------|--------|
+| Room ban | `RoomBans` | Room admin/owner | One room | Locked out of that room; file access revoked |
+| User block | `UserBlocks` | Any user | DMs between the two | DMs frozen; friendship terminated |
+| Platform ban | `PlatformBans` + Redis | System admin | All API access | Global 403 |
+
+---
+
+## 15. UI Mapping
+
+### Navigation Bar
+
+```
+ChatLogo | Public Rooms | Private Rooms | Contacts | Sessions | Profile ▼ | Sign out
+```
+
+| Item | Route | Source |
+|------|-------|--------|
+| Public Rooms | `/rooms/public` | `GET /api/rooms` |
+| Private Rooms | `/rooms/private` | `GET /api/rooms` (user's private memberships) |
+| Contacts | `/contacts` | `GET /api/friends` + SignalR presence |
+| Sessions | `/sessions` | `GET /api/sessions` |
+| Profile | `/profile` | `GET /api/users/me` |
+
+### Side Panel
+
+```
+Search [______________]
+
+ROOMS
+  > Public Rooms
+    • general        (3)   ← unread badge
+    • engineering
+  > Private Rooms
+    • core-team      (1)
+
+CONTACTS
+    ● Alice
+    ◐ Bob (AFK)
+    ○ Carol          (2)   ← unread badge
+```
+
+Compacted to accordion when user enters a room. Presence badges from Angular `PresenceService`:
+```typescript
+presenceMap = signal<Map<string, 'online' | 'afk' | 'offline'>>(new Map());
+```
+Updated by `UserStatusChanged` SignalR events from the `user-presence:*` groups.
+
+### Chat Window
+
+```
+# engineering-room
+──────────────────────────────────────────────────
+[10:21] Bob: Hello team
+[10:22] Alice: Uploading spec
+[10:23] You: Here's the file
+         ┌─────────────────────────────────────┐
+         │ spec-v3.pdf                         │
+         │ comment: latest requirements        │
+         └─────────────────────────────────────┘
+[10:25] Carol replied to Bob:
+   > Hello team
+   Can we make this private?
+──────────────────────────────────────────────────
+[😊] [📎] [Replying to: Bob ×]  [ input (multiline) ]  [ Send ]
+```
+
+**Auto-scroll:** scroll to bottom on new message if user is within 100px of bottom. No auto-scroll if user has scrolled up. `IntersectionObserver` on the topmost visible message triggers `GET /rooms/{id}/messages?before={id}` for infinite scroll upward.
+
+### Members Panel (Right Sidebar)
+
+```
+Room info          Public room
+Owner: alice
+Admins: alice, dave
+Members (38)
+  ● Alice
+  ● Bob
+  ◐ Carol (AFK)
+  ○ Mike (offline)
+[Invite user]  [Manage room]   ← admin only
+```
+
+Member list: `GET /api/rooms/{id}/members` (DB), presence statuses from `PresenceService.presenceMap`.
+
+### Admin Modal — 5 Tabs
+
+```
+Manage Room: #engineering-room
+─────────────────────────────────────────────────────
+[Members] [Admins] [Banned users] [Invitations] [Settings]
+```
+
+| Tab | Data Source | Actions Available |
+|-----|------------|------------------|
+| Members | `GET /rooms/{id}/members` | Make Admin, Ban, Remove from room |
+| Admins | `GET /rooms/{id}/members?role=admin` | Remove Admin (owner only) |
+| Banned users | `GET /rooms/{id}/bans` | Unban; shows who banned and when |
+| Invitations | `GET /rooms/{id}/invitations` | Send invite by username |
+| Settings | Room record | Edit name/description/visibility; Delete room |
+
+### Unread Indicators
+
+Angular `UnreadService`:
+```typescript
+unreadCounts = signal<Map<string, number>>(new Map());
+```
+Updated by `UnreadCountChanged` SignalR event. Cleared by `POST /api/rooms/{id}/read` on navigation into chat.
+
+---
+
+## 16. Non-Functional Requirements
+
+### Capacity
+
+| Metric | Requirement | Design Confirmation |
+|--------|------------|-------------------|
+| Simultaneous users | 300 | Redis heartbeat: O(1) per tab; SignalR with Redis backplane across 2 replicas; tested pattern for 1,000s of connections |
+| Room participants | 1,000 | SignalR group broadcast scales linearly; PostgreSQL RoomMembership query is O(log N) |
+| Rooms per user | Unlimited | ~20 typical → 20 SignalR group memberships per connection |
+| Contacts per user | ~50 typical | ~50 `user-presence:*` group subscriptions per connection at connect time |
+
+### Message Delivery Latency
+
+**Requirement:** < 3 seconds.
+**Actual:** WebSocket round-trip < 200ms local. Redis backplane cross-replica < 50ms additional. P99 well under 1 second under normal 300-user load.
+
+### Presence Update Latency
+
+**Requirement:** < 2 seconds.
+- **Online/offline (connect/disconnect):** < 500ms — triggered immediately in hub lifecycle methods, broadcast synchronously.
+- **AFK detection:** up to 20s detection lag (monitor polls every 20s). AFK is a lagging indicator; the < 2s requirement applies to online/offline transitions. Monitor poll can be reduced to 5s for stricter AFK if needed.
+
+### Message History
+
+**Requirement:** rooms with 10,000+ messages must remain usable.
+Cursor-based (keyset) pagination is O(log N) regardless of history depth. Angular `IntersectionObserver` triggers page loads before the user reaches the top, making scroll feel continuous.
+
+### Persistence
+
+Messages stored indefinitely in PostgreSQL. No automatic purge. Files stored on Docker volume (or S3). `ReadMarkers` survive Redis restarts (re-hydrated on reconnect from DB).
+
+### Session Behaviour
+
+- No automatic logout on inactivity.
+- Login persists across browser close if `keepSignedIn = true` (7-day refresh token TTL).
+- Multi-tab: full support via Redis Sorted Set presence engine.
+
+### Consistency Guarantees
+
+| Domain | Guarantee |
+|--------|-----------|
+| Room membership | PostgreSQL `RoomMembership` is authoritative; Redis tracks only currently-connected users for presence |
+| Room bans | PostgreSQL `RoomBans`; enforced at join and file access by DB query — no stale cache risk |
+| File access rights | Enforced at download endpoint via DB membership check |
+| Message history | Persistent in PostgreSQL; unaffected by Redis restarts |
+| Admin/owner permissions | `RoomMembership.Role` in PostgreSQL; checked on every admin action |
+| Unread counts | Redis (fast) + PostgreSQL `ReadMarkers` (durable); re-derived from DB on reconnect |
+
+---
+
+## 17. Jabber / XMPP — *Optional; implement last, only on explicit request*
+
+This section is a design sketch only. No implementation until explicitly requested.
+
+### Scope
+
+- Allow external XMPP clients (Pidgin, Gajim, etc.) to connect and use rooms/DMs.
+- Support server-to-server (s2s) federation: messages between two ChatHerder instances.
+- Admin UI: Jabber connection dashboard + federation traffic statistics.
+
+### Library
+
+**`XmppDotNet`** (MIT, .NET-compatible) — handles XMPP stream parsing, stanza routing, TLS, and SASL authentication. Bridges XMPP stanzas to the existing Application layer use cases without modifying Domain or Infrastructure.
+
+### Architecture Sketch
+
+```
+ChatHerder.Xmpp/
+├── XmppServer.cs                # TCP listener: port 5222 (c2s), 5269 (s2s)
+├── ClientConnectionHandler.cs   # Per-client XMPP stream; maps stanzas → Application use cases
+├── FederationHandler.cs         # s2s stream; XMPP dialback or SASL EXTERNAL
+├── StanzaRouter.cs              # Dispatches message/presence/iq stanzas
+└── JabberAdminHub.cs            # SignalR hub for admin dashboard metrics
+```
+
+### Docker Compose for Federation
 
 ```yaml
-services:
-
-  postgres:
-    image: postgres:17-alpine
+  xmpp-a:
+    build: ./src/ChatHerder.Xmpp
     environment:
-      POSTGRES_DB: chatherder
-      POSTGRES_USER: chatherder
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U chatherder"]
-      interval: 5s
-      retries: 5
-
-  redis:
-    image: redis:7-alpine
-    command: redis-server --appendonly yes
-    volumes:
-      - redis_data:/data
-
-  rabbitmq:
-    image: rabbitmq:3.13-management-alpine
-    environment:
-      RABBITMQ_DEFAULT_USER: chatherder
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+      XMPP_DOMAIN: "chatherder-a.local"
     ports:
-      - "15672:15672"   # Management UI (dev only)
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
-      interval: 10s
-      retries: 5
+      - "5222:5222"   # c2s
+      - "5269:5269"   # s2s
 
-  api:
-    build:
-      context: ./src
-      dockerfile: ChatHerder.API/Dockerfile
+  xmpp-b:
+    build: ./src/ChatHerder.Xmpp
     environment:
-      ConnectionStrings__Default: "Host=postgres;Database=chatherder;Username=chatherder;Password=${POSTGRES_PASSWORD}"
-      Redis__ConnectionString: "redis:6379"
-      RabbitMQ__Host: "rabbitmq"
-      RabbitMQ__Username: "chatherder"
-      RabbitMQ__Password: ${RABBITMQ_PASSWORD}
-      Jwt__Secret: ${JWT_SECRET}
-      Jwt__AccessTokenMinutes: "15"
-      Jwt__RefreshTokenDays: "7"
-      Storage__BasePath: "/app/uploads"
-    volumes:
-      - uploads_data:/app/uploads
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_started
-      rabbitmq:
-        condition: service_healthy
-    deploy:
-      replicas: 2     # horizontal scaling; Redis backplane handles SignalR fan-out
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
+      XMPP_DOMAIN: "chatherder-b.local"
     ports:
-      - "4200:80"
-    depends_on:
-      - api
-
-volumes:
-  postgres_data:
-  redis_data:
-  rabbitmq_data:
-  uploads_data:       # shared across all api replicas
+      - "5322:5222"
+      - "5369:5269"
 ```
 
-The `uploads_data` named volume is mounted by all API replicas, providing shared filesystem access for the local file storage MVP. When migrating to S3, this volume is removed.
+### Admin Dashboard (Angular `/admin/jabber`)
+
+- Active c2s connection count (live via `JabberAdminHub` SignalR).
+- Federation peer list with bytes in/out and message rate (published to RabbitMQ, consumed by admin hub).
+- Federation health indicator (last successful s2s handshake timestamp per peer).
 
 ---
 
-## Appendix — Decision Log
+## 18. Decision Log
 
 | Decision | Rationale |
 |----------|-----------|
-| JWT (15 min) + Redis ban gate | Stateless auth scalability with millisecond-precision ban enforcement |
-| Redis Sorted Set for presence | Score-as-timestamp enables O(stale) AFK detection via `ZRANGEBYSCORE` |
-| Split ChatHub / PresenceHub | Single-responsibility per hub; client connects to both independently |
-| RabbitMQ topic exchange | Routing keys allow future consumers to subscribe to event subsets without API changes |
-| Pre-staged file uploads | Decouples slow I/O from low-latency message delivery path |
-| `IFileStorage` abstraction | Local disk MVP → S3 swap without touching Application or Domain layers |
-| `ActivityLogs.Payload` as `jsonb` | Avoids schema churn as event shapes evolve; PostgreSQL GIN-indexable if needed |
-| Partial index on Messages | Keeps soft-deleted rows out of the hot read path without physical deletion |
-| Minimal APIs (no controllers) | Idiomatic .NET 10; eliminates MVC reflection overhead; endpoint groups are independently testable |
+| `RoomMembership` table, not Redis-only | Redis is volatile; a restart would erase all memberships and silently break file access control and ban enforcement |
+| Three separate ban types | Platform ban, room ban, and user block have different issuers, scopes, and effects; collapsing them causes irreparable correctness bugs |
+| `PersonalDialog` separate from `Rooms` | DMs have fixed participants, no admin, friend-only gate, frozen-on-block semantics; sharing the Messages table makes these invariants unenforceable |
+| `user-presence:{userId}` SignalR group | Enables fan-out to friends' connections without server-side iteration; each connecting user subscribes to friends' groups at connect time; Redis backplane propagates across replicas |
+| Cursor-based (keyset) pagination | Offset pagination is O(N) at large offsets; keyset is O(log N) at any history depth via the composite index |
+| Redis unread counters + PostgreSQL ReadMarkers | Redis for sub-millisecond badge increments; PostgreSQL for durability across restarts; re-hydrated from DB on reconnect |
+| Attachment `Comment` as multipart form field | One round-trip for file + metadata; no separate PATCH request needed |
+| Soft delete for messages | Preserves reply chain coherence; `"Message deleted"` placeholder maintains conversation threading |
+| Frozen dialogs on block | History remains visible (read-only) per §2.3.5; new messages blocked; existing files downloadable |
+| Reply snapshot in DTO | Embedded at send time; quoted text survives original message deletion |
+| Jabber as optional / last | High integration complexity, external library dependency, non-trivial networking; deferred to avoid blocking core feature delivery |
+| JWT (15 min) + Redis session gate | Stateless auth scalability with instant revocation via Redis session set |
+| Redis Sorted Set for presence | Score-as-timestamp gives O(stale) AFK detection — O(connected users), not O(all users) |
+| Minimal APIs (no controllers) | Idiomatic .NET 10; RouteGroupBuilder extension methods independently testable via WebApplicationFactory |

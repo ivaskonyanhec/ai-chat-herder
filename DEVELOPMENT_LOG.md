@@ -65,3 +65,83 @@ Format: `[Timestamp] | Task | Reasoning | Changes`
 ---
 
 `[2026-04-18 T15]` | **Write ARCHITECTURE.md spec** | Consolidate all design decisions into a durable reference document | Output: `docs/superpowers/specs/2026-04-18-chat-server-architecture-design.md` covering: Clean Architecture layers, Minimal API structure, JWT + session + ban security model, Redis Presence Engine, PostgreSQL schema (Mermaid ERD + indexes), SignalR hub contracts, RabbitMQ topology, IFileStorage abstraction, Angular 21 structure, Docker Compose configuration, Decision Log appendix
+
+---
+
+## 2026-04-18 — Architecture Gap Analysis & Requirement-Complete Rewrite
+
+---
+
+`[2026-04-18 T16]` | **Gap analysis: validate ARCHITECTURE.md against requirements.md** | First architecture session was greenfield brainstorming without a requirements document; a formal requirements document was subsequently provided, revealing 29 of 38 requirement areas were missing or conflicting | Identified gaps: private rooms, DMs (PersonalDialog), friend system, user blocks, room admin roles, room bans (separate from platform bans), room invitations, unread notifications, message replies, attachment comment field, image size limit, cursor pagination, account deletion, password reset flow, friend presence subscriptions, Jabber/XMPP
+
+---
+
+`[2026-04-18 T17]` | **Introduce `RoomMembership` table** | Redis `room:members:{roomId}` was being used as the source of truth for room membership — volatile, lost on restart, and unsafe for access control decisions | Fix: `RoomMembership` PostgreSQL table (`RoomId`, `UserId`, `Role`) is now authoritative. Redis `room:members` key removed entirely. Redis tracks only currently-connected users for presence, never membership.
+
+---
+
+`[2026-04-18 T18]` | **Separate three ban types** | Original `Bans` table + Redis `ban:{userId}` gate conflated platform bans, room bans, and user-to-user blocks into one model — fundamentally incorrect, would cause catastrophic access control bugs | Fix: three distinct models: `PlatformBans` + Redis key (global API 403, admin-only), `RoomBans` table (per-room, admin-issued, remove = ban), `UserBlocks` table (user-to-user, freezes DMs and terminates friendship)
+
+---
+
+`[2026-04-18 T19]` | **Add PersonalDialog + PersonalDialogMessage model** | Requirements §2.5.1: DMs are functionally equivalent to rooms but have fixed 2-person participant lists, no admin, friend-only gate, and frozen-on-block semantics — cannot share the Messages table without making these invariants unenforceable | New tables: `PersonalDialogs` (User1Id, User2Id, FrozenAt), `PersonalDialogMessages` (with same feature set as Messages: replies, edit, soft delete). Normalised: User1Id < User2Id enforced in application to prevent duplicate dialog pairs.
+
+---
+
+`[2026-04-18 T20]` | **Add FriendRequest + Friendship state machine** | Requirements §2.3: friend system requires request/confirmation workflow; original `Friendships` table was a stub with no state machine | New tables: `FriendRequests` (SenderId, ReceiverId, Message, Status: Pending/Accepted/Rejected), `Friendships` (active relationship, normalised pair). Friendship gates DM creation and friend-list presence visibility.
+
+---
+
+`[2026-04-18 T21]` | **Add UserBlock model** | Requirements §2.3.5: user-to-user ban is distinct from room bans and platform bans; blocks DMs, terminates friendship, freezes existing dialog history | New table: `UserBlocks` (BlockerId, BlockedUserId). On block: freeze PersonalDialog (set FrozenAt), delete Friendship, broadcast `DialogFrozen` SignalR event to both parties. Frozen dialogs remain visible (read-only) per spec.
+
+---
+
+`[2026-04-18 T22]` | **Add RoomInvitation model** | Requirements §2.4.4/§2.4.9: private rooms require invitation-based join; without persistence, invitations are lost on restart | New table: `RoomInvitations` (RoomId, InvitedByUserId, InvitedUserId, Status: Pending/Accepted/Rejected). New SignalR event `RoomInvitationReceived` (distinct from `FriendRequestReceived`). New endpoints: `GET/POST /rooms/{id}/invitations`, `POST /invitations/{id}/accept`, `POST /invitations/{id}/reject`.
+
+---
+
+`[2026-04-18 T23]` | **Add ReadMarker + unread counter system** | Requirements §2.7.1: unread indicators per room and per dialog, cleared on open; not present in original architecture at all | Two-tier: Redis `unread:{userId}:{type}:{id}` strings for fast INCR/badge reads; PostgreSQL `ReadMarkers` table (UserId, ContextType, ContextId, LastReadMessageId, LastReadAt) for durability across restarts. On reconnect, unread counts re-hydrated from DB. Cleared by `POST /api/rooms/{id}/read` or `POST /api/dialogs/{id}/read`.
+
+---
+
+`[2026-04-18 T24]` | **Add Message.ReplyToMessageId (self-referential FK)** | Requirements §2.5.3: message reply feature; original Messages schema had no such column | Added `ReplyToMessageId` nullable FK to both `Messages` and `PersonalDialogMessages`. Server embeds a `ReplyTo` snapshot in the DTO at send time — not a live FK chain — so quoted text survives original message deletion.
+
+---
+
+`[2026-04-18 T25]` | **Add Attachments.Comment column + image size limit** | Requirements §2.6.3: optional comment per attachment; §3.4: image max 3 MB (separate from 20 MB general limit); both missing from original schema | Added `Comment` nullable string column to `Attachments`. Upload endpoint checks `Content-Type`: `image/*` → 3 MB limit, otherwise → 20 MB limit. Returns `413` with descriptive message specifying which limit applies.
+
+---
+
+`[2026-04-18 T26]` | **Design cursor-based (keyset) pagination** | Requirements §2.5.6/§3.3: infinite scroll through very old history (10,000+ messages); offset pagination degrades to O(N) at large offsets | Keyset pagination: `GET /rooms/{id}/messages?before={messageId}&limit=50`. Composite index `(RoomId, SentAt DESC, Id DESC) WHERE DeletedAt IS NULL` gives O(log N) scan regardless of history depth. Same pattern for dialog messages.
+
+---
+
+`[2026-04-18 T27]` | **Add account deletion cascade** | Requirements §2.1.5: delete account must remove owned rooms (with all their messages + files), remove memberships in other rooms, and soft-delete user record | Flow: delete owned rooms (cascade messages + files via IFileStorage), DELETE RoomMembership for non-owned rooms, DELETE FriendRequest/Friendship/UserBlock, SET Users.DeletedAt (email + username reserved to prevent reuse), revoke all sessions + ForceDisconnect.
+
+---
+
+`[2026-04-18 T28]` | **Add password reset flow + PasswordResetTokens table** | Requirements §2.1.4: password reset required; original architecture listed the endpoint but defined no flow, token mechanism, or email delivery | New table: `PasswordResetTokens` (Token, UserId, ExpiresAt 1h, UsedAt). New interface: `IEmailSender → SmtpEmailSender`. Flow: generate token → email → validate on reset → update hash → mark token used → revoke all sessions.
+
+---
+
+`[2026-04-18 T29]` | **Add friend presence subscription via `user-presence:{userId}` SignalR groups** | Requirements §2.7.2: presence updates < 2s; contacts list needs live presence indicators; no mechanism for friends to receive each other's status changes was defined | On `PresenceHub.OnConnectedAsync`: for each friend F, `Groups.AddToGroupAsync(connId, "user-presence:{F.UserId}")`. Status change broadcasts to `user-presence:{userId}` reach all online friends across replicas via Redis backplane. O(friends_count) group joins on connect — ~50 per user at target scale.
+
+---
+
+`[2026-04-18 T30]` | **Extend SignalR hubs for DMs** | Requirements §2.5.1: personal messages have the same feature set as room messages; ChatHub only covered room messages | Added to ChatHub: `SendDirectMessage`, `EditDirectMessage`, `DeleteDirectMessage`, `StartTypingDM`, `StopTypingDM` (client→server); `DirectMessageReceived`, `DirectMessageEdited`, `DirectMessageDeleted`, `UserTypingInDialog` (server→client). DM delivery uses recipient's connectionIds from Redis presence (no SignalR group — dialogs have exactly 2 fixed participants).
+
+---
+
+`[2026-04-18 T31]` | **Add room admin role permission matrix + owner/admin lifecycle** | Requirements §2.4.7/§2.4.8: owner and admin have distinct permissions; owner cannot leave room; remove = ban | Defined full permission matrix (owner/admin/member × action). `RoomMembership.Role` enum: Owner/Admin/Member. All admin actions validated server-side against role. Owner-only: delete room, change settings, promote/demote admins. Admin: ban/unban, delete any message, invite.
+
+---
+
+`[2026-04-18 T32]` | **Mark Jabber/XMPP as optional / implement last** | Requirements §6: Jabber is an advanced feature contingent on completing all other requirements first; user confirmed this explicitly | Section 17 in ARCHITECTURE.md documents the design sketch (XmppDotNet library, c2s port 5222, s2s port 5269, federation via Docker Compose, admin dashboard) but is explicitly gated: "implement last, only on explicit request".
+
+---
+
+`[2026-04-18 T33]` | **Fix spec self-review: room invitation event naming** | Room invitations used the same "FriendRequestReceived" language as friend requests — ambiguous and would cause client-side handler conflicts | Fix: dedicated `RoomInvitationReceived` SignalR event `{ invitationId, roomId, roomName, fromUserId }` added to PresenceHub server→client table; room system section updated accordingly.
+
+---
+
+`[2026-04-18 T34]` | **Full ARCHITECTURE.md rewrite** | Original spec covered only ~25% of requirements; gap analysis confirmed 29 of 38 areas missing or conflicting; requirement-complete rewrite needed | Replaced ARCHITECTURE.md with 18-section document covering: overview, tech stack, clean architecture, security (auth/sessions/3 ban types), domain model (16 entities), Mermaid ERD + indexes, complete API endpoint list, extended SignalR hub contracts, messaging model (3 KB limit/replies/soft delete/cursor pagination), attachments (image limit/paste/comment/access control), notifications (unread counters/read markers), presence engine (updated Redis structures), room system (membership lifecycle/invitations/permission matrix/cascade deletion), moderation (3 ban type separation), UI mapping (nav/side panel/chat window/admin modal), non-functional (capacity/latency/consistency), Jabber sketch (optional), decision log.
