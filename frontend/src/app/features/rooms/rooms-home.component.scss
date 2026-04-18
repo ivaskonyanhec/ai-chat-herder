@@ -1,181 +1,383 @@
-:host {
-  display: contents;
+.catalog {
+  padding: var(--spacing-8);
+  height: 100%;
+  overflow-y: auto;
+  background: var(--color-surface);
+
+  &__header {
+    margin-bottom: var(--spacing-10);
+  }
+
+  &__title {
+    font-size: var(--font-size-display-sm);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-on-surface);
+    margin-bottom: var(--spacing-2);
+  }
+
+  &__subtitle {
+    color: var(--color-on-surface-variant);
+    max-width: 40rem;
+    font-size: var(--font-size-body-md);
+  }
+
+  &__featured-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-6);
+    margin-bottom: var(--spacing-12);
+
+    @media (min-width: 1024px) {
+      grid-template-columns: 2fr 1fr;
+    }
+  }
+
+  &__list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-8);
+  }
+
+  &__list-title {
+    font-size: var(--font-size-title-lg);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-on-surface);
+  }
+
+  &__view-toggle {
+    display: flex;
+    gap: var(--spacing-2);
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--spacing-6);
+  }
 }
 
-.rooms-home__rail,
-.rooms-home__members {
-  padding: var(--spacing-8) var(--spacing-5);
-  background: var(--color-surface-container);
-}
-
-.rooms-home__chat {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  min-width: 0;
+.featured-card {
   background: var(--color-surface-container-lowest);
-}
-
-.rooms-home__chat-header,
-.rooms-home__section-header {
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-ambient);
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--spacing-4);
+  flex-direction: column;
+
+  &__image-container {
+    position: relative;
+    height: 16rem;
+  }
+
+  &__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s;
+
+    &:hover {
+      transform: scale(1.05);
+    }
+  }
+
+  &__overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, color-mix(in srgb, var(--color-inverse-surface) 70%, transparent), transparent);
+    padding: var(--spacing-6);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    color: var(--color-on-primary);
+  }
+
+  &__tag {
+    background: var(--color-primary);
+    padding: var(--spacing-1) var(--spacing-3);
+    font-size: var(--font-size-label-sm);
+    font-weight: var(--font-weight-bold);
+    text-transform: uppercase;
+    border-radius: var(--radius-full);
+    width: fit-content;
+    margin-bottom: var(--spacing-3);
+  }
+
+  &__name {
+    font-size: var(--font-size-headline-sm);
+    font-weight: var(--font-weight-bold);
+    margin-bottom: var(--spacing-1);
+  }
+
+  &__description {
+    font-size: var(--font-size-body-sm);
+    opacity: 0.9;
+  }
+
+  &__footer {
+    padding: var(--spacing-6);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__members {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-6);
+  }
+
+  &__avatars {
+    display: flex;
+    margin-left: var(--spacing-2);
+    
+    .avatar {
+      margin-left: -0.5rem;
+      border: 2px solid var(--color-surface-container-lowest);
+      
+      &:first-child {
+        margin-left: 0;
+      }
+    }
+  }
+
+  &__active-count {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    font-size: var(--font-size-body-sm);
+    color: var(--color-on-surface-variant);
+
+    span:first-child {
+      font-size: 1.125rem;
+    }
+  }
 }
 
-.rooms-home__chat-header {
+.stats-card {
   padding: var(--spacing-6);
-}
-
-.rooms-home__section-label {
-  margin: 0;
-  color: var(--color-outline-variant);
-  font-size: var(--font-size-label-md);
-  font-weight: var(--font-weight-bold);
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
-
-.rooms-home__section-title,
-.rooms-home__chat-title {
-  margin: var(--spacing-2) 0 0;
-  color: var(--color-on-surface);
-  font-size: var(--font-size-title-lg);
-  font-weight: var(--font-weight-bold);
-}
-
-.rooms-home__room-list {
-  display: grid;
-  gap: var(--spacing-2);
-}
-
-.rooms-home__room {
-  border: 0;
-  padding: var(--spacing-3) var(--spacing-4);
-  border-radius: var(--radius-md);
-  color: var(--color-on-surface);
-  background: transparent;
-  font-size: var(--font-size-body-md);
-  font-weight: var(--font-weight-semibold);
-  text-align: left;
-}
-
-.rooms-home__room--active {
-  background: color-mix(in srgb, var(--color-surface-container-lowest) 35%, transparent);
-}
-
-.rooms-home__room-tag {
-  align-self: center;
-  padding: 0.35rem 0.65rem;
-  border-radius: var(--radius-md);
-  color: var(--color-on-surface-variant);
-  background: var(--color-surface-container);
-  font-size: var(--font-size-label-sm);
-  font-weight: var(--font-weight-bold);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.rooms-home__messages {
-  display: grid;
-  align-content: start;
-  gap: var(--spacing-6);
-  padding: 0 var(--spacing-6) var(--spacing-6);
-  overflow: auto;
-}
-
-.rooms-home__message {
-  display: grid;
-  grid-template-columns: 2.5rem minmax(0, 1fr);
-  gap: var(--spacing-4);
-}
-
-.rooms-home__avatar {
-  display: grid;
-  place-items: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: var(--radius-md);
-  color: var(--color-on-primary);
-  background: var(--color-primary);
-  font-size: var(--font-size-body-sm);
-  font-weight: var(--font-weight-bold);
-}
-
-.rooms-home__avatar--secondary {
-  background: var(--color-secondary);
-}
-
-.rooms-home__message-meta {
+  border-radius: var(--radius-xl);
   display: flex;
-  align-items: baseline;
-  gap: var(--spacing-3);
-  margin-bottom: var(--spacing-2);
-  color: var(--color-on-surface);
-  font-size: var(--font-size-body-sm);
-  font-weight: var(--font-weight-bold);
+  flex-direction: column;
+
+  &--primary {
+    background: var(--color-primary-container);
+    color: var(--color-on-primary-container);
+  }
+
+  &--secondary {
+    background: var(--color-surface-container-highest);
+    color: var(--color-on-surface);
+  }
+
+  &__icon {
+    font-size: 2rem;
+    color: var(--color-primary);
+    margin-bottom: var(--spacing-4);
+  }
+
+  &__title {
+    font-size: var(--font-size-title-md);
+    font-weight: var(--font-weight-bold);
+    margin-bottom: var(--spacing-2);
+  }
+
+  &__copy {
+    font-size: var(--font-size-body-sm);
+    opacity: 0.7;
+    margin-bottom: var(--spacing-6);
+  }
+
+  &__tags {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-3);
+  }
+
+  &__tag {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: color-mix(in srgb, var(--color-surface-container-lowest) 40%, transparent);
+    padding: var(--spacing-2);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-body-sm);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  &__tag-live {
+    color: var(--color-primary);
+  }
+
+  &__metrics {
+    margin-top: var(--spacing-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-4);
+  }
 }
 
-.rooms-home__message-meta time {
-  color: var(--color-outline);
-  font-size: var(--font-size-label-sm);
-  letter-spacing: var(--letter-spacing-metadata);
+.metric {
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    font-size: var(--font-size-label-sm);
+    font-weight: var(--font-weight-bold);
+    text-transform: uppercase;
+    color: var(--color-on-surface-variant);
+    margin-bottom: var(--spacing-1);
+  }
+
+  &__bar {
+    height: 0.25rem;
+    background: var(--color-surface-container);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+  }
+
+  &__fill {
+    height: 100%;
+    background: var(--color-primary);
+  }
 }
 
-.rooms-home__message p {
-  margin: 0;
-  max-width: 42rem;
-  color: var(--color-on-surface);
-  font-size: var(--font-size-body-md);
-  line-height: var(--line-height-relaxed);
-}
-
-.rooms-home__composer {
-  padding: 0 var(--spacing-6) var(--spacing-6);
-}
-
-.rooms-home__composer-input {
-  width: 100%;
-  border: 0;
-  border-radius: var(--radius-md);
-  padding: 1rem 1rem 0.95rem;
-  background: var(--color-surface-container-low);
-  color: var(--color-on-surface);
-}
-
-.rooms-home__member-card {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: var(--spacing-3);
-  margin-top: var(--spacing-6);
-  padding: var(--spacing-4);
-  border-radius: var(--radius-md);
+.room-card {
   background: var(--color-surface-container-lowest);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--ghost-border);
+  padding: var(--spacing-6);
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.2s;
+
+  &:hover {
+    box-shadow: var(--shadow-ambient);
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-4);
+  }
+
+  &__icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    background: var(--color-surface-container-high);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-primary);
+  }
+
+  &__type {
+    font-size: var(--font-size-label-sm);
+    font-weight: var(--font-weight-bold);
+    text-transform: uppercase;
+    color: var(--color-on-surface-variant);
+  }
+
+  &__name {
+    font-size: var(--font-size-title-md);
+    font-weight: var(--font-weight-bold);
+    margin-bottom: var(--spacing-2);
+    color: var(--color-on-surface);
+  }
+
+  &__description {
+    font-size: var(--font-size-body-sm);
+    color: var(--color-on-surface-variant);
+    line-height: var(--line-height-normal);
+    flex: 1;
+  }
+
+  &__footer {
+    margin-top: var(--spacing-6);
+    padding-top: var(--spacing-6);
+    border-top: 1px solid var(--color-surface-container);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__members {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-1);
+    font-size: var(--font-size-body-sm);
+    color: var(--color-on-surface-variant);
+
+    span:first-child {
+      font-size: 1.125rem;
+    }
+  }
+
+  &__action {
+    background: transparent;
+    border: none;
+    color: var(--color-primary);
+    font-weight: var(--font-weight-bold);
+    font-size: var(--font-size-body-sm);
+    cursor: pointer;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
 }
 
-.rooms-home__status-dot {
-  display: inline-block;
-  width: var(--status-dot-size);
-  height: var(--status-dot-size);
-  margin-top: 0.35rem;
-  border: var(--status-dot-border);
+.avatar {
+  width: 2rem;
+  height: 2rem;
   border-radius: var(--radius-full);
-  background: var(--color-status-online);
-}
-
-.rooms-home__member-name,
-.rooms-home__member-meta {
-  margin: 0;
-}
-
-.rooms-home__member-name {
-  color: var(--color-on-surface);
-  font-size: var(--font-size-body-sm);
+  background: var(--color-primary-container);
+  color: var(--color-on-primary-container);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-label-sm);
   font-weight: var(--font-weight-bold);
+
+  &--sm {
+    width: 1.5rem;
+    height: 1.5rem;
+    font-size: 0.625rem;
+  }
+
+  &--more {
+    background: var(--color-surface-container-high);
+    color: var(--color-on-surface);
+  }
 }
 
-.rooms-home__member-meta {
-  margin-top: var(--spacing-1);
-  color: var(--color-on-surface-variant);
-  font-size: var(--font-size-label-md);
+.btn {
+  border: none;
+  border-radius: var(--radius-md);
+  padding: var(--spacing-2) var(--spacing-6);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-body-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &--primary {
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+
+    &:hover {
+      background: var(--color-primary-dim);
+    }
+  }
+
+  &--icon {
+    padding: var(--spacing-2);
+    background: var(--color-surface-container-lowest);
+    border: 1px solid var(--ghost-border);
+    color: var(--color-on-surface-variant);
+
+    &.btn--active {
+      color: var(--color-primary);
+    }
+  }
 }

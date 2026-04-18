@@ -1,38 +1,84 @@
-<main class="workspace" data-testid="main-chat">
-  <aside class="workspace__nav">
-    <div>
-      <p class="workspace__nav-label">Chat Herder</p>
-      <h1 class="workspace__nav-title">Structured chat workspace.</h1>
+<div data-testid="main-chat">
+<header class="workspace-header">
+  <div class="workspace-header__left">
+    <span class="workspace-header__logo">Architectural Workspace</span>
+    <nav class="workspace-header__nav">
+      <a routerLink="/app/rooms" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" data-testid="go-to-rooms">Public Rooms</a>
+      <a routerLink="/app/rooms" routerLinkActive="active">Private Rooms</a>
+      <a routerLink="/app/contacts" routerLinkActive="active">Contacts</a>
+      <a routerLink="/app/sessions" routerLinkActive="active" data-testid="go-to-sessions">Sessions</a>
+    </nav>
+  </div>
+  <div class="workspace-header__right">
+    <div class="workspace-header__actions">
+      <span class="material-symbols-outlined workspace-header__icon">settings</span>
+      <span class="material-symbols-outlined workspace-header__icon">help</span>
+    </div>
+    <img
+      [src]="user()?.avatarUrl || 'https://lh3.googleusercontent.com/aida-public/AB6AXuBoE1AAIFrnyj9F8mxOop8uxCsIRdOxzhWtnxjn7NugcZYLy5I0Dpd7Xa9meXu5UDQAGvY5xt3Hb0oHZJ-RtruBAq2ha-SdwkN6yVjMRlK6os9_26BZMepR6qZxG_G6zRuAyXw4qT1BseTQJxDpjswRqkQCvFbbaVFsomxcZ6ubiGBy4IaGBVjd0ikVTb_cBNYZO7nZkxH8LEctIAAHPuiio0Qfy3pKTJkOdZSHFJE_AxtUk0itobW_nenKACmDvvyl5JeG7Of_yMQ'"
+      alt="User profile"
+      class="workspace-header__avatar"
+    />
+  </div>
+</header>
+
+<main class="workspace-layout">
+  <aside class="workspace-sidebar">
+    <div class="workspace-sidebar__header">
+      <div class="workspace-sidebar__logo-box">
+        <span class="material-symbols-outlined">corporate_fare</span>
+      </div>
+      <div>
+        <h2 class="workspace-sidebar__title">Workspace</h2>
+        <p class="workspace-sidebar__status">Active Session</p>
+      </div>
     </div>
 
-    <nav class="workspace__nav-list" aria-label="Primary">
-      <a
-        class="workspace__nav-item"
-        routerLink="/app/rooms"
-        routerLinkActive="workspace__nav-item--active"
-        data-testid="go-to-rooms"
-      >
-        Rooms
-      </a>
-      <button type="button" class="workspace__nav-item workspace__nav-item--muted">Direct Messages</button>
-      <button type="button" class="workspace__nav-item workspace__nav-item--muted">Contacts</button>
-      <a
-        class="workspace__nav-item"
-        routerLink="/app/sessions"
-        routerLinkActive="workspace__nav-item--active"
-        data-testid="go-to-sessions"
-      >
-        Sessions
-      </a>
+    <div class="workspace-sidebar__search">
+      <span class="material-symbols-outlined">search</span>
+      <input type="text" placeholder="Search workspace..." />
+    </div>
+
+    <nav class="workspace-sidebar__nav">
+      <div class="workspace-sidebar__group">
+        <div class="workspace-sidebar__group-header">
+          <div class="workspace-sidebar__group-title">
+            <span class="material-symbols-outlined">forum</span>
+            <span>Rooms</span>
+          </div>
+          <span class="material-symbols-outlined">keyboard_arrow_down</span>
+        </div>
+        <div class="workspace-sidebar__group-content">
+          <a routerLink="/app/rooms" class="workspace-sidebar__item workspace-sidebar__item--active">#engineering-room</a>
+          <a class="workspace-sidebar__item">#design-ops</a>
+          <a class="workspace-sidebar__item">#product-roadmap</a>
+        </div>
+      </div>
+
+      <div class="workspace-sidebar__group">
+        <div class="workspace-sidebar__group-header">
+          <div class="workspace-sidebar__group-title">
+            <span class="material-symbols-outlined">person</span>
+            <span>Contacts</span>
+          </div>
+        </div>
+      </div>
     </nav>
 
-    @if (logoutError()) {
-      <p class="workspace__nav-error" role="alert">{{ logoutError() }}</p>
-    }
-
-    <button class="workspace__logout" type="button" (click)="logout()">Sign out</button>
+    <div class="workspace-sidebar__footer">
+      @if (logoutError()) {
+        <p class="workspace-sidebar__error">{{ logoutError() }}</p>
+      }
+      <button class="workspace-sidebar__create-btn" type="button">
+        <span class="material-symbols-outlined">add</span>
+        Create Room
+      </button>
+      <button class="workspace-sidebar__logout-btn" type="button" (click)="logout()">Sign out</button>
+    </div>
   </aside>
-  <section class="workspace__content">
+
+  <section class="workspace-content">
     <router-outlet />
   </section>
 </main>
+</div>

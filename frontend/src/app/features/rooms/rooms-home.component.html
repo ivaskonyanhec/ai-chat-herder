@@ -1,74 +1,184 @@
-<section class="rooms-home__rail">
-  <header class="rooms-home__section-header">
-    <p class="rooms-home__section-label">Public Rooms</p>
-    <h2 class="rooms-home__section-title">#engineering-room</h2>
+<div class="catalog" data-testid="chat-area">
+  <header class="catalog__header">
+    <h1 class="catalog__title">Public Rooms Catalog</h1>
+    <p class="catalog__subtitle">Explore open architectural workshops and collaborative design spaces within the global workspace ecosystem.</p>
   </header>
 
-  <div class="rooms-home__room-list">
-    <button class="rooms-home__room rooms-home__room--active" type="button">#engineering-room</button>
-    <button class="rooms-home__room" type="button">#product-systems</button>
-    <button class="rooms-home__room" type="button">#ops-review</button>
-  </div>
-</section>
-
-<section class="rooms-home__chat">
-  <header class="rooms-home__chat-header">
-    <div>
-      <p class="rooms-home__section-label">Room View</p>
-      <h2 class="rooms-home__chat-title">#engineering-room</h2>
-    </div>
-    <span class="rooms-home__room-tag">Public</span>
-  </header>
-
-  <div class="rooms-home__messages" data-testid="chat-area">
-    <article class="rooms-home__message">
-      <div class="rooms-home__avatar">AC</div>
-      <div>
-        <div class="rooms-home__message-meta">
-          <span>Alice Chen</span>
-          <time>10:24 AM</time>
+  <div class="catalog__featured-grid">
+    <div class="catalog__featured-card">
+      <div class="featured-card">
+        <div class="featured-card__image-container">
+          <img
+            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBcomcDp_iJ6kFEVaBJ686noj6WNvqg61bWKfsVKTKRlugge0jUtUc4MZ3fKX-gGZxDmoPC7YRLkWddt-8xPeW2XP_NPinPNu-JWO5UD8gHQ3AvNkKMnkV1QUjs3S29pjc2PMR5HIgLAMoG27qyFVh98f7wAf6u5zWNxmkEWokuEJrs3ePnMy14fNZfI0ariC9UGPF6BwskytWdZmm5W8JJHjsJVxNXf_-sXjczjQ0umesjBv7RezoGoDdIC4a4hW0p8x1IvCBDu_U"
+            alt="Main Lobby"
+            class="featured-card__image"
+          />
+          <div class="featured-card__overlay">
+            <span class="featured-card__tag">Featured Workspace</span>
+            <h2 class="featured-card__name">Urban Planning Collective</h2>
+            <p class="featured-card__description">Central hub for metropolitan infrastructure and civic design discussions.</p>
+          </div>
         </div>
-        <p data-testid="message-text">
-          Reviewing the Angular shell now that backend auth is in place. The UI frame is aligned to the approved slate protocol.
-        </p>
-      </div>
-    </article>
-
-    <article class="rooms-home__message">
-      <div class="rooms-home__avatar rooms-home__avatar--secondary">BV</div>
-      <div>
-        <div class="rooms-home__message-meta">
-          <span>{{ user()?.username ?? 'Current User' }}</span>
-          <time>10:31 AM</time>
+        <div class="featured-card__footer">
+          <div class="featured-card__members">
+            <div class="featured-card__avatars">
+              <div class="avatar avatar--sm">AC</div>
+              <div class="avatar avatar--sm">BM</div>
+              <div class="avatar avatar--sm">CV</div>
+              <div class="avatar avatar--sm avatar--more">+142</div>
+            </div>
+            <div class="featured-card__active-count">
+              <span class="material-symbols-outlined">groups</span>
+              <span>2.4k Active Members</span>
+            </div>
+          </div>
+          <button class="btn btn--primary" type="button">Join Room</button>
         </div>
-        <p data-testid="message-text">
-          Auth routing, session bootstrap, and the first workspace shell are now the active frontend foundation.
-        </p>
       </div>
-    </article>
-  </div>
+    </div>
 
-  <footer class="rooms-home__composer">
-    <input
-      data-testid="message-input"
-      class="rooms-home__composer-input"
-      type="text"
-      placeholder="Message composition lands here in the next slice."
-    />
-  </footer>
-</section>
+    <div class="catalog__stats">
+      <div class="stats-card stats-card--primary">
+        <span class="material-symbols-outlined stats-card__icon">insights</span>
+        <h3 class="stats-card__title">Trending Discussions</h3>
+        <p class="stats-card__copy">Highly active architectural sessions currently in progress.</p>
+        <div class="stats-card__tags">
+          <div class="stats-card__tag">
+            <span>#SustainableTimber</span>
+            <span class="stats-card__tag-live">Live</span>
+          </div>
+          <div class="stats-card__tag">
+            <span>#ParametricFaçades</span>
+            <span class="stats-card__tag-count">12 New</span>
+          </div>
+        </div>
+      </div>
 
-<aside class="rooms-home__members">
-  <header class="rooms-home__section-header">
-    <p class="rooms-home__section-label">Members</p>
-    <h2 class="rooms-home__section-title">Current session</h2>
-  </header>
-
-  <div class="rooms-home__member-card">
-    <span class="rooms-home__status-dot" [attr.data-testid]="memberStatusTestId()"></span>
-    <div>
-      <p class="rooms-home__member-name">{{ user()?.username ?? 'Authenticated user' }}</p>
-      <p class="rooms-home__member-meta">{{ user()?.email ?? 'active session' }}</p>
+      <div class="stats-card stats-card--secondary">
+        <h3 class="stats-card__title">Discovery Metrics</h3>
+        <div class="stats-card__metrics">
+          <div class="metric">
+            <div class="metric__header">
+              <span>Workspace Density</span>
+              <span>88%</span>
+            </div>
+            <div class="metric__bar"><div class="metric__fill" style="width: 88%"></div></div>
+          </div>
+          <div class="metric">
+            <div class="metric__header">
+              <span>New Rooms (24h)</span>
+              <span>12</span>
+            </div>
+            <div class="metric__bar"><div class="metric__fill" style="width: 40%"></div></div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-</aside>
+
+  <div class="catalog__list-header">
+    <h3 class="catalog__list-title">Available Rooms</h3>
+    <div class="catalog__view-toggle">
+      <button class="btn btn--icon btn--active"><span class="material-symbols-outlined">grid_view</span></button>
+      <button class="btn btn--icon"><span class="material-symbols-outlined">list</span></button>
+    </div>
+  </div>
+
+  <div class="catalog__grid">
+    <div class="room-card">
+      <div class="room-card__header">
+        <div class="room-card__icon"><span class="material-symbols-outlined">apartment</span></div>
+        <span class="room-card__type">Public</span>
+      </div>
+      <h4 class="room-card__name">Sustainable Materials Lab</h4>
+      <p class="room-card__description">Discussing the implementation of carbon-negative materials in commercial residential projects.</p>
+      <div class="room-card__footer">
+        <div class="room-card__members">
+          <span class="material-symbols-outlined">person</span>
+          <span>852 Members</span>
+        </div>
+        <button class="room-card__action">Join</button>
+      </div>
+    </div>
+
+    <div class="room-card">
+      <div class="room-card__header">
+        <div class="room-card__icon"><span class="material-symbols-outlined">landscape</span></div>
+        <span class="room-card__type">Public</span>
+      </div>
+      <h4 class="room-card__name">Biophilic Design Group</h4>
+      <p class="room-card__description">Integrating nature into interior architectures to enhance occupant well-being and productivity.</p>
+      <div class="room-card__footer">
+        <div class="room-card__members">
+          <span class="material-symbols-outlined">person</span>
+          <span>1.2k Members</span>
+        </div>
+        <button class="room-card__action">Join</button>
+      </div>
+    </div>
+
+    <div class="room-card">
+      <div class="room-card__header">
+        <div class="room-card__icon"><span class="material-symbols-outlined">foundation</span></div>
+        <span class="room-card__type">Public</span>
+      </div>
+      <h4 class="room-card__name">Heritage Preservation</h4>
+      <p class="room-card__description">Methods and strategies for restoring historical landmarks while meeting modern safety codes.</p>
+      <div class="room-card__footer">
+        <div class="room-card__members">
+          <span class="material-symbols-outlined">person</span>
+          <span>431 Members</span>
+        </div>
+        <button class="room-card__action">Join</button>
+      </div>
+    </div>
+
+    <div class="room-card">
+      <div class="room-card__header">
+        <div class="room-card__icon"><span class="material-symbols-outlined">token</span></div>
+        <span class="room-card__type">Public</span>
+      </div>
+      <h4 class="room-card__name">BIM Automation Hub</h4>
+      <p class="room-card__description">Sharing scripts and plugins for Revit and ArchiCAD to streamline documentation workflows.</p>
+      <div class="room-card__footer">
+        <div class="room-card__members">
+          <span class="material-symbols-outlined">person</span>
+          <span>3.1k Members</span>
+        </div>
+        <button class="room-card__action">Join</button>
+      </div>
+    </div>
+
+    <div class="room-card">
+      <div class="room-card__header">
+        <div class="room-card__icon"><span class="material-symbols-outlined">brush</span></div>
+        <span class="room-card__type">Public</span>
+      </div>
+      <h4 class="room-card__name">Concept Visualization</h4>
+      <p class="room-card__description">Showcasing high-end architectural renders and discussing lighting and material setups.</p>
+      <div class="room-card__footer">
+        <div class="room-card__members">
+          <span class="material-symbols-outlined">person</span>
+          <span>928 Members</span>
+        </div>
+        <button class="room-card__action">Join</button>
+      </div>
+    </div>
+
+    <div class="room-card">
+      <div class="room-card__header">
+        <div class="room-card__icon"><span class="material-symbols-outlined">bolt</span></div>
+        <span class="room-card__type">Public</span>
+      </div>
+      <h4 class="room-card__name">Fast-Track Permitting</h4>
+      <p class="room-card__description">Collaborative strategy for navigating complex zoning laws and urban regulations.</p>
+      <div class="room-card__footer">
+        <div class="room-card__members">
+          <span class="material-symbols-outlined">person</span>
+          <span>215 Members</span>
+        </div>
+        <button class="room-card__action">Join</button>
+      </div>
+    </div>
+  </div>
+</div>
