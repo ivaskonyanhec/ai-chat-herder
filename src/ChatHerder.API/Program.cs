@@ -83,6 +83,7 @@ app.MapGet("/api/health", () => Results.Ok(new { status = "healthy", timestamp =
 var api = app.MapGroup("/api");
 api.MapGroup("/auth").MapAuthEndpoints();
 api.MapGroup("/sessions").MapSessionsEndpoints();
+api.MapGroup("/users").MapUserEndpoints();
 
 app.Run();
 

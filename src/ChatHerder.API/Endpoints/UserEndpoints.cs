@@ -18,12 +18,16 @@ public static class UserEndpoints
     internal static Task<IResult> GetMeInternal(ClaimsPrincipal p, AppDbContext db, CancellationToken ct)
         => GetMe(p, db, ct);
 
+    internal static Task<IResult> PatchMeInternal(UpdateMeRequest req, ClaimsPrincipal p, AppDbContext db, CancellationToken ct)
+        => PatchMe(req, p, db, ct);
+
     private static async Task<IResult> GetMe(
         ClaimsPrincipal principal,
         AppDbContext db,
         CancellationToken ct)
     {
-        var userId = Guid.Parse(principal.FindFirstValue("user_id")!);
+        if (!Guid.TryParse(principal.FindFirstValue("user_id"), out var userId))
+            return Results.Unauthorized();
         var user = await db.Users.FirstOrDefaultAsync(u => u.Id == userId && u.DeletedAt == null, ct);
         if (user is null) return Results.NotFound();
         return Results.Ok(new UserDto(user.Id, user.Username, user.Email, user.AvatarUrl));
@@ -35,7 +39,8 @@ public static class UserEndpoints
         AppDbContext db,
         CancellationToken ct)
     {
-        var userId = Guid.Parse(principal.FindFirstValue("user_id")!);
+        if (!Guid.TryParse(principal.FindFirstValue("user_id"), out var userId))
+            return Results.Unauthorized();
         var user = await db.Users.FirstOrDefaultAsync(u => u.Id == userId && u.DeletedAt == null, ct);
         if (user is null) return Results.NotFound();
 

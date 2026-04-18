@@ -51,10 +51,28 @@ public sealed class UserEndpointsTests
 
         Assert.IsType<NotFound>(result);
     }
+
+    [Fact]
+    public async Task PatchMe_Returns400_WhenAvatarUrlTooLong()
+    {
+        await using var db = BuildContext();
+        var user = new User { Username = "alice", Email = "alice@test.com", PasswordHash = "x" };
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
+
+        var req = new UpdateMeRequest(new string('a', 2049));
+        var result = await UserEndpointsTestHelper.PatchMe(req, MakePrincipal(user.Id), db, CancellationToken.None);
+
+        var statusCode = result.GetType().GetProperty("StatusCode")?.GetValue(result);
+        Assert.Equal(400, statusCode);
+    }
 }
 
 internal static class UserEndpointsTestHelper
 {
     public static Task<IResult> GetMe(ClaimsPrincipal p, AppDbContext db, CancellationToken ct)
         => ChatHerder.API.Endpoints.UserEndpoints.GetMeInternal(p, db, ct);
+
+    public static Task<IResult> PatchMe(UpdateMeRequest req, ClaimsPrincipal p, AppDbContext db, CancellationToken ct)
+        => ChatHerder.API.Endpoints.UserEndpoints.PatchMeInternal(req, p, db, ct);
 }
