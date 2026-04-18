@@ -1,0 +1,90 @@
+<section class="sessions-panel">
+  <header class="sessions-panel__header">
+    <div>
+      <p class="sessions-panel__eyebrow">Security</p>
+      <h2 class="sessions-panel__title" data-testid="sessions-title">Active Sessions</h2>
+      <p class="sessions-panel__copy">
+        Manage current authenticated connections and revoke access from devices you no longer trust.
+      </p>
+    </div>
+  </header>
+
+  @if (errorMessage()) {
+    <p class="sessions-panel__error" role="alert">{{ errorMessage() }}</p>
+  }
+
+  @if (isLoading()) {
+    <div class="sessions-panel__loading">
+      <p-progress-spinner ariaLabel="Loading sessions" strokeWidth="4" />
+    </div>
+  } @else {
+    @if (currentSession(); as current) {
+      <p-card styleClass="sessions-panel__card sessions-panel__card--current" data-testid="current-session-card">
+        <div class="sessions-panel__card-header">
+          <div>
+            <p class="sessions-panel__section-label">Current Session</p>
+            <h3 class="sessions-panel__card-title">{{ current.userAgent }}</h3>
+          </div>
+          <p-tag value="Current Session" severity="success" />
+        </div>
+
+        <div class="sessions-panel__meta-grid">
+          <div>
+            <p class="sessions-panel__section-label">IP Address</p>
+            <p class="sessions-panel__meta-value">{{ current.ipAddress }}</p>
+          </div>
+          <div>
+            <p class="sessions-panel__section-label">Created</p>
+            <p class="sessions-panel__meta-value">{{ formatTimestamp(current.createdAt) }}</p>
+          </div>
+          <div>
+            <p class="sessions-panel__section-label">Expires</p>
+            <p class="sessions-panel__meta-value">{{ formatTimestamp(current.expiresAt) }}</p>
+          </div>
+          <div>
+            <p class="sessions-panel__section-label">Persistence</p>
+            <p class="sessions-panel__meta-value">
+              {{ current.keepSignedIn ? 'Keep signed in' : 'Session only' }}
+            </p>
+          </div>
+        </div>
+      </p-card>
+    }
+
+    @if (otherSessions().length > 0) {
+      <div class="sessions-panel__list">
+        <p class="sessions-panel__section-label">Other Active Connections</p>
+
+        @for (session of otherSessions(); track session.id) {
+          <p-card
+            styleClass="sessions-panel__card sessions-panel__card--secondary"
+            [attr.data-testid]="'session-row-' + session.id"
+          >
+            <div class="sessions-panel__row">
+              <div class="sessions-panel__row-copy">
+                <h3 class="sessions-panel__row-title">{{ session.userAgent }}</h3>
+                <p class="sessions-panel__row-meta">
+                  IP {{ session.ipAddress }} · Created {{ formatTimestamp(session.createdAt) }}
+                </p>
+              </div>
+              <button
+                pButton
+                type="button"
+                [attr.data-testid]="'revoke-session-' + session.id"
+                label="Revoke"
+                severity="secondary"
+                [outlined]="true"
+                [loading]="isRevoking(session.id)"
+                (click)="revokeSession(session.id)"
+              ></button>
+            </div>
+          </p-card>
+        }
+      </div>
+    } @else {
+      <p-card styleClass="sessions-panel__card sessions-panel__card--empty">
+        <p class="sessions-panel__empty-copy">No other active sessions are currently open.</p>
+      </p-card>
+    }
+  }
+</section>

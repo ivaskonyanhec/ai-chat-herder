@@ -23,4 +23,12 @@ public sealed class EntityShapeTests
     [Fact]
     public void ReadMarker_HasLastReadAtProperty()
         => Assert.NotNull(typeof(ReadMarker).GetProperty("LastReadAt"));
+
+    [Fact]
+    public void RoomBan_HasBannedByUserIdProperty()
+        => Assert.NotNull(typeof(RoomBan).GetProperty("BannedByUserId"));
+
+    [Fact]
+    public void RoomBan_HasBannedByUserNavProp()
+        => Assert.NotNull(typeof(RoomBan).GetProperty("BannedByUser"));
 }

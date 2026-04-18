@@ -67,6 +67,16 @@
   font-weight: var(--font-weight-semibold);
 }
 
+.workspace__nav-error {
+  margin: var(--spacing-4) 0 0;
+  padding: var(--spacing-3);
+  border-radius: var(--radius-md);
+  color: var(--color-on-primary);
+  background: color-mix(in srgb, var(--color-error) 35%, transparent);
+  font-size: var(--font-size-body-sm);
+  line-height: var(--line-height-normal);
+}
+
 .workspace__rail,
 .workspace__members {
   padding: var(--spacing-8) var(--spacing-5);
@@ -76,6 +86,12 @@
 .workspace__chat {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
+  min-width: 0;
+  background: var(--color-surface-container-lowest);
+}
+
+.workspace__sessions {
+  grid-column: 2 / -1;
   min-width: 0;
   background: var(--color-surface-container-lowest);
 }
@@ -224,6 +240,10 @@
   .workspace__members {
     display: none;
   }
+
+  .workspace__sessions {
+    grid-column: 2 / -1;
+  }
 }
 
 @media (max-width: 900px) {
@@ -234,5 +254,9 @@
   .workspace__nav,
   .workspace__rail {
     display: none;
+  }
+
+  .workspace__sessions {
+    grid-column: auto;
   }
 }

@@ -6,87 +6,112 @@
     </div>
 
     <nav class="workspace__nav-list" aria-label="Primary">
-      <a class="workspace__nav-item workspace__nav-item--active" href="#">Rooms</a>
-      <a class="workspace__nav-item" href="#">Direct Messages</a>
-      <a class="workspace__nav-item" href="#">Contacts</a>
-      <a class="workspace__nav-item" href="#">Sessions</a>
+      <button
+        type="button"
+        class="workspace__nav-item"
+        [class.workspace__nav-item--active]="activeView() === 'rooms'"
+        (click)="setActiveView('rooms')"
+      >
+        Rooms
+      </button>
+      <button type="button" class="workspace__nav-item">Direct Messages</button>
+      <button type="button" class="workspace__nav-item">Contacts</button>
+      <button
+        type="button"
+        class="workspace__nav-item"
+        [class.workspace__nav-item--active]="activeView() === 'sessions'"
+        data-testid="go-to-sessions"
+        (click)="setActiveView('sessions')"
+      >
+        Sessions
+      </button>
     </nav>
+
+    @if (logoutError()) {
+      <p class="workspace__nav-error" role="alert">{{ logoutError() }}</p>
+    }
 
     <button class="workspace__logout" type="button" (click)="logout()">Sign out</button>
   </aside>
 
-  <section class="workspace__rail">
-    <header class="workspace__section-header">
-      <p class="workspace__section-label">Public Rooms</p>
-      <h2 class="workspace__section-title">#engineering-room</h2>
-    </header>
+  @if (activeView() === 'rooms') {
+    <section class="workspace__rail">
+      <header class="workspace__section-header">
+        <p class="workspace__section-label">Public Rooms</p>
+        <h2 class="workspace__section-title">#engineering-room</h2>
+      </header>
 
-    <div class="workspace__room-list">
-      <button class="workspace__room workspace__room--active" type="button">#engineering-room</button>
-      <button class="workspace__room" type="button">#product-systems</button>
-      <button class="workspace__room" type="button">#ops-review</button>
-    </div>
-  </section>
-
-  <section class="workspace__chat">
-    <header class="workspace__chat-header">
-      <div>
-        <p class="workspace__section-label">Room View</p>
-        <h2 class="workspace__chat-title">#engineering-room</h2>
+      <div class="workspace__room-list">
+        <button class="workspace__room workspace__room--active" type="button">#engineering-room</button>
+        <button class="workspace__room" type="button">#product-systems</button>
+        <button class="workspace__room" type="button">#ops-review</button>
       </div>
-      <span class="workspace__room-tag">Public</span>
-    </header>
+    </section>
 
-    <div class="workspace__messages" data-testid="chat-area">
-      <article class="workspace__message">
-        <div class="workspace__avatar">AC</div>
+    <section class="workspace__chat">
+      <header class="workspace__chat-header">
         <div>
-          <div class="workspace__message-meta">
-            <span>Alice Chen</span>
-            <time>10:24 AM</time>
-          </div>
-          <p data-testid="message-text">
-            Reviewing the Angular shell now that backend auth is in place. The UI frame is aligned to the approved slate protocol.
-          </p>
+          <p class="workspace__section-label">Room View</p>
+          <h2 class="workspace__chat-title">#engineering-room</h2>
         </div>
-      </article>
+        <span class="workspace__room-tag">Public</span>
+      </header>
 
-      <article class="workspace__message">
-        <div class="workspace__avatar workspace__avatar--secondary">BV</div>
-        <div>
-          <div class="workspace__message-meta">
-            <span>{{ user()?.username ?? 'Current User' }}</span>
-            <time>10:31 AM</time>
+      <div class="workspace__messages" data-testid="chat-area">
+        <article class="workspace__message">
+          <div class="workspace__avatar">AC</div>
+          <div>
+            <div class="workspace__message-meta">
+              <span>Alice Chen</span>
+              <time>10:24 AM</time>
+            </div>
+            <p data-testid="message-text">
+              Reviewing the Angular shell now that backend auth is in place. The UI frame is aligned to the approved slate protocol.
+            </p>
           </div>
-          <p data-testid="message-text">
-            Auth routing, session bootstrap, and the first workspace shell are now the active frontend foundation.
-          </p>
-        </div>
-      </article>
-    </div>
+        </article>
 
-    <footer class="workspace__composer">
-      <input
-        data-testid="message-input"
-        class="workspace__composer-input"
-        type="text"
-        placeholder="Message composition lands here in the next slice."
-      />
-    </footer>
-  </section>
-
-  <aside class="workspace__members">
-    <header class="workspace__section-header">
-      <p class="workspace__section-label">Members</p>
-      <h2 class="workspace__section-title">Current session</h2>
-    </header>
-
-    <div class="workspace__member-card">
-      <span class="workspace__status-dot" [attr.data-testid]="memberStatusTestId()"></span>
-      <div>
-        <p class="workspace__member-name">{{ user()?.username ?? 'Authenticated user' }}</p>
-        <p class="workspace__member-meta">{{ user()?.email ?? 'active session' }}</p>
+        <article class="workspace__message">
+          <div class="workspace__avatar workspace__avatar--secondary">BV</div>
+          <div>
+            <div class="workspace__message-meta">
+              <span>{{ user()?.username ?? 'Current User' }}</span>
+              <time>10:31 AM</time>
+            </div>
+            <p data-testid="message-text">
+              Auth routing, session bootstrap, and the first workspace shell are now the active frontend foundation.
+            </p>
+          </div>
+        </article>
       </div>
-    </div>
-  </aside>
+
+      <footer class="workspace__composer">
+        <input
+          data-testid="message-input"
+          class="workspace__composer-input"
+          type="text"
+          placeholder="Message composition lands here in the next slice."
+        />
+      </footer>
+    </section>
+
+    <aside class="workspace__members">
+      <header class="workspace__section-header">
+        <p class="workspace__section-label">Members</p>
+        <h2 class="workspace__section-title">Current session</h2>
+      </header>
+
+      <div class="workspace__member-card">
+        <span class="workspace__status-dot" [attr.data-testid]="memberStatusTestId()"></span>
+        <div>
+          <p class="workspace__member-name">{{ user()?.username ?? 'Authenticated user' }}</p>
+          <p class="workspace__member-meta">{{ user()?.email ?? 'active session' }}</p>
+        </div>
+      </div>
+    </aside>
+  } @else {
+    <section class="workspace__sessions">
+      <app-sessions-panel />
+    </section>
+  }
 </main>

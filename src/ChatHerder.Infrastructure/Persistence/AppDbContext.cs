@@ -93,7 +93,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
         m.Entity<RoomBan>(e =>
         {
             e.HasKey(b => b.Id);
-            e.HasIndex(b => new { b.RoomId, b.BannedUserId }).HasFilter("\"RevokedAt\" IS NULL");
+            e.HasIndex(b => new { b.RoomId, b.BannedUserId }).IsUnique().HasFilter("\"RevokedAt\" IS NULL");
             e.Property(b => b.Reason).HasMaxLength(500);
             e.HasOne(b => b.Room).WithMany().HasForeignKey(b => b.RoomId).OnDelete(DeleteBehavior.Cascade);
             e.HasOne(b => b.BannedUser).WithMany().HasForeignKey(b => b.BannedUserId).OnDelete(DeleteBehavior.Cascade);
