@@ -125,8 +125,54 @@ test.describe('Authentication', () => {
     await ctx.dispose();
   });
 
-  test.skip('username cannot be changed through the UI', async () => {
-    // BLOCKED: profile settings page is currently static and exposes no username update control.
+  test('password change keeps current session and revokes other active sessions', async ({ api }) => {
+    const user = await api.register();
+    const secondSession = await api.login(user.email, user.password);
+    const currentCtx = await api.authContext(user.accessToken);
+    const otherCtx = await api.authContext(secondSession.accessToken);
+
+    const change = await currentCtx.post('/api/auth/change-password', {
+      data: {
+        currentPassword: user.password,
+        newPassword: 'Changed@1234!E2E',
+      },
+    });
+    expect(change.status(), await change.text()).toBe(200);
+
+    expect((await currentCtx.get('/api/rooms/my')).status()).toBe(200);
+    expect((await otherCtx.get('/api/rooms/my')).status()).toBe(401);
+
+    await currentCtx.dispose();
+    await otherCtx.dispose();
+  });
+
+  test('username remains immutable through the profile API', async ({ api, userA }) => {
+    const ctx = await api.authContext(userA.accessToken);
+    const patch = await ctx.patch('/api/users/me', {
+      data: {
+        username: `${userA.username}_changed`,
+        avatarUrl: 'https://example.test/avatar.png',
+      },
+    });
+    expect(patch.status(), await patch.text()).toBe(200);
+    const body = await patch.json();
+    expect(body.username).toBe(userA.username);
+    expect(body.avatarUrl).toBe('https://example.test/avatar.png');
+    await ctx.dispose();
+  });
+
+  test('delete account removes the deleted user from memberships in other rooms', async ({ api }) => {
+    const owner = await api.register();
+    const member = await api.register();
+    const room = await api.createRoom(owner.accessToken, { visibility: 'Public' });
+    await api.joinPublicRoom(room.id, member.accessToken);
+
+    const memberCtx = await api.authContext(member.accessToken);
+    expect((await memberCtx.delete('/api/auth/account')).status()).toBe(204);
+    await memberCtx.dispose();
+
+    const members = await api.getMembers(room.id, owner.accessToken);
+    expect(members.map((m) => m.userId)).not.toContain(member.id);
   });
 
   test.skip('active sessions can be viewed and selectively revoked through the UI', async () => {

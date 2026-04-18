@@ -47,4 +47,19 @@ describe('InvitationsApiService', () => {
     expect(req.request.method).toBe('POST');
     req.flush(null);
   });
+
+  it('fetches room invitations', () => {
+    service.getRoomInvitations('room-1').subscribe();
+    const req = httpMock.expectOne('/api/rooms/room-1/invitations');
+    expect(req.request.method).toBe('GET');
+    req.flush([]);
+  });
+
+  it('sends an invitation', () => {
+    service.sendInvitation('room-1', 'alice').subscribe();
+    const req = httpMock.expectOne('/api/rooms/room-1/invitations');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ username: 'alice' });
+    req.flush(null);
+  });
 });

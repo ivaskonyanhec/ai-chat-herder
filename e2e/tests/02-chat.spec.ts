@@ -41,6 +41,95 @@ test.describe('Room chat', () => {
     await chat.stop();
   });
 
+  test('room history can be fetched in chronological order with afterSeq', async ({ userA, userB, api }) => {
+    const room = await createPublicRoomWithMembers(api, userA, [userB]);
+    const chat = await createHubConnection('/hubs/chat', userA.accessToken);
+    const first = `first-${Date.now()}`;
+    const second = `second-${Date.now()}`;
+
+    await chat.invoke('SendMessage', room.id, first, null, null);
+    await chat.invoke('SendMessage', room.id, second, null, null);
+    await chat.stop();
+
+    const ctx = await api.authContext(userB.accessToken);
+    const history = await ctx.get(`/api/rooms/${room.id}/messages?afterSeq=0`);
+    expect(history.status(), await history.text()).toBe(200);
+    const messages = await history.json();
+    const contents = messages.map((m: { content: string | null }) => m.content);
+    expect(contents.indexOf(first)).toBeGreaterThanOrEqual(0);
+    expect(contents.indexOf(second)).toBeGreaterThan(contents.indexOf(first));
+    await ctx.dispose();
+  });
+
+  test('message author can edit their own message and edited timestamp is returned', async ({ userA, api }) => {
+    const room = await api.createRoom(userA.accessToken, { visibility: 'Public' });
+    const chat = await createHubConnection('/hubs/chat', userA.accessToken);
+    const original = `before-edit-${Date.now()}`;
+    const edited = `after-edit-${Date.now()}`;
+
+    await chat.invoke('SendMessage', room.id, original, null, null);
+    await chat.stop();
+
+    const ctx = await api.authContext(userA.accessToken);
+    const history = await ctx.get(`/api/rooms/${room.id}/messages`);
+    expect(history.status(), await history.text()).toBe(200);
+    const messages = await history.json();
+    const message = messages.find((m: { content: string | null }) => m.content === original);
+    expect(message?.id).toBeTruthy();
+
+    const edit = await ctx.patch(`/api/messages/${message.id}`, {
+      data: { content: edited },
+    });
+    expect(edit.status(), await edit.text()).toBe(200);
+    const editBody = await edit.json();
+    expect(editBody.content).toBe(edited);
+    expect(editBody.editedAt).toBeTruthy();
+    await ctx.dispose();
+  });
+
+  test('non-author cannot edit another user message', async ({ userA, userB, api }) => {
+    const room = await createPublicRoomWithMembers(api, userA, [userB]);
+    const chat = await createHubConnection('/hubs/chat', userA.accessToken);
+    const original = `not-yours-${Date.now()}`;
+
+    await chat.invoke('SendMessage', room.id, original, null, null);
+    await chat.stop();
+
+    const ownerCtx = await api.authContext(userA.accessToken);
+    const history = await ownerCtx.get(`/api/rooms/${room.id}/messages`);
+    const messages = await history.json();
+    const message = messages.find((m: { content: string | null }) => m.content === original);
+    await ownerCtx.dispose();
+
+    const otherCtx = await api.authContext(userB.accessToken);
+    const edit = await otherCtx.patch(`/api/messages/${message.id}`, {
+      data: { content: 'hijack attempt' },
+    });
+    expect(edit.status()).toBe(403);
+    await otherCtx.dispose();
+  });
+
+  test('message author can delete their own message', async ({ userA, api }) => {
+    const room = await api.createRoom(userA.accessToken, { visibility: 'Public' });
+    const chat = await createHubConnection('/hubs/chat', userA.accessToken);
+    const content = `delete-me-${Date.now()}`;
+
+    await chat.invoke('SendMessage', room.id, content, null, null);
+    await chat.stop();
+
+    const ctx = await api.authContext(userA.accessToken);
+    const history = await ctx.get(`/api/rooms/${room.id}/messages`);
+    const messages = await history.json();
+    const message = messages.find((m: { content: string | null }) => m.content === content);
+    const deletion = await ctx.delete(`/api/messages/${message.id}`);
+    expect(deletion.status()).toBe(204);
+
+    const afterDelete = await ctx.get(`/api/rooms/${room.id}/messages`);
+    const remaining = await afterDelete.json();
+    expect(remaining.some((m: { id: string }) => m.id === message.id)).toBe(false);
+    await ctx.dispose();
+  });
+
   test.skip('user B receives a room message in the browser within 3 seconds', async () => {
     // BLOCKED: ChatHub has no JoinRoom method and the current room UI does not bind ChatService events
     // into visible message rows. Backend persistence is covered above; browser-visible SignalR delivery is not.

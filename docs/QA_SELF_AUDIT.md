@@ -3,10 +3,10 @@
 ## 11.1 Summary
 
 - Total requirements reviewed: 77
-- Covered: 13
-- Partially covered: 16
-- Blocked: 27
-- Not covered: 21
+- Covered: 22
+- Partially covered: 18
+- Blocked: 26
+- Not covered: 11
 
 This audit is intentionally conservative. A requirement is not marked `COVERED` unless a concrete Playwright test exists and exercises the behavior. Tests that are present but skipped are counted as `BLOCKED`, not covered.
 
@@ -15,14 +15,23 @@ This audit is intentionally conservative. A requirement is not marked `COVERED` 
 - FR-2.1.1-1 registration
 - FR-2.1.2-1 unique email
 - FR-2.1.2-2 unique username
+- FR-2.1.2-3 immutable username
 - FR-2.1.2-4 no email verification required
 - FR-2.1.3-1 login
 - FR-2.1.3-2 invalid login
 - FR-2.1.3-3 sign out current session only
+- FR-2.1.4-2 password change
+- FR-2.1.5-3 account deletion removes memberships in other rooms
 - FR-2.2.1-1 online/AFK/offline statuses
 - FR-2.2.3-1 active tab keeps user online
 - FR-2.2.3-2 offline only when all tabs close
 - FR-2.4.1-1 room creation
+- FR-2.4.2-2 unique room names
+- FR-2.4.3-1 public catalog fields
+- FR-2.4.3-2 public catalog search
+- FR-2.4.4-1 private rooms hidden and invitation-only
+- FR-2.4.5-1 member leave and owner-leave protection
+- FR-2.4.9-1 private room invitations
 - FR-2.7.2-1 low-latency presence updates
 - NFR-3.2-2 presence propagation below 2 seconds
 
@@ -37,7 +46,9 @@ This audit is intentionally conservative. A requirement is not marked `COVERED` 
 - FR-2.4.8-2 banned cannot rejoin: access/rejoin API covered; immediate browser removal is blocked.
 - FR-2.4.8-3 loss of room access: room API access covered; file access is blocked.
 - FR-2.5.2-1 message content: multiline/emoji/UTF-8/3 KB limit are covered; attachments and replies are blocked.
-- FR-2.5.6-1 message history: history refetch is covered; infinite scroll/offline recipient UI is not.
+- FR-2.5.4-1 message editing: author edit and edited timestamp are covered; browser edited indicator is not.
+- FR-2.5.5-1 message deletion: author delete is covered; admin delete and browser deleted state are not.
+- FR-2.5.6-1 message history: history refetch and chronological `afterSeq` fetch are covered; infinite scroll/offline recipient UI is not.
 - NFR-3.3-1 message persistence: refetch is covered, not long-term retention/infinite scroll.
 - NFR-3.5-2 multi-tab behavior: auth and presence are covered, not full multi-tab chat UX.
 - NFR-3.6-1 consistency: membership/bans/history partially covered; files and complete permissions are not.
@@ -48,7 +59,6 @@ This audit is intentionally conservative. A requirement is not marked `COVERED` 
 
 | Requirement ID | Reason | Change Needed |
 | -------------- | ------ | ------------- |
-| FR-2.1.2-3 | Profile UI is static; no username update/immutability path. | Wire profile settings to `/api/users/me` and expose immutable username state. |
 | FR-2.2.4-1, FR-2.2.4-2 | Active-session UI needs stable live rows for multi-session E2E. | Bind sessions panel to API with stable row/test IDs and revoke controls. |
 | FR-2.3.* | Friend/contact endpoints and dynamic UI are absent or static. | Implement/map friend request, friendship, remove friend, and user block endpoints and UI. |
 | FR-2.4.6-1 | File deletion side effects cannot be verified without file endpoints. | Map upload/download endpoints and room deletion file assertions. |
@@ -64,8 +74,8 @@ This audit is intentionally conservative. A requirement is not marked `COVERED` 
 
 ## 11.5 Not Covered
 
-- Password reset, password change, password hashing storage checks: not included in this E2E/UAT layer yet.
-- Room catalog search, room name uniqueness, private invitations, leave room/owner leave, message editing/deletion: feasible future E2E additions.
+- Password reset and password hashing storage checks: not included in this E2E/UAT layer yet.
+- Admin message deletion, room deletion side effects, unread indicators, and long-idle no-logout behavior still need E2E additions.
 - Capacity/load requirements: intentionally not covered by Playwright; they belong in the k6 load-testing layer.
 - Jabber requirements: optional advanced scope is not implemented.
 
@@ -76,5 +86,5 @@ This audit is intentionally conservative. A requirement is not marked `COVERED` 
 - Access control: room ban access is covered; attachment security is completely blocked by missing file endpoints.
 - Moderation: ban persistence works through API, but immediate removal of active users is not broadcast.
 - Attachment security: high risk until upload/download endpoints enforce membership checks and size limits.
-- Persistence/history: message refetch is covered, but chronological ordering, infinite scroll, and offline delivery need tests.
+- Persistence/history: message refetch and chronological API fetch are covered, but infinite scroll and offline delivery need tests.
 - Non-functional timing: presence timing is covered; message delivery timing is blocked by ChatHub group/browser rendering gaps.

@@ -72,9 +72,11 @@ export class RoomChatComponent implements OnInit, OnDestroy {
     if (!content || this.isSending()) return;
     this.isSending.set(true);
     void this.chat.sendMessage(this.roomId(), content, null, null)
+      .then(() => {
+        this.messageText.set('');
+      })
       .finally(() => {
         this.isSending.set(false);
-        this.messageText.set('');
       });
   }
 

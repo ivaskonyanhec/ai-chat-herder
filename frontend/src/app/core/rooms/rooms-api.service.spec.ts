@@ -100,4 +100,11 @@ describe('RoomsApiService', () => {
     expect(req.request.method).toBe('GET');
     req.flush([]);
   });
+
+  it('fetches my joined rooms', () => {
+    service.getMyRooms().subscribe();
+    const req = httpMock.expectOne('/api/rooms/my');
+    expect(req.request.method).toBe('GET');
+    req.flush([]);
+  });
 });
