@@ -67,14 +67,21 @@
     </nav>
 
     <div class="workspace-sidebar__footer">
+      <p-button
+        label="Create Room"
+        icon="pi pi-plus"
+        styleClass="w-full"
+      />
       @if (logoutError()) {
         <p class="workspace-sidebar__error">{{ logoutError() }}</p>
       }
-      <button class="workspace-sidebar__create-btn" type="button">
-        <span class="material-symbols-outlined">add</span>
-        Create Room
-      </button>
-      <button class="workspace-sidebar__logout-btn" type="button" (click)="logout()">Sign out</button>
+      <p-button
+        label="Sign out"
+        severity="secondary"
+        [text]="true"
+        styleClass="w-full"
+        (onClick)="logout()"
+      />
     </div>
   </aside>
 

@@ -1,28 +1,31 @@
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { provideRouter, Router } from '@angular/router';
+import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { throwError } from 'rxjs';
+import { providePrimeNG } from 'primeng/config';
 import { WorkspaceShellComponent } from './workspace-shell.component';
 import { AuthApiService } from '../../core/auth/auth-api.service';
 import { AuthSessionService } from '../../core/auth/auth-session.service';
 
 describe('WorkspaceShellComponent', () => {
+  function buildProviders(authApi: object, authSession: object) {
+    return [
+      provideRouter([]),
+      provideNoopAnimations(),
+      providePrimeNG({}),
+      { provide: AuthApiService, useValue: authApi },
+      { provide: AuthSessionService, useValue: authSession },
+    ];
+  }
+
   it('renders route-backed navigation links for rooms and sessions', () => {
-    const authApi = {
-      logout: vi.fn(),
-    };
-    const authSession = {
-      user: signal(null).asReadonly(),
-      clearSession: vi.fn(),
-    };
+    const authApi = { logout: vi.fn() };
+    const authSession = { user: signal(null).asReadonly(), clearSession: vi.fn() };
 
     TestBed.configureTestingModule({
       imports: [WorkspaceShellComponent],
-      providers: [
-        provideRouter([]),
-        { provide: AuthApiService, useValue: authApi },
-        { provide: AuthSessionService, useValue: authSession },
-      ],
+      providers: buildProviders(authApi, authSession),
     });
 
     const fixture = TestBed.createComponent(WorkspaceShellComponent);
@@ -45,11 +48,7 @@ describe('WorkspaceShellComponent', () => {
 
     TestBed.configureTestingModule({
       imports: [WorkspaceShellComponent],
-      providers: [
-        provideRouter([]),
-        { provide: AuthApiService, useValue: authApi },
-        { provide: AuthSessionService, useValue: authSession },
-      ],
+      providers: buildProviders(authApi, authSession),
     });
 
     const fixture = TestBed.createComponent(WorkspaceShellComponent);
