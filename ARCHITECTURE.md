@@ -57,7 +57,7 @@ AI Chat Herder is a classic web-based real-time chat server supporting:
 | Database | PostgreSQL 17 |
 | Cache / Presence | Redis 7 |
 | Message Broker | RabbitMQ 3.13 (activity logging) |
-| Frontend | Angular 21 (Signals, Standalone Components, Control Flow) |
+| Frontend | Angular 21 (Signals, Standalone Components, Control Flow) + Tailwind CSS + PrimeNG |
 | Containerisation | Docker & Docker Compose |
 
 ---
@@ -73,7 +73,7 @@ ai-chat-herder/
 │   ├── ChatHerder.Application/      # Use cases, DTOs, IFileStorage, IMessageBus
 │   ├── ChatHerder.Infrastructure/   # EF Core, Redis, RabbitMQ, LocalFileStorage
 │   └── ChatHerder.API/              # Minimal API endpoints, SignalR Hubs, DI wiring
-└── frontend/                        # Angular 21 standalone SPA
+└── frontend/                        # Angular 21 standalone SPA + Tailwind + PrimeNG
 ```
 
 **Dependency rule (strictly inward):**
@@ -1261,6 +1261,14 @@ Returns only public, non-deleted rooms. Each entry includes `memberCount` (COUNT
 ---
 
 ## 15. UI Mapping
+
+### Frontend UI Stack
+
+- **Angular 21** remains the application shell and state/runtime framework.
+- **Tailwind CSS** is the primary utility and layout layer for implementing the exported mockups quickly and consistently.
+- **PrimeNG** is used alongside Tailwind for behavior-rich UI primitives where custom-building would add unnecessary cost.
+- **Design authority stays with Slate Protocol**: Tailwind utilities, Tailwind theme tokens, and all PrimeNG overrides must map to `designs/tokens.css` and follow `DESIGN.md`.
+- **Do not use PrimeNG’s stock look-and-feel as product UI.** PrimeNG is a functional primitive library here, not the visual design system.
 
 > **Design artifacts:** Pixel-accurate HTML mockups are in `designs/` (8 screens). CSS tokens are in `designs/tokens.css`. Full design rules are in `DESIGN.md`. Open the relevant `.html` file in a browser before implementing any screen — the mockups are the authoritative visual reference.
 >

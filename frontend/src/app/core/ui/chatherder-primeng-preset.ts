@@ -1,0 +1,106 @@
+import Aura from '@primeuix/themes/aura';
+import { definePreset } from '@primeuix/themes';
+
+export const chatHerderPrimeNgPreset = definePreset(Aura, {
+  semantic: {
+    primary: {
+      50: 'var(--color-primary-fixed)',
+      100: 'var(--color-primary-container)',
+      200: 'var(--color-primary-fixed-dim)',
+      300: 'var(--color-primary-fixed-dim)',
+      400: 'var(--color-primary)',
+      500: 'var(--color-primary)',
+      600: 'var(--color-primary-dim)',
+      700: 'var(--color-on-primary-container)',
+      800: 'var(--color-on-primary-fixed-variant)',
+      900: 'var(--color-on-primary-fixed)',
+      950: 'var(--color-inverse-surface)',
+    },
+    colorScheme: {
+      light: {
+        surface: {
+          0: 'var(--color-surface-container-lowest)',
+          50: 'var(--color-surface-container-lowest)',
+          100: 'var(--color-surface-container-low)',
+          200: 'var(--color-surface-container)',
+          300: 'var(--color-surface-container-high)',
+          400: 'var(--color-surface-container-highest)',
+          500: 'var(--color-surface-variant)',
+          600: 'var(--color-outline-variant)',
+          700: 'var(--color-outline)',
+          800: 'var(--color-on-surface-variant)',
+          900: 'var(--color-on-surface)',
+          950: 'var(--color-inverse-surface)',
+        },
+        primary: {
+          color: 'var(--color-primary)',
+          contrastColor: 'var(--color-on-primary)',
+          hoverColor: 'var(--color-primary-dim)',
+          activeColor: 'var(--color-on-primary-container)',
+        },
+        highlight: {
+          background: 'var(--color-primary-container)',
+          focusBackground: 'var(--color-primary-fixed-dim)',
+          color: 'var(--color-on-primary-container)',
+          focusColor: 'var(--color-on-primary-fixed-variant)',
+        },
+        content: {
+          background: 'var(--color-surface-container-lowest)',
+          hoverBackground: 'var(--color-surface-container-low)',
+          borderColor: 'var(--ghost-border)',
+          color: 'var(--color-on-surface)',
+          hoverColor: 'var(--color-on-surface)',
+        },
+        overlay: {
+          select: {
+            background: 'var(--color-surface-container-lowest)',
+            borderColor: 'var(--ghost-border)',
+            color: 'var(--color-on-surface)',
+          },
+          popover: {
+            background: 'var(--color-surface-container-lowest)',
+            borderColor: 'var(--ghost-border)',
+            color: 'var(--color-on-surface)',
+          },
+          modal: {
+            background: 'var(--color-surface-container-lowest)',
+            borderColor: 'var(--ghost-border)',
+            color: 'var(--color-on-surface)',
+          },
+        },
+        formField: {
+          background: 'var(--color-surface-container-low)',
+          disabledBackground: 'var(--color-surface-container)',
+          filledBackground: 'var(--color-surface-container-low)',
+          filledHoverBackground: 'var(--color-surface-container)',
+          filledFocusBackground: 'var(--color-surface-container)',
+          borderColor: 'transparent',
+          hoverBorderColor: 'transparent',
+          focusBorderColor: 'transparent',
+          invalidBorderColor: 'var(--color-error)',
+          color: 'var(--color-on-surface)',
+          disabledColor: 'var(--color-on-surface-variant)',
+          placeholderColor: 'var(--color-outline)',
+          invalidPlaceholderColor: 'var(--color-error)',
+          borderRadius: 'var(--radius-lg)',
+          shadow: 'none',
+          paddingX: '1rem',
+          paddingY: '1rem',
+          focusRing: {
+            width: '0',
+            style: 'none',
+            color: 'transparent',
+            offset: '0',
+            shadow: 'none',
+          },
+        },
+        text: {
+          color: 'var(--color-on-surface)',
+          hoverColor: 'var(--color-on-surface)',
+          mutedColor: 'var(--color-on-surface-variant)',
+          hoverMutedColor: 'var(--color-on-surface)',
+        },
+      },
+    },
+  },
+});

@@ -4,9 +4,9 @@
 
 **Goal:** Initialize a .NET 10 Clean Architecture solution (`src/`) and an Angular 21 standalone SPA (`frontend/`) so that `docker compose up` produces a running, health-checked stack.
 
-**Architecture:** Four-layer Clean Architecture backend (Domain → Application → Infrastructure → API) with strict dependency rules enforced via project references. Angular 21 standalone SPA served through Nginx reverse-proxy; no server-side rendering. Dockerfiles already exist and expect `ChatHerder.sln` at repo root and `frontend/dist/chat-herder` as the build output.
+**Architecture:** Four-layer Clean Architecture backend (Domain → Application → Infrastructure → API) with strict dependency rules enforced via project references. Angular 21 standalone SPA served through Nginx reverse-proxy; no server-side rendering. Frontend styling uses Tailwind CSS plus PrimeNG, both constrained by `designs/tokens.css` and `DESIGN.md`. Dockerfiles already exist and expect `ChatHerder.sln` at repo root and `frontend/dist/chat-herder` as the build output.
 
-**Tech Stack:** .NET 10 · C# 14 · EF Core 10 · Npgsql · StackExchange.Redis · RabbitMQ.Client · Konscious.Security.Cryptography · ASP.NET Core SignalR · Angular 21 · TypeScript 5 · SCSS · Nginx
+**Tech Stack:** .NET 10 · C# 14 · EF Core 10 · Npgsql · StackExchange.Redis · RabbitMQ.Client · Konscious.Security.Cryptography · ASP.NET Core SignalR · Angular 21 · TypeScript 5 · Tailwind CSS · PrimeNG · SCSS · Nginx
 
 ---
 
@@ -31,8 +31,10 @@
 |------|---------------|
 | `frontend/angular.json` | Build config; `outputPath` must be `dist/chat-herder` |
 | `frontend/package.json` | Angular 21 deps |
+| `frontend/tailwind.config.js` | Tailwind theme mapped to Slate Protocol tokens |
+| `frontend/proxy.config.json` | Local dev proxy for `/api` and `/hubs` |
 | `frontend/tsconfig.json` | `strict: true`, no `any` |
-| `frontend/src/styles.scss` | Global styles; imports `designs/tokens.css` |
+| `frontend/src/styles.scss` | Global styles; imports `designs/tokens.css`, Tailwind entrypoint, PrimeNG overrides |
 | `frontend/src/app/app.component.ts` | Root standalone component |
 | `frontend/src/app/app.config.ts` | `provideRouter`, `provideHttpClient` bootstrap |
 

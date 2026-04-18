@@ -47,7 +47,11 @@ Format:
 - **Components:** Standalone components only. No NgModules.
 - **Control flow:** `@if`, `@for`, `@switch` only. No `*ngIf` / `*ngFor` directives.
 - **Typing:** `strict: true` in `tsconfig.json`. No `any`. No `as` type assertions without a `// justification` comment.
-- **CSS/SCSS:** Consume `designs/tokens.css` CSS custom properties exclusively — no hardcoded hex values. Follow `DESIGN.md` for all visual rules (surface hierarchy, No-Line rule, roundness limits, typography scale). Pixel-accurate mockups are in `designs/*.html` — open in browser before implementing any screen.
+- **Styling stack:** Use **Tailwind CSS + PrimeNG together** on the Angular frontend.
+  - Tailwind is the default utility/layout layer.
+  - PrimeNG is allowed for behavior-heavy primitives (dialogs, overlays, menus, tables, inputs, dropdowns, tabs) when it accelerates delivery.
+  - PrimeNG components must be restyled to the project design system; do **not** ship PrimeNG default visual theme styling as-is.
+- **Design system:** Consume `designs/tokens.css` CSS custom properties as the visual source of truth — no hardcoded hex values. Tailwind config and PrimeNG theme overrides must map back to these tokens. Follow `DESIGN.md` for all visual rules (surface hierarchy, No-Line rule, roundness limits, typography scale). Pixel-accurate mockups are in `designs/*.html` — open in browser before implementing any screen.
 - **HTTP:** `HttpClient` with `AuthInterceptor` that injects `Authorization: Bearer {token}` on all requests.
 
 ### 3.3 Docker First
@@ -78,7 +82,7 @@ Every piece of code must be compatible with the Docker Compose environment defin
 | Database | PostgreSQL 17 |
 | Cache / Presence | Redis 7 |
 | Message Broker | RabbitMQ 3.13 (activity logging only) |
-| Frontend | Angular 21 (Signals, Standalone, Control Flow) |
+| Frontend | Angular 21 (Signals, Standalone, Control Flow) + Tailwind CSS + PrimeNG |
 | Containerisation | Docker & Docker Compose |
 
 ---

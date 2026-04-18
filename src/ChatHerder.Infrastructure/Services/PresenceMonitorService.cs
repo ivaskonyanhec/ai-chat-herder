@@ -22,7 +22,7 @@ public sealed class PresenceMonitorService(
         }
     }
 
-    private async Task SweepAsync(CancellationToken ct)
+    internal async Task SweepAsync(CancellationToken ct)
     {
         try
         {

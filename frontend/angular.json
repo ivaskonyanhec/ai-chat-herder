@@ -35,6 +35,7 @@
             ],
             "styles": [
               "../designs/tokens.css",
+              "src/tailwind.css",
               "src/styles.scss"
             ]
           },

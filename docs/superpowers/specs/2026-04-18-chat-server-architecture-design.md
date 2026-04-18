@@ -44,7 +44,7 @@ AI Chat Herder is a real-time online chat server supporting public rooms, multi-
 | Database | PostgreSQL 17 |
 | Cache / Presence | Redis 7 |
 | Message Broker | RabbitMQ 3.13 |
-| Frontend | Angular 21 (Signals, Standalone Components, Control Flow) |
+| Frontend | Angular 21 (Signals, Standalone Components, Control Flow) + Tailwind CSS + PrimeNG |
 | Containerisation | Docker & Docker Compose |
 
 ---
@@ -60,7 +60,7 @@ ai-chat-herder/
 │   ├── ChatHerder.Application/      # Use Cases, DTOs, port interfaces
 │   ├── ChatHerder.Infrastructure/   # EF Core, Redis, RabbitMQ, LocalFileStorage
 │   └── ChatHerder.API/              # Minimal API endpoints, SignalR Hubs, DI wiring
-└── frontend/                        # Angular 21 standalone app
+└── frontend/                        # Angular 21 standalone app + Tailwind + PrimeNG
 ```
 
 **Dependency rule (inward only):**
@@ -555,12 +555,17 @@ frontend/
 │   │   ├── sessions/       # SessionsComponent (active session list + revoke)
 │   │   └── files/          # FileUploadComponent, FilePreviewComponent
 │   └── app.routes.ts       # Standalone route config with lazy-loaded feature routes
+├── src/styles.scss         # Global token imports + Tailwind entrypoint + PrimeNG overrides
+├── tailwind.config.js      # Tailwind theme mapped to Slate Protocol tokens
+└── proxy.config.json       # Local dev proxy for /api and /hubs
 ```
 
 ### Key Patterns
 
 - **Signals throughout:** `AuthService` exposes `currentUser = signal<User | null>(null)`. `PresenceService` exposes `roomMembers = signal<Map<string, UserPresence[]>>(new Map())`.
 - **Control Flow:** `@if`, `@for`, `@switch` replace `*ngIf`/`*ngFor` directives in all templates.
+- **Tailwind + PrimeNG together:** Tailwind handles layout, spacing, responsive structure, and utility composition. PrimeNG provides selected interactive primitives such as dialogs, overlays, tabs, dropdowns, data tables, and menus.
+- **Design-token mapping:** Tailwind theme extensions and PrimeNG theme overrides map back to `designs/tokens.css`; the visual source of truth remains Slate Protocol, not PrimeNG defaults.
 - **SignalRService** manages both hub connections, handles token refresh before reconnect, and applies exponential backoff with jitter (base 1s, cap 30s).
 - **SessionsComponent:** reads `session_id` claim from the decoded access token to mark the current session in the list. Each row has a standalone "Log out" button that calls `DELETE /api/sessions/{id}` and listens for `ForceDisconnect` to redirect if the current session was revoked from another device.
 
