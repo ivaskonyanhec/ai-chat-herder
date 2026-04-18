@@ -2,7 +2,7 @@
 @import 'primeicons/primeicons.css';
 
 /*
- * Map design tokens (from public/tokens.css) to Tailwind v4 utility classes.
+ * Map design tokens (from designs/tokens.css) to Tailwind v4 utility classes.
  * `@theme inline` means Tailwind inlines the var() reference into generated CSS
  * rather than creating its own CSS custom property — avoids variable name collisions.
  */
@@ -29,9 +29,14 @@
   --color-outline: var(--color-outline);
   --color-outline-variant: var(--color-outline-variant);
   --color-inverse-surface: var(--color-inverse-surface);
+  --color-inverse-on-surface: var(--color-inverse-on-surface);
 
   /* Status / error */
   --color-error: var(--color-error);
+  --color-error-dim: var(--color-error-dim);
+  --color-error-container: var(--color-error-container);
+  --color-on-error: var(--color-on-error);
+  --color-on-error-container: var(--color-on-error-container);
   --color-status-online: var(--color-status-online);
   --color-status-afk: var(--color-status-afk);
   --color-status-offline: var(--color-status-offline);
