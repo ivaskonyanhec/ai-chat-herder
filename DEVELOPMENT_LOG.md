@@ -145,3 +145,51 @@ Format: `[Timestamp] | Task | Reasoning | Changes`
 ---
 
 `[2026-04-18 T34]` | **Full ARCHITECTURE.md rewrite** | Original spec covered only ~25% of requirements; gap analysis confirmed 29 of 38 areas missing or conflicting; requirement-complete rewrite needed | Replaced ARCHITECTURE.md with 18-section document covering: overview, tech stack, clean architecture, security (auth/sessions/3 ban types), domain model (16 entities), Mermaid ERD + indexes, complete API endpoint list, extended SignalR hub contracts, messaging model (3 KB limit/replies/soft delete/cursor pagination), attachments (image limit/paste/comment/access control), notifications (unread counters/read markers), presence engine (updated Redis structures), room system (membership lifecycle/invitations/permission matrix/cascade deletion), moderation (3 ban type separation), UI mapping (nav/side panel/chat window/admin modal), non-functional (capacity/latency/consistency), Jabber sketch (optional), decision log.
+
+---
+
+## 2026-04-18 — Surgical Correction Pass (11 Targeted Fixes)
+
+---
+
+`[2026-04-18 T35]` | **Fix admin permission mismatch: admin demotion** | Requirements §2.4.7 states admins may remove admin status from other admins (except owner); ARCHITECTURE.md incorrectly restricted this to owner-only | Fix: permission matrix updated — Demote Admin row now shows `✓` for Admin column (not owner, not self). API `DELETE /rooms/{id}/members/{userId}/admin` authorization changed from `[owner]` to `[admin]`. Server-side guard: reject if target is Owner or self.
+
+---
+
+`[2026-04-18 T36]` | **Unify Remove vs Ban** | Requirements §2.4.8 states removing a member IS banning them — no separate "remove without ban" action exists; UI Mapping admin modal and moderation section described them as separate actions | Fix: Members tab action list changed from "Make Admin, Ban, Remove from room" to "Make Admin, Ban (= remove from room)". Moderation section reworded to explicitly state: "Removing a member and banning a member are the same operation." API was already correct (single `/ban` endpoint).
+
+---
+
+`[2026-04-18 T37]` | **Add private rooms read path** | Private rooms are excluded from `GET /rooms` (public catalog) by design, but no endpoint existed for users to retrieve their own private room memberships, making the Private Rooms nav item unimplementable | Fix: Added `GET /rooms/my` — returns all rooms the caller is a member of (public + private), sorted by last message time. Nav table updated: Private Rooms tab now sources from `GET /api/rooms/my` filtered client-side to `Visibility = 'Private'`.
+
+---
+
+`[2026-04-18 T38]` | **Add explicit offline delivery guarantee** | Requirements §2.5.6 and §5 require messages sent to offline users to be delivered when they reconnect; architecture was silent on the delivery mechanism, leaving open the incorrect assumption that a message queue might be needed | Fix: New "Offline Delivery Guarantee" subsection added to Section 11. Explicit statement: "Offline delivery is implemented via durable storage and read progress, not per-user message queues." No unbounded queues anywhere in the system; unread counters are bounded integers, not message payloads.
+
+---
+
+`[2026-04-18 T39]` | **Clarify message ordering contract** | Requirements §2.5.6 requires chronological display; backend query returns newest-first for cursor efficiency, which could be misread as the display order | Fix: Added explicit "Message ordering contract" note in Section 9: backend returns descending `(SentAt, Id)` order; Angular reverses before rendering. Invariant stated: UI always displays strictly ascending chronological order.
+
+---
+
+`[2026-04-18 T40]` | **Clarify account deletion semantics** | Requirements §2.1.5 states "their account is removed"; architecture used soft delete (`DeletedAt`) which could be misread as the account still existing | Fix: Comment block added to deletion flow step 4 explaining that soft-delete is an internal implementation detail — functionally equivalent to permanent removal. Email + username are excluded from all queries; soft-delete solely reserves the identity strings to prevent reuse by new registrants.
+
+---
+
+`[2026-04-18 T41]` | **Specify password hashing algorithm** | Requirements §2.1.4 states passwords must be stored securely in hashed form; architecture was silent on the algorithm, leaving an underspecified security-critical decision | Decision: **Argon2id** (OWASP-recommended, RFC 9106) via `Konscious.Security.Cryptography`. Parameters: 64 MiB memory, 3 iterations, parallelism 1 (~100 ms per hash). Per-password 128-bit random salt encoded with hash in a single self-describing string in `Users.PasswordHash`.
+
+---
+
+`[2026-04-18 T42]` | **Add friend request from room member list** | Requirements §2.3.2 explicitly states friend requests can be sent from the room user list; no UI interaction flow was described for this path | Fix: Members Panel description in Section 15 extended with a context-menu interaction: hover/right-click on any member row shows "Send friend request" if not already friends and no block exists. Calls `POST /api/friends/requests { username, message? }`. No new endpoint required.
+
+---
+
+`[2026-04-18 T43]` | **Scope AFK latency SLA and justify detection delay** | Requirements §3.1 states presence updates should propagate within 2 seconds; AFK detection lags up to 80s (60s threshold + 20s monitor interval), creating an apparent requirement violation | Fix: AFK latency note added in Section 12 and Section 16 clarifying the SLA scope: the `< 2s` requirement applies to online/offline transitions (hub lifecycle events, synchronous). AFK is inherently coarse-grained — §2.2.2 defines it as "more than 1 minute inactive", making sub-second AFK detection neither required nor meaningful. Documented explicitly.
+
+---
+
+`[2026-04-18 T44]` | **Prohibit unbounded offline message queues** | Implicit architecture risk: if a user disappears for months, any per-user message queue would grow without bound; the spec did not explicitly prohibit this pattern | Fix: Explicit design rule stated in Section 11: no per-user message queues anywhere in the system. Offline delivery relies on PostgreSQL persistence + ReadMarkers + unread counters. Redis keys hold bounded integer counters, not payloads. Reconnecting user fetches history via normal pagination API.
+
+---
+
+`[2026-04-18 T45]` | **Introduce per-chat message sequence numbers** | Without monotonic sequence numbers, the client has no reliable mechanism to detect dropped or out-of-order messages during WebSocket reconnections or replica failover — silent message gaps are a correctness risk | Design: `SequenceNumber bigint` column added to `Messages` and `PersonalDialogMessages`. Unique indexes `(RoomId, SequenceNumber)` and `(DialogId, SequenceNumber)`. Generated server-side via `SELECT MAX + 1` inside INSERT transaction (Redis `INCR` available as higher-throughput alternative). `MessageDto` extended with `sequenceNumber`. Client gap detection: `seq == last+1` → accept; `seq > last+1` → re-fetch via recovery endpoint; `seq <= last` → discard duplicate. Recovery endpoints added: `GET /rooms/{id}/messages?afterSeq=X` and `GET /dialogs/{id}/messages?afterSeq=X`. SequenceNumbers are orthogonal to ReadMarkers — integrity vs. unread tracking.

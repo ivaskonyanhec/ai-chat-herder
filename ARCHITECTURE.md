@@ -167,6 +167,10 @@ POST /api/auth/reset-password  { token, newPassword }
   → Revoke all existing sessions (force re-login everywhere)
 ```
 
+### Password Hashing
+
+Passwords are hashed with **Argon2id** (OWASP-recommended, RFC 9106) via the `Konscious.Security.Cryptography` NuGet package. Parameters: memory cost = 64 MiB, iterations = 3, parallelism = 1 — tuned to ~100 ms per hash on target hardware. Each password receives a unique **128-bit cryptographic random salt** generated at registration/change time. The hash and salt are encoded together as a single self-describing string (`$argon2id$v=19$m=65536,t=3,p=1$<base64-salt>$<base64-hash>`) stored in `Users.PasswordHash`. No separate salt column is required; the encoded string is portable and self-contained.
+
 ### Three Ban Types (Strictly Separated)
 
 | Type | Storage | Effect |
@@ -187,7 +191,14 @@ DELETE /api/auth/account
      → for each: delete messages + files + room record
   2. DELETE RoomMembership WHERE UserId = userId (remove from all other rooms)
   3. DELETE FriendRequest, Friendship, UserBlock involving user
-  4. SET Users.DeletedAt = now (soft delete; username + email reserved to prevent reuse)
+  4. SET Users.DeletedAt = now
+     -- Soft-delete is an internal implementation detail only.
+     -- Effect is functionally equivalent to permanent removal:
+     --   • username and email excluded from all queries and search results
+     --   • user no longer appears in room member lists or contact searches
+     --   • all sessions invalidated, all SignalR connections forcibly disconnected
+     -- Soft-delete (vs. hard DELETE) is used solely to permanently reserve the
+     --   email + username strings and prevent identity reuse by a new registrant.
   5. Revoke all sessions + ForceDisconnect all SignalR connections
 ```
 
@@ -310,6 +321,7 @@ erDiagram
         uuid      Id                  PK
         uuid      RoomId              FK
         uuid      SenderId            FK
+        bigint    SequenceNumber          "per-room monotonic; unique within RoomId"
         string    Content
         uuid      ReplyToMessageId    FK
         uuid      AttachmentId        FK
@@ -331,6 +343,7 @@ erDiagram
         uuid      Id                  PK
         uuid      DialogId            FK
         uuid      SenderId            FK
+        bigint    SequenceNumber          "per-dialog monotonic; unique within DialogId"
         string    Content
         uuid      ReplyToMessageId    FK
         uuid      AttachmentId        FK
@@ -446,6 +459,10 @@ CREATE INDEX idx_roombans_room_user            ON RoomBans (RoomId, BannedUserId
 CREATE INDEX idx_invitations_user_pending      ON RoomInvitations (InvitedUserId)
     WHERE Status = 'Pending';
 
+-- Sequence integrity: gap detection and recovery
+CREATE UNIQUE INDEX idx_messages_seq           ON Messages (RoomId, SequenceNumber);
+CREATE UNIQUE INDEX idx_dm_messages_seq        ON PersonalDialogMessages (DialogId, SequenceNumber);
+
 -- Hot read: paginated room history (cursor-based, excludes soft-deleted)
 CREATE INDEX idx_messages_room_cursor          ON Messages (RoomId, SentAt DESC, Id DESC)
     WHERE DeletedAt IS NULL;
@@ -523,7 +540,8 @@ GET    /users/by-username/{name}   user lookup for friend request
 ### Rooms
 
 ```
-GET    /rooms                      public catalog (?search=&page=&limit=)
+GET    /rooms                      public catalog only (?search=&page=&limit=)
+GET    /rooms/my                   all rooms caller is a member of (public + private); sorted by last message time
 POST   /rooms                      { name, description, visibility }
 GET    /rooms/{id}                 room detail + caller membership status
 PATCH  /rooms/{id}                 { name?, description?, visibility? }  [owner]
@@ -541,7 +559,7 @@ GET    /rooms/{id}/bans                         [admin]  list active bans (usern
 POST   /rooms/{id}/members/{userId}/ban         [admin]  ban = remove member
 DELETE /rooms/{id}/bans/{userId}                [admin]  lift ban
 POST   /rooms/{id}/members/{userId}/make-admin  [owner]  promote to admin
-DELETE /rooms/{id}/members/{userId}/admin       [owner]  demote admin
+DELETE /rooms/{id}/members/{userId}/admin       [admin]  demote admin (cannot target owner or self)
 DELETE /rooms/{id}/messages/{messageId}         [admin]  delete any room message
 ```
 
@@ -560,6 +578,7 @@ POST   /invitations/{id}/reject
 ```
 PATCH  /messages/{id}              { content }  [author only, max 3 KB]
 DELETE /messages/{id}              [author or room admin]
+GET    /rooms/{id}/messages?afterSeq={seq}&limit=50    gap recovery (sequence-based)
 ```
 
 ### Friends
@@ -588,6 +607,7 @@ GET    /dialogs                    all dialogs sorted by last message timestamp
 POST   /dialogs                    { userId }  create or retrieve existing dialog
 GET    /dialogs/{id}               dialog detail
 GET    /dialogs/{id}/messages      cursor-based history (?before={messageId}&limit=50)
+GET    /dialogs/{id}/messages?afterSeq={seq}&limit=50  gap recovery (sequence-based)
 PATCH  /dm-messages/{id}           { content }  [sender only]
 DELETE /dm-messages/{id}           [sender only]
 ```
@@ -732,12 +752,13 @@ Typing indicators bypass RabbitMQ — ephemeral, no audit value, delivered cross
 ```csharp
 record MessageDto(
     Guid        Id,
+    long        SequenceNumber,    // per-room (or per-dialog) monotonic counter
     string      Content,
     UserSummary Sender,
     DateTime    SentAt,
     DateTime?   EditedAt,
     bool        IsDeleted,
-    MessageDto? ReplyTo,        // embedded snapshot; not a recursive FK chain
+    MessageDto? ReplyTo,           // embedded snapshot; not a recursive FK chain
     AttachmentDto? Attachment
 );
 ```
@@ -771,7 +792,23 @@ ORDER BY SentAt DESC, Id DESC
 LIMIT 50
 ```
 
-Returns newest-first; Angular reverses for display. First load omits `before`. Supports 10,000+ message rooms with O(log N) index scan. Same pattern applies to dialog messages.
+Returns newest-first; Angular reverses the list before rendering, producing strictly chronological display (oldest at top, newest at bottom). First load omits `before`. Supports 10,000+ message rooms with O(log N) index scan. Same pattern applies to dialog messages.
+
+**Message ordering contract:** The backend always returns messages in descending `(SentAt, Id)` order for cursor efficiency. The Angular `ChatComponent` always reverses this before inserting into the view. Invariant: the UI displays messages in strictly ascending chronological order.
+
+### Sequence Numbers and Gap Detection
+
+Every message carries a per-context monotonic `SequenceNumber` unique within `RoomId` or `DialogId`. Generated server-side: `SELECT MAX(SequenceNumber) + 1 FROM Messages WHERE RoomId = X` inside the INSERT transaction. At 300-user scale, per-room write serialisation under a row-level lock is acceptable; this can be replaced with `INCR room:seq:{roomId}` in Redis for higher throughput if needed.
+
+**Client gap detection logic:**
+
+| Condition | Action |
+|-----------|--------|
+| `seq == lastSeen + 1` | Accept; update local watermark |
+| `seq > lastSeen + 1` | **GAP** — call `GET /rooms/{id}/messages?afterSeq={lastSeen}&limit=50` to backfill |
+| `seq <= lastSeen` | Duplicate / replay — discard silently |
+
+`SequenceNumber` is for integrity and gap detection only. It does not replace `ReadMarkers`, which are the authoritative source for unread tracking (two orthogonal concerns).
 
 ---
 
@@ -834,6 +871,10 @@ On account delete (owned rooms): same cascade per owned room.
 ---
 
 ## 11. Notifications System
+
+### Offline Delivery Guarantee
+
+**Offline delivery is implemented via durable storage and read progress, not per-user message queues.** Messages sent while a user is offline are persisted in PostgreSQL immediately. When the user next connects, `PresenceHub.OnConnectedAsync` re-hydrates their unread counts from `ReadMarkers` + a DB count query; the user then loads missed messages via the normal pagination API. No unbounded per-user queues exist anywhere in the system. Redis unread counter keys (`unread:{userId}:…`) are bounded integers — they accumulate counts, not message payloads. A user who disappears for months receives no special handling: their messages are in the DB, their unread count reflects reality, and both are delivered correctly on reconnect.
 
 ### Unread Count Model
 
@@ -926,6 +967,8 @@ for each userId in SMEMBERS active:users:
 
 `ZRANGEBYSCORE` is O(log N + M) where M is only the matching entries — O(stale connections), not O(all connections). The 70s TTL on `presence:conn:*` self-heals ghost-online users if the monitor stops.
 
+**AFK latency note:** Maximum AFK detection lag = 60s heartbeat threshold + 20s monitor interval = **≤ 80s from last interaction to AFK broadcast**. This is intentional and correct: §2.2.2 defines AFK as "not interacted for *more than* 1 minute", making sub-second AFK detection neither required nor meaningful. The §3.1 `< 2s` presence SLA applies exclusively to **online/offline** transitions, which are handled synchronously in `OnConnectedAsync` / `OnDisconnectedAsync`.
+
 ### Friend Presence Subscription
 
 Pattern: `user-presence:{userId}` is a SignalR group that receives status updates *about* `userId`. When user A connects, for each friend F, `Groups.AddToGroupAsync(A.connId, "user-presence:{F.UserId}")`. Broadcasting status changes to `user-presence:{userId}` reaches all online friends across all replicas via the Redis backplane.
@@ -981,7 +1024,7 @@ Invitee rejects (POST /invitations/{id}/reject):
 | Delete room | ✓ | — | — |
 | Change room settings | ✓ | — | — |
 | Promote member to admin | ✓ | — | — |
-| Demote admin | ✓ (not self) | — | — |
+| Demote admin | ✓ (not self) | ✓ (not owner, not self) | — |
 | Ban / remove member | ✓ | ✓ | — |
 | Unban member | ✓ | ✓ | — |
 | Delete any message | ✓ | ✓ | — |
@@ -1014,7 +1057,7 @@ Returns only public, non-deleted rooms. Each entry includes `memberCount` (COUNT
 
 ### Room Bans
 
-Removing a member equals banning. `RoomBans` table is the authoritative record.
+**Removing a member and banning a member are the same operation.** There is no "remove without ban." When an admin removes a user from a room — whether via the "Ban" button in the UI or the `POST /rooms/{id}/members/{userId}/ban` endpoint — a `RoomBans` row is always created. The user cannot rejoin unless explicitly unbanned. `RoomBans` table is the authoritative record.
 
 - On ban: INSERT RoomBans → DELETE RoomMembership → `RemovedFromRoom` SignalR event → remove from room SignalR group.
 - Access to room messages and files revoked immediately (enforced by RoomMembership check at query time — no Redis dependency).
@@ -1065,7 +1108,7 @@ ChatLogo | Public Rooms | Private Rooms | Contacts | Sessions | Profile ▼ | Si
 | Item | Route | Source |
 |------|-------|--------|
 | Public Rooms | `/rooms/public` | `GET /api/rooms` |
-| Private Rooms | `/rooms/private` | `GET /api/rooms` (user's private memberships) |
+| Private Rooms | `/rooms/private` | `GET /api/rooms/my` (filtered client-side to `Visibility = 'Private'`) |
 | Contacts | `/contacts` | `GET /api/friends` + SignalR presence |
 | Sessions | `/sessions` | `GET /api/sessions` |
 | Profile | `/profile` | `GET /api/users/me` |
@@ -1131,6 +1174,8 @@ Members (38)
 
 Member list: `GET /api/rooms/{id}/members` (DB), presence statuses from `PresenceService.presenceMap`.
 
+**Friend requests from room members:** Every row in the members list (right sidebar and Admin Modal Members tab) has a context menu accessible on hover or right-click. If the listed user is not already a friend and neither party has blocked the other, the menu shows "Send friend request" with an optional message field. Clicking it calls `POST /api/friends/requests { username, message? }`. No new endpoint is required — the username is already present in the member row data.
+
 ### Admin Modal — 5 Tabs
 
 ```
@@ -1141,8 +1186,8 @@ Manage Room: #engineering-room
 
 | Tab | Data Source | Actions Available |
 |-----|------------|------------------|
-| Members | `GET /rooms/{id}/members` | Make Admin, Ban, Remove from room |
-| Admins | `GET /rooms/{id}/members?role=admin` | Remove Admin (owner only) |
+| Members | `GET /rooms/{id}/members` | Make Admin, Ban (= remove from room) |
+| Admins | `GET /rooms/{id}/members?role=admin` | Remove Admin (any admin; cannot demote owner) |
 | Banned users | `GET /rooms/{id}/bans` | Unban; shows who banned and when |
 | Invitations | `GET /rooms/{id}/invitations` | Send invite by username |
 | Settings | Room record | Edit name/description/visibility; Delete room |
@@ -1175,9 +1220,9 @@ Updated by `UnreadCountChanged` SignalR event. Cleared by `POST /api/rooms/{id}/
 
 ### Presence Update Latency
 
-**Requirement:** < 2 seconds.
-- **Online/offline (connect/disconnect):** < 500ms — triggered immediately in hub lifecycle methods, broadcast synchronously.
-- **AFK detection:** up to 20s detection lag (monitor polls every 20s). AFK is a lagging indicator; the < 2s requirement applies to online/offline transitions. Monitor poll can be reduced to 5s for stricter AFK if needed.
+**Requirement:** < 2 seconds (§3.1).
+- **Online/offline (connect/disconnect):** < 500ms — triggered immediately in hub lifecycle methods, broadcast synchronously to `user-presence:{userId}` groups via Redis backplane. Satisfies the < 2s SLA.
+- **AFK detection:** ≤ 80s from last interaction (60s threshold + 20s monitor interval). This exceeds the < 2s SLA, but that SLA applies to online/offline transitions only. AFK is inherently a coarse-grained state (§2.2.2 defines it as "more than 1 minute inactive") — sub-second AFK detection is neither required nor meaningful. Monitor poll interval is a tunable parameter and can be tightened if product requirements change.
 
 ### Message History
 
