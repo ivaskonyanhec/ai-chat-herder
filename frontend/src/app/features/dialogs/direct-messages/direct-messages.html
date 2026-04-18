@@ -1,241 +1,157 @@
 <div class="flex h-full overflow-hidden bg-surface">
-  <!-- Pane 1: Recent Chats & Contact List -->
-  <section class="w-80 flex flex-col bg-surface-container border-r border-surface-container-high">
-    <div class="p-6">
+  <!-- Pane 1: Dialog List -->
+  <section class="w-80 flex flex-col bg-surface-container border-r border-surface-container-high shrink-0">
+    <div class="p-6 border-b border-surface-container-high">
       <h2 class="text-lg font-bold text-on-surface mb-4">Messages</h2>
-      <div class="relative mb-6">
+      <div class="relative">
         <input
           class="w-full bg-surface-container-low border-none rounded-lg text-sm px-4 py-2 focus:ring-1 focus:ring-primary/30"
-          placeholder="Jump to message..."
+          placeholder="Search conversations..."
           type="text"
         />
       </div>
-      <div class="space-y-1">
-        <!-- Active contact -->
-        <div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-lowest shadow-sm cursor-pointer border border-transparent">
-          <div class="flex items-center gap-3">
-            <div class="relative">
-              <img
-                class="w-10 h-10 rounded-full"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVfkNihdOvwX_MxzzvmcSL8ddYZoVpAJWm2PKPAepTGWvKad275LpeVpVwDK8WflthmpZnN8Oq7aII3IZBvhwt0hyOmu5FrHF6NMyUO3QjQ8xtDhjEdr3xEhs1D7_lEQHzyiqFNxLeh6KE93euZ-uX3GvbFrFed3Jqc8g4z8GO-Vm_4IykdAYWzvvNWfTlDPni4VyWO9M8vLZtwjQJOLZBuF6Wr9hF6t2itg29OXd1lpT6ve1Ppnbe39vpA_zzbaJ0smlu3ysEJeU"
-                alt="Julian Thorne"
-              />
-              <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-[#ffb300] border-2 border-surface-container-lowest"></span>
-            </div>
-            <div>
-              <p class="text-sm font-bold text-on-surface">Julian Thorne</p>
-              <p class="text-xs text-on-surface-variant truncate w-32">The site plan looks correct...</p>
-            </div>
-          </div>
-          <span class="text-[10px] text-outline font-medium tracking-tight">12:45 PM</span>
-        </div>
+    </div>
 
-        <!-- Suspended contact -->
-        <div class="flex items-center justify-between p-3 rounded-lg hover:bg-surface-container-high cursor-pointer transition-colors">
-          <div class="flex items-center gap-3">
-            <div class="relative opacity-60">
-              <img
-                class="w-10 h-10 rounded-full"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBDki53kf1xdveGGrZ5N84ARgkTzhtMSgydMLDXWHZCJaEsMte52xNYmN9j-pyPplSjzfSpZzCb5bu18l75iJMYUa94lCjY7745IY-KqWkytTUb_IbvV4gBBp8rrkUUt5aBYHNTEmiabiUWj7Heh34_1IIaZULUnHeyccfBeuiYB4j6H8kvZUlFM_PqpnyrAalCe5p6sXjuYoz1Zcx66-VkotFMjOKeXCJ8A8PVmBD55WnRfKa3ZD_0Xh-NFZcZuu2U8m40H7vyI4w"
-                alt="Marcus Reid"
-              />
-              <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-outline border-2 border-surface-container-lowest"></span>
-            </div>
-            <div>
-              <p class="text-sm font-bold text-on-surface opacity-60">Marcus Reid</p>
-              <p class="text-[10px] text-error font-bold uppercase tracking-widest mt-0.5">Account Suspended</p>
-            </div>
-          </div>
-          <span class="text-[10px] text-outline font-medium tracking-tight">Nov 12</span>
+    <div class="flex-1 overflow-y-auto">
+      @if (isLoadingDialogs()) {
+        <div class="flex justify-center py-8">
+          <span class="material-symbols-outlined text-xl text-outline animate-spin">progress_activity</span>
         </div>
-      </div>
+      } @else if (dialogs().length === 0) {
+        <div class="flex flex-col items-center justify-center py-12 px-6 text-center gap-2">
+          <span class="material-symbols-outlined text-3xl text-outline">chat_bubble</span>
+          <p class="text-xs text-on-surface-variant">No conversations yet.</p>
+        </div>
+      } @else {
+        @for (dialog of dialogs(); track dialog.id) {
+          <button
+            class="w-full flex items-center gap-3 p-4 hover:bg-surface-container-lowest transition-colors text-left"
+            [class.bg-surface-container-lowest]="selectedDialog()?.id === dialog.id"
+            [class.shadow-sm]="selectedDialog()?.id === dialog.id"
+            (click)="selectDialog(dialog)"
+          >
+            <div class="w-10 h-10 rounded-full bg-surface-container-high overflow-hidden shrink-0 flex items-center justify-center">
+              @if (dialog.otherAvatarUrl) {
+                <img [src]="dialog.otherAvatarUrl" class="w-full h-full object-cover" alt="" />
+              } @else {
+                <span class="material-symbols-outlined text-on-surface-variant" style="font-size:1.25rem">person</span>
+              }
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-bold text-on-surface truncate">{{ dialog.otherUsername }}</p>
+              @if (dialog.isFrozen) {
+                <p class="text-[10px] text-error">Conversation frozen</p>
+              }
+            </div>
+          </button>
+        }
+      }
     </div>
   </section>
 
-  <!-- Pane 2: Central Chat Area -->
-  <section class="flex-1 flex flex-col bg-surface-container-lowest relative">
-    <!-- Chat Header -->
-    <header class="h-16 flex items-center justify-between px-8 border-b border-surface-container-low">
-      <div class="flex items-center gap-4">
-        <div class="relative">
-          <img
-            class="w-10 h-10 rounded-full"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuAlEFUEj1TwW0WkEW439J2oM0YObmQs1_f9YMh9NC97CC9z3fLSpHLTfy0P6hkWIWGTkomY13qAlsloGjdtu_qK06iCeZTB1rl3TTTz1poAZYW102dZ7hz-Jv9GrA7EcD8P64EHVPTXiZoBcktoK9WMRWzImV-qOD47TFBKqqqjLr0hBonhFj-hWRQYCm0cnkEOUAMQM4SX-fg8SDtzLPy1Ft4DsSaMqu-0CkPof_Jyxxk1FW6UGeMhlFkpHkANHZy4n-QK0k4TlJc"
-            alt="Julian Thorne"
-          />
-          <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-[#ffb300] border-2 border-surface-container-lowest"></span>
-        </div>
-        <div>
-          <h3 class="text-sm font-bold text-on-surface">Julian Thorne</h3>
-          <p class="text-[10px] text-outline font-medium tracking-wider uppercase">Senior Structural Lead • AFK</p>
+  <!-- Pane 2: Message Thread -->
+  <section class="flex-1 flex flex-col overflow-hidden">
+    @if (!selectedDialog()) {
+      <div class="flex-1 flex items-center justify-center text-on-surface-variant">
+        <div class="text-center">
+          <span class="material-symbols-outlined text-4xl text-outline block mb-2">chat</span>
+          <p class="text-sm">Select a conversation to start chatting</p>
         </div>
       </div>
-      <div class="flex items-center gap-4 text-outline">
-        <button class="material-symbols-outlined hover:text-primary transition-colors">call</button>
-        <button class="material-symbols-outlined hover:text-primary transition-colors">video_call</button>
-        <button class="material-symbols-outlined hover:text-primary transition-colors">info</button>
-      </div>
-    </header>
-
-    <!-- Message History -->
-    <div class="flex-1 overflow-y-auto p-8 space-y-8">
-      <!-- Date Divider -->
-      <div class="flex items-center gap-4 opacity-40">
-        <div class="h-px flex-1 bg-outline-variant"></div>
-        <span class="text-[10px] font-bold uppercase tracking-widest text-outline">Wednesday, October 24</span>
-        <div class="h-px flex-1 bg-outline-variant"></div>
-      </div>
-
-      <!-- Received Message Group -->
-      <div class="flex items-start gap-4 max-w-2xl">
-        <img
-          class="w-8 h-8 rounded-full mt-1"
-          src="https://lh3.googleusercontent.com/aida-public/AB6AXuBnUZcuWy6YgWtDRWJPrehrKYrFR3pws1-wZIGF4iiVs-B60zOtbjE12CM9fFJBk-bQaNl79WOSRKY-vVjI0-XGYWbJGWBHasy6ZWPfJBYgukRPmvoEkLIE765YiDXaNAPmCrmYbPrO5zO8v_XgVSFdYcS7XFIEL4ldYdEPwpCIsRL8wAgHJ8ABpH7npiqKnLF62GHY4eeLCa4Dh0e87rG0_nvvX-4EEvUrlMoA2k-hMleukNUy_ZWUTkgX64IRxaNKz6l3bBhI1ww"
-          alt="Julian Thorne"
-        />
-        <div class="space-y-2">
-          <div class="flex items-center gap-2">
-            <span class="text-sm font-bold text-on-surface">Julian Thorne</span>
-            <span class="text-[10px] text-outline font-medium tracking-tight">10:15 AM</span>
-          </div>
-          <div class="bg-surface-container-low p-4 rounded-lg rounded-tl-none">
-            <p class="text-sm leading-relaxed text-on-surface">Good morning. I've reviewed the blueprints for the North Wing extension. The structural load calculations seem slightly optimistic regarding the central atrium supports.</p>
-          </div>
-          <div class="bg-surface-container-low p-4 rounded-lg">
-            <p class="text-sm leading-relaxed text-on-surface">Can you verify the steel grade specified in Section 4.2? We might need to upgrade to Grade 50 if we stick with the slim profile columns.</p>
-          </div>
+    } @else {
+      <!-- Header -->
+      <div class="h-16 bg-surface-container border-b border-surface-container-high flex items-center px-6 gap-3 shrink-0">
+        <div class="w-8 h-8 rounded-full bg-surface-container-high overflow-hidden flex items-center justify-center">
+          @if (selectedDialog()!.otherAvatarUrl) {
+            <img [src]="selectedDialog()!.otherAvatarUrl" class="w-full h-full object-cover" alt="" />
+          } @else {
+            <span class="material-symbols-outlined text-on-surface-variant" style="font-size:1rem">person</span>
+          }
         </div>
+        <h3 class="font-bold text-on-surface text-sm">{{ selectedDialog()!.otherUsername }}</h3>
+        @if (selectedDialog()!.isFrozen) {
+          <span class="ml-auto text-[10px] font-bold uppercase tracking-widest text-error bg-error-container/30 px-2 py-1 rounded-full">Frozen</span>
+        }
       </div>
 
-      <!-- Sent Message Group -->
-      <div class="flex items-start gap-4 max-w-2xl ml-auto flex-row-reverse">
-        <img
-          class="w-8 h-8 rounded-full mt-1"
-          [src]="user()?.avatarUrl || 'https://lh3.googleusercontent.com/aida-public/AB6AXuDX1T5_0MPa0LmcZwsvxf5k-Ogg_XRg8VBGD9OdhS8B-6-sB5RTOex7w8Fbc9UJsQ0uS8BvRtkbb5S2YygzpgpP4qDq1htcDOaIZ9epaupOKEOXm4DL8cKcppZW1oCZ3q8_7vE7PEiCFoDTItR149Ib6_5swtEL-rQpGkOTfC6M9uSHQE8mrwWsen3x_UABYxfEJa4pj5IWHcDHZhIBGKYlTyCpvVH9W86bNE_67PCFQD3HaF25nIRTzWRGNVlEuDYI06telxuoh7k'"
-          alt="You"
-        />
-        <div class="space-y-2 flex flex-col items-end">
-          <div class="flex items-center gap-2">
-            <span class="text-[10px] text-outline font-medium tracking-tight">10:42 AM</span>
-            <span class="text-sm font-bold text-on-surface">You</span>
+      <!-- Messages -->
+      <div class="flex-1 overflow-y-auto p-6 space-y-3" data-testid="dm-messages">
+        @if (isLoadingMessages()) {
+          <div class="flex justify-center py-8">
+            <span class="material-symbols-outlined text-xl text-outline animate-spin">progress_activity</span>
           </div>
-          <div class="bg-primary text-on-primary p-4 rounded-lg rounded-tr-none shadow-md">
-            <p class="text-sm leading-relaxed">I'll cross-check that immediately. I believe we were pushing for the Grade 50 but I need to confirm the supplier's lead time on those specific extrusions.</p>
-          </div>
-        </div>
+        } @else if (messages().length === 0) {
+          <div class="text-center py-12 text-on-surface-variant text-sm">No messages yet. Say hello!</div>
+        } @else {
+          @for (msg of messages(); track msg.id) {
+            @if (!msg.isDeleted) {
+              <div [class]="msg.sender.id === user()?.id ? 'flex justify-end' : 'flex'">
+                <div
+                  class="max-w-xs lg:max-w-sm px-4 py-2.5 rounded-2xl text-sm"
+                  [class]="msg.sender.id === user()?.id
+                    ? 'bg-primary text-on-primary rounded-br-sm'
+                    : 'bg-surface-container-lowest text-on-surface rounded-bl-sm'"
+                >
+                  <p>{{ msg.content }}</p>
+                  @if (msg.editedAt) {
+                    <p class="text-[9px] opacity-60 mt-0.5">edited</p>
+                  }
+                </div>
+              </div>
+            } @else {
+              <div [class]="msg.sender.id === user()?.id ? 'flex justify-end' : 'flex'">
+                <div class="px-4 py-2 rounded-2xl text-xs text-on-surface-variant italic bg-surface-container">
+                  Message deleted
+                </div>
+              </div>
+            }
+          }
+        }
       </div>
-    </div>
 
-    <!-- Input Area -->
-    <div class="p-6 bg-surface-container-lowest border-t border-surface-container-low">
-      <div class="bg-surface-container-low rounded-xl p-2">
-        <textarea
-          class="w-full bg-transparent border-none focus:ring-0 text-sm p-3 resize-none h-24 placeholder:text-outline/60"
-          placeholder="Type your message..."
-        ></textarea>
-        <div class="flex items-center justify-between px-3 pb-2">
-          <div class="flex items-center gap-3 text-outline">
-            <button class="material-symbols-outlined hover:text-primary transition-colors text-xl">attach_file</button>
-            <button class="material-symbols-outlined hover:text-primary transition-colors text-xl">image</button>
-            <button class="material-symbols-outlined hover:text-primary transition-colors text-xl">mood</button>
-            <div class="h-4 w-px bg-outline-variant mx-1"></div>
-            <button class="material-symbols-outlined hover:text-primary transition-colors text-xl">format_bold</button>
-            <button class="material-symbols-outlined hover:text-primary transition-colors text-xl">format_italic</button>
-          </div>
-          <button class="bg-primary text-on-primary px-6 py-2 rounded-lg font-bold text-xs uppercase tracking-widest hover:bg-primary-dim transition-all shadow-lg flex items-center gap-2">
-            Send
-            <span class="material-symbols-outlined text-sm">send</span>
+      <!-- Compose -->
+      <div class="p-4 border-t border-surface-container-high shrink-0">
+        @if (errorMessage()) {
+          <p class="text-error text-xs mb-2">{{ errorMessage() }}</p>
+        }
+        <div class="flex gap-2 items-end">
+          <textarea
+            class="flex-1 bg-surface-container-low border-none rounded-xl px-4 py-3 text-sm text-on-surface resize-none focus:ring-1 focus:ring-primary/30 outline-none"
+            data-testid="dm-message-input"
+            placeholder="Type a message..."
+            rows="1"
+            [value]="messageText()"
+            [disabled]="selectedDialog()!.isFrozen || isSending()"
+            (input)="messageText.set($any($event.target).value)"
+            (keydown.enter)="$event.preventDefault(); sendMessage()"
+          ></textarea>
+          <button
+            class="px-4 py-3 bg-primary text-on-primary text-sm font-bold rounded-xl hover:bg-primary-dim transition-colors disabled:opacity-50"
+            [disabled]="isSending() || !messageText().trim() || selectedDialog()!.isFrozen"
+            (click)="sendMessage()"
+          >
+            <span class="material-symbols-outlined" style="font-size:1.25rem">send</span>
           </button>
         </div>
       </div>
-    </div>
+    }
   </section>
 
-  <!-- Pane 3: Contact Details & Media -->
-  <aside class="w-72 bg-surface border-l border-surface-container">
-    <div class="p-6 flex flex-col h-full">
-      <div class="text-center mb-8">
-        <div class="relative inline-block mx-auto">
-          <img
-            class="w-24 h-24 rounded-full border-4 border-surface-container-lowest shadow-xl"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCgrOExE1wa41W76JlETsm1eFTHkr1aVuGIBSNFUBsrMRqEIEy60N4z4rfST3gwYW84H0jkP2eVgnDGHEvW-SsByXREP8yUpFlu8CHRBMI-x4TeEcb5GuVkx6K8hXg7GFvAu6sJADJ4QU6EFnfbwBSUzLIOaFWc6ekJtV6F-Ag3lYWTiEb3xE0242r-ObzCRWbpz8xeSMV8M7ielKtPOUHBAo1K7JW71cb-Z4Cd_xHO3zZKMtLS8To059snW5J94TTQ678znKz2Zes"
-            alt="Julian Thorne"
-          />
-          <span class="absolute bottom-2 right-2 w-5 h-5 rounded-full bg-[#ffb300] ring-4 ring-surface"></span>
+  <!-- Pane 3: Contact Info -->
+  @if (selectedDialog()) {
+    <section class="w-72 flex flex-col bg-surface-container border-l border-surface-container-high shrink-0 overflow-y-auto p-6">
+      <div class="flex flex-col items-center gap-4 text-center">
+        <div class="w-20 h-20 rounded-full bg-surface-container-high overflow-hidden flex items-center justify-center">
+          @if (selectedDialog()!.otherAvatarUrl) {
+            <img [src]="selectedDialog()!.otherAvatarUrl" class="w-full h-full object-cover" alt="" />
+          } @else {
+            <span class="material-symbols-outlined text-on-surface-variant text-4xl">person</span>
+          }
         </div>
-        <h4 class="text-lg font-bold text-on-surface mt-4">Julian Thorne</h4>
-        <p class="text-xs text-outline font-medium">julian.thorne&#64;arch-workspace.com</p>
-      </div>
-
-      <div class="space-y-6 flex-1">
         <div>
-          <h5 class="text-[10px] font-bold text-outline uppercase tracking-widest mb-3">Professional Bio</h5>
-          <p class="text-xs text-on-surface-variant leading-relaxed">
-            Lead Structural Engineer with 15+ years experience in high-rise steel frame design. Oversaw the Jakarta Financial District redevelopment.
-          </p>
-        </div>
-
-        <div>
-          <div class="flex items-center justify-between mb-3">
-            <h5 class="text-[10px] font-bold text-outline uppercase tracking-widest">Shared Assets</h5>
-            <button class="text-[10px] font-bold text-primary hover:underline">View All</button>
-          </div>
-          <div class="grid grid-cols-2 gap-2">
-            <div class="aspect-square bg-surface-container-high rounded overflow-hidden relative group cursor-pointer">
-              <img
-                class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuAd7uQXmSpNzucbr3y6jW9pJqQgibq5hxX9bmCtias_gyM-piMyJYxz4EcYCOPqQ3GGsWI0-4PB5s_4gKj9QY4KXq-GBTVnlL3JgtqxZhTIPFrWiXouBkm_8RaxiKiPnmjfEn1DjXTTzVQqoztymAmKPPuRWiigwNbQoFIHNuGblDr2KPq98ESGYDMdRFQTFnhL-Wvil1ujoImj-F3S5tpgUP_D-sVyh7jXFSZWzPD1DC8-NCRvJt86XFqezF8gA3azq5XyfDOXems"
-                alt="Asset"
-              />
-              <div class="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            </div>
-            <div class="aspect-square bg-surface-container-high rounded overflow-hidden relative group cursor-pointer">
-              <img
-                class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDKSxD54DhKXMBgjftECkIQEJY6YSlRFoaq2wL_oaz93if1viS8alWw-lfqPRt_Ep5q_i3v-yhD76lxrgGhcw5_YADrsxU4PODBO4UJtq2GEwfBAiB4-RxA7UOfKOLVN1zdw6qhdQSnrb7lB-RyMEi9RJENU-yZS1bJL_bnidQJ1b7U-saQ4KXtiYBri9rg555xWib85sJ59mvYKalCUYk6aKzGCtDkhU3Jq6D1MsitokADCUmJP3GX-jIUl00Utivh86cCxkKfZNo"
-                alt="Asset"
-              />
-              <div class="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            </div>
-            <div class="aspect-square bg-surface-container-high rounded overflow-hidden relative group cursor-pointer">
-              <img
-                class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwrVk89SiSJ6WUGwL9YahmPAITQvoeTVsHPAnCZwTnuDzKLjaO03EX2ziDxktBdVHTvkUe_M1rCLbdBlvjJ4Q-GozZddWfZjkWvbYGYo-6jf6hyfJ3c7XvByEMWFUlqh8S6bx8KXZasWf74IsZ5DUsQ6rGlVS3RysD4zz9JbkNIW8br9Jn0945Ug92zCugG2SOVGrQuiVmSMVzYIfBTltMxmEYCoQgSmjerHgzcjp-z5lJrGBPGMzyaY6E8pN84EcDM86THS5UQqk"
-                alt="Asset"
-              />
-              <div class="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            </div>
-            <div class="aspect-square bg-surface-container-high rounded overflow-hidden relative group cursor-pointer flex items-center justify-center text-outline">
-              <span class="text-xs font-bold">+12</span>
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <h5 class="text-[10px] font-bold text-outline uppercase tracking-widest mb-3">Links</h5>
-          <ul class="space-y-2">
-            <li class="flex items-center gap-2 text-xs text-on-surface-variant hover:text-primary cursor-pointer">
-              <span class="material-symbols-outlined text-sm">link</span>
-              <span class="truncate">project-atlas-v4.figma.com</span>
-            </li>
-            <li class="flex items-center gap-2 text-xs text-on-surface-variant hover:text-primary cursor-pointer">
-              <span class="material-symbols-outlined text-sm">link</span>
-              <span class="truncate">structural-audit-report-2023.pdf</span>
-            </li>
-          </ul>
+          <h3 class="font-bold text-on-surface">{{ selectedDialog()!.otherUsername }}</h3>
         </div>
       </div>
-
-      <div class="mt-auto space-y-2">
-        <button class="w-full flex items-center justify-center gap-2 py-2 text-xs font-bold text-outline hover:text-on-surface-variant transition-colors border border-outline/20 rounded">
-          <span class="material-symbols-outlined text-sm">block</span>
-          Mute Julian
-        </button>
-        <button class="w-full flex items-center justify-center gap-2 py-2 text-xs font-bold text-error hover:bg-error/5 transition-colors border border-error/20 rounded">
-          <span class="material-symbols-outlined text-sm">report</span>
-          Report Contact
-        </button>
-      </div>
-    </div>
-  </aside>
+    </section>
+  }
 </div>
