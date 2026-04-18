@@ -1,0 +1,80 @@
+export type PresenceStatus = 'online' | 'afk' | 'offline';
+
+export interface RoomMemberPresence {
+  userId: string;
+  username: string;
+  avatarUrl: string | null;
+  status: PresenceStatus;
+}
+
+export interface UserSummaryDto {
+  id: string;
+  username: string;
+  avatarUrl: string | null;
+}
+
+export interface AttachmentDto {
+  id: string;
+  fileName: string;
+  contentType: string;
+  sizeBytes: number;
+  comment: string | null;
+}
+
+export interface MessageDto {
+  id: string;
+  sequenceNumber: number;
+  content: string | null;
+  sender: UserSummaryDto;
+  sentAt: string;
+  editedAt: string | null;
+  isDeleted: boolean;
+  replyTo: MessageDto | null;
+  attachment: AttachmentDto | null;
+}
+
+export interface DialogMessageDto {
+  id: string;
+  sequenceNumber: number;
+  content: string | null;
+  author: UserSummaryDto;
+  sentAt: string;
+  editedAt: string | null;
+  isDeleted: boolean;
+  replyTo: DialogMessageDto | null;
+  attachment: AttachmentDto | null;
+}
+
+// PresenceHub server→client event payloads
+export interface UserStatusChangedEvent { userId: string; status: PresenceStatus; }
+export interface RoomMembersSnapshotEvent { roomId: string; members: RoomMemberPresence[]; }
+export interface MemberJoinedEvent { roomId: string; user: RoomMemberPresence; }
+export interface MemberLeftEvent { roomId: string; userId: string; }
+export interface RemovedFromRoomEvent { roomId: string; reason: string; }
+export interface FriendRequestReceivedEvent { requestId: string; fromUserId: string; fromUsername: string; message: string; }
+export interface FriendRequestAcceptedEvent { userId: string; username: string; }
+export interface RoomInvitationReceivedEvent { invitationId: string; roomId: string; roomName: string; fromUserId: string; }
+export interface DialogFrozenEvent { dialogId: string; }
+export interface ForceDisconnectEvent { reason: string; }
+
+// ChatHub server→client event payloads
+export interface MessageDeletedEvent { messageId: string; roomId: string; }
+export interface UserTypingEvent { roomId: string; userId: string; isTyping: boolean; }
+export interface DirectMessageDeletedEvent { messageId: string; dialogId: string; }
+export interface UserTypingInDialogEvent { dialogId: string; userId: string; isTyping: boolean; }
+export interface UnreadCountChangedEvent { contextType: string; contextId: string; count: number; }
+
+// Union types for ChatService event signals
+export type RoomChatEvent =
+  | { type: 'MessageReceived'; payload: MessageDto }
+  | { type: 'MessageEdited'; payload: MessageDto }
+  | { type: 'MessageDeleted'; payload: MessageDeletedEvent };
+
+export type DmChatEvent =
+  | { type: 'DirectMessageReceived'; payload: DialogMessageDto }
+  | { type: 'DirectMessageEdited'; payload: DialogMessageDto }
+  | { type: 'DirectMessageDeleted'; payload: DirectMessageDeletedEvent };
+
+export type TypingEvent =
+  | { type: 'UserTyping'; payload: UserTypingEvent }
+  | { type: 'UserTypingInDialog'; payload: UserTypingInDialogEvent };
