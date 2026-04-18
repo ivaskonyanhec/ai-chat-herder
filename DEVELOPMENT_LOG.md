@@ -4,6 +4,10 @@ Format: `[Timestamp] | Task | Reasoning | Changes`
 
 ---
 
+`[2026-04-18 T62]` | **[BUILD] Phase 2 — Domain entities, Application port interfaces, EF Core AppDbContext, InitialSchema migration** | Phase 1 scaffold [VERIFIED]; next logical step is all domain entities required by every future endpoint — without them no use-case or endpoint can be written | Files to create: `src/ChatHerder.Domain/Enums/` (5 enums), `src/ChatHerder.Domain/Entities/` (16 entity classes), `src/ChatHerder.Application/Ports/` (IFileStorage, IMessageBus, IEmailSender), `src/ChatHerder.Infrastructure/Persistence/AppDbContext.cs`, `src/ChatHerder.Infrastructure/Migrations/` (InitialSchema); Files to modify: `src/ChatHerder.API/Program.cs` (wire DbContext + MigrateAsync), `src/ChatHerder.API/appsettings.json` (add ConnectionStrings) | **[PENDING REVIEW]**
+
+---
+
 `[2026-04-18 T61]` | **[BUILD] Initialize .NET 10 solution + Angular 21 SPA project structure** | No source code exists yet — `src/` and `frontend/src/` are empty; Dockerfiles already reference `ChatHerder.sln`, `src/ChatHerder.API`, and `frontend/dist/chat-herder` so scaffolding must match those expectations exactly | Files created: `ChatHerder.sln`, `src/ChatHerder.Domain/`, `src/ChatHerder.Application/`, `src/ChatHerder.Infrastructure/`, `src/ChatHerder.API/` (with `Program.cs`, `appsettings.json`), `src/ChatHerder.Domain/Common/Result.cs`; `frontend/` scaffolded via Angular CLI 21 (`ng new chat-herder --standalone --routing --style scss --ssr false`); `frontend/public/tokens.css` added; `angular.json` outputPath verified as `dist/chat-herder` | **[REJECTED]**
 
 `[2026-04-18 T61-AUDIT-1]` | **[AUDIT] T61 Scaffold Review — Round 1** | Auditor: Security Architect & Code Quality Expert | Five blocking defects found — Builder must fix all before resubmitting.
