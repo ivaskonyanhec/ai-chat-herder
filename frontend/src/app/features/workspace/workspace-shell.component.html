@@ -1,96 +1,100 @@
-<div data-testid="main-chat">
-<header class="workspace-header">
-  <div class="workspace-header__left">
-    <span class="workspace-header__logo">Architectural Workspace</span>
-    <nav class="workspace-header__nav">
-      <a routerLink="/app/rooms" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" data-testid="go-to-rooms">Public Rooms</a>
-      <a routerLink="/app/invitations" routerLinkActive="active">Invitations</a>
-      <a routerLink="/app/contacts" routerLinkActive="active">Contacts</a>
-      <a routerLink="/app/admin" routerLinkActive="active">Admin</a>
-      <a routerLink="/app/sessions" routerLinkActive="active" data-testid="go-to-sessions">Sessions</a>
-    </nav>
-  </div>
-  <div class="workspace-header__right">
-    <div class="workspace-header__actions">
-      <a routerLink="/app/settings" class="material-symbols-outlined workspace-header__icon">settings</a>
-      <span class="material-symbols-outlined workspace-header__icon">help</span>
+<div data-testid="main-chat" class="flex flex-col h-screen overflow-hidden">
+  <!-- Top Header -->
+  <header class="bg-inverse-surface text-inverse-on-surface flex items-center justify-between px-6 h-16 w-full shrink-0 z-50 shadow-sm">
+    <div class="flex items-center gap-8">
+      <span class="text-lg font-semibold tracking-tighter text-white">Architectural Workspace</span>
+      <nav class="hidden md:flex gap-6">
+        <a routerLink="/app/rooms" routerLinkActive="border-b-2 border-white text-white" [routerLinkActiveOptions]="{exact:true}" class="text-outline hover:text-white transition-colors pb-1" data-testid="go-to-rooms">Public Rooms</a>
+        <a routerLink="/app/invitations" routerLinkActive="border-b-2 border-white text-white" class="text-outline hover:text-white transition-colors pb-1">Invitations</a>
+        <a routerLink="/app/contacts" routerLinkActive="border-b-2 border-white text-white" class="text-outline hover:text-white transition-colors pb-1">Contacts</a>
+        <a routerLink="/app/admin" routerLinkActive="border-b-2 border-white text-white" class="text-outline hover:text-white transition-colors pb-1">Admin</a>
+        <a routerLink="/app/sessions" routerLinkActive="border-b-2 border-white text-white" class="text-outline hover:text-white transition-colors pb-1" data-testid="go-to-sessions">Sessions</a>
+      </nav>
     </div>
-    <img
-      [src]="user()?.avatarUrl || 'https://lh3.googleusercontent.com/aida-public/AB6AXuBoE1AAIFrnyj9F8mxOop8uxCsIRdOxzhWtnxjn7NugcZYLy5I0Dpd7Xa9meXu5UDQAGvY5xt3Hb0oHZJ-RtruBAq2ha-SdwkN6yVjMRlK6os9_26BZMepR6qZxG_G6zRuAyXw4qT1BseTQJxDpjswRqkQCvFbbaVFsomxcZ6ubiGBy4IaGBVjd0ikVTb_cBNYZO7nZkxH8LEctIAAHPuiio0Qfy3pKTJkOdZSHFJE_AxtUk0itobW_nenKACmDvvyl5JeG7Of_yMQ'"
-      alt="User profile"
-      class="workspace-header__avatar"
-    />
-  </div>
-</header>
+    <div class="flex items-center gap-4">
+      <a routerLink="/app/settings" class="p-2 text-outline hover:text-white transition-colors hover:bg-white/10 rounded-full cursor-pointer">
+        <span class="material-symbols-outlined">settings</span>
+      </a>
+      <span class="p-2 text-outline hover:text-white transition-colors hover:bg-white/10 rounded-full cursor-pointer material-symbols-outlined">help</span>
+      <img
+        [src]="user()?.avatarUrl || 'https://lh3.googleusercontent.com/aida-public/AB6AXuBoE1AAIFrnyj9F8mxOop8uxCsIRdOxzhWtnxjn7NugcZYLy5I0Dpd7Xa9meXu5UDQAGvY5xt3Hb0oHZJ-RtruBAq2ha-SdwkN6yVjMRlK6os9_26BZMepR6qZxG_G6zRuAyXw4qT1BseTQJxDpjswRqkQCvFbbaVFsomxcZ6ubiGBy4IaGBVjd0ikVTb_cBNYZO7nZkxH8LEctIAAHPuiio0Qfy3pKTJkOdZSHFJE_AxtUk0itobW_nenKACmDvvyl5JeG7Of_yMQ'"
+        alt="User profile"
+        class="h-8 w-8 rounded-full border border-outline-variant object-cover"
+      />
+    </div>
+  </header>
 
-<main class="workspace-layout">
-  <aside class="workspace-sidebar">
-    <div class="workspace-sidebar__header">
-      <div class="workspace-sidebar__logo-box">
-        <span class="material-symbols-outlined">corporate_fare</span>
+  <!-- Body: Left Sidebar + Main Content -->
+  <div class="flex flex-1 overflow-hidden">
+    <!-- Left Sidebar -->
+    <aside class="bg-surface-container flex flex-col w-72 shrink-0 h-full overflow-y-auto p-4">
+      <div class="flex items-center gap-3 mb-8">
+        <div class="w-10 h-10 bg-inverse-surface rounded-lg flex items-center justify-center">
+          <span class="material-symbols-outlined text-white">corporate_fare</span>
+        </div>
+        <div>
+          <h2 class="text-xl font-bold text-on-surface tracking-normal">Workspace</h2>
+          <p class="text-[10px] text-on-surface-variant tracking-wider">Active Session</p>
+        </div>
       </div>
-      <div>
-        <h2 class="workspace-sidebar__title">Workspace</h2>
-        <p class="workspace-sidebar__status">Active Session</p>
-      </div>
-    </div>
 
-    <div class="workspace-sidebar__search">
-      <span class="material-symbols-outlined">search</span>
-      <input type="text" placeholder="Search workspace..." />
-    </div>
+      <div class="mb-6">
+        <div class="bg-surface-container-high p-2 rounded-lg mb-6 flex items-center gap-2 text-sm text-on-surface-variant">
+          <span class="material-symbols-outlined text-sm">search</span>
+          <input class="bg-transparent border-none focus:outline-none p-0 text-sm w-full placeholder-on-surface-variant" placeholder="Search workspace..." type="text" />
+        </div>
 
-    <nav class="workspace-sidebar__nav">
-      <div class="workspace-sidebar__group">
-        <div class="workspace-sidebar__group-header">
-          <div class="workspace-sidebar__group-title">
-            <span class="material-symbols-outlined">forum</span>
-            <span>Rooms</span>
+        <div class="space-y-1">
+          <div class="flex items-center justify-between p-2 cursor-pointer text-on-surface-variant hover:bg-surface-container-high rounded-lg">
+            <div class="flex items-center gap-3">
+              <span class="material-symbols-outlined">forum</span>
+              <span class="text-on-surface font-bold">Rooms</span>
+            </div>
+            <span class="material-symbols-outlined text-sm">keyboard_arrow_down</span>
           </div>
-          <span class="material-symbols-outlined">keyboard_arrow_down</span>
-        </div>
-        <div class="workspace-sidebar__group-content">
-          <a routerLink="/app/rooms" class="workspace-sidebar__item workspace-sidebar__item--active">#engineering-room</a>
-          <a class="workspace-sidebar__item">#design-ops</a>
-          <a class="workspace-sidebar__item">#product-roadmap</a>
-        </div>
-      </div>
-
-      <div class="workspace-sidebar__group">
-        <div class="workspace-sidebar__group-header">
-          <div class="workspace-sidebar__group-title">
-            <span class="material-symbols-outlined">person</span>
-            <span>Contacts</span>
+          <div class="pl-9 space-y-1">
+            <div class="p-2 bg-surface-container-lowest text-on-surface font-bold rounded-lg cursor-pointer text-sm">#engineering-room</div>
+            <div class="p-2 text-on-surface-variant hover:text-on-surface cursor-pointer text-sm">#design-ops</div>
+            <div class="p-2 text-on-surface-variant hover:text-on-surface cursor-pointer text-sm">#product-roadmap</div>
           </div>
         </div>
+
+        <div class="mt-4 space-y-1">
+          <div class="flex items-center justify-between p-2 cursor-pointer text-on-surface-variant hover:bg-surface-container-high rounded-lg">
+            <div class="flex items-center gap-3">
+              <span class="material-symbols-outlined">person</span>
+              <span>Contacts</span>
+            </div>
+          </div>
+        </div>
       </div>
-    </nav>
 
-    <div class="workspace-sidebar__footer">
-      <p-button
-        class="block w-full"
-        label="Create Room"
-        icon="pi pi-plus"
-        data-testid="create-room"
-        styleClass="w-full"
-      />
-      <p-button
-        class="block w-full"
-        label="Sign out"
-        severity="secondary"
-        [text]="true"
-        styleClass="w-full"
-        data-testid="logout-btn"
-        (onClick)="logout()"
-      />
-      @if (logoutError()) {
-        <p class="workspace-sidebar__error" data-testid="logout-error">{{ logoutError() }}</p>
-      }
-    </div>
-  </aside>
+      <div class="mt-auto space-y-2">
+        <p-button
+          class="block w-full"
+          label="Create Room"
+          icon="pi pi-plus"
+          data-testid="create-room"
+          styleClass="w-full"
+        />
+        <p-button
+          class="block w-full"
+          label="Sign out"
+          severity="secondary"
+          [text]="true"
+          styleClass="w-full"
+          data-testid="logout-btn"
+          (onClick)="logout()"
+        />
+        @if (logoutError()) {
+          <p class="text-error text-xs text-center" data-testid="logout-error">{{ logoutError() }}</p>
+        }
+      </div>
+    </aside>
 
-  <section class="workspace-content">
-    <router-outlet />
-  </section>
-</main>
+    <!-- Main Content via Router -->
+    <main class="flex-1 overflow-hidden bg-surface">
+      <router-outlet />
+    </main>
+  </div>
 </div>
