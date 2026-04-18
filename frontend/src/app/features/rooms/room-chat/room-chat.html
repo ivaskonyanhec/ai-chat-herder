@@ -11,7 +11,7 @@
       </div>
     </header>
 
-    <div class="chat-messages">
+    <div class="chat-messages" data-testid="chat-area">
       <div class="chat-messages__divider">
         <div class="chat-messages__divider-line"></div>
         <span class="chat-messages__divider-label">Monday, May 22</span>
@@ -89,6 +89,7 @@
         <textarea
           pTextarea
           class="composer__input"
+          data-testid="message-input"
           placeholder="Message #engineering-room..."
           rows="3"
         ></textarea>
