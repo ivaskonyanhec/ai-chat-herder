@@ -131,6 +131,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             e.HasKey(a => a.Id);
             e.Property(a => a.StoragePath).HasMaxLength(1024).IsRequired();
             e.Property(a => a.FileName).HasMaxLength(255).IsRequired();
+            e.Property(a => a.ContentType).HasMaxLength(255).IsRequired();
             e.Property(a => a.Comment).HasMaxLength(512);
             e.HasOne(a => a.Message).WithOne(msg => msg.Attachment).HasForeignKey<Attachment>(a => a.MessageId).OnDelete(DeleteBehavior.Cascade);
             e.HasOne(a => a.PersonalDialogMessage).WithOne(dm => dm.Attachment).HasForeignKey<Attachment>(a => a.PersonalDialogMessageId).OnDelete(DeleteBehavior.Cascade);

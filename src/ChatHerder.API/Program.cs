@@ -84,6 +84,7 @@ var api = app.MapGroup("/api");
 api.MapGroup("/auth").MapAuthEndpoints();
 api.MapGroup("/sessions").MapSessionsEndpoints();
 api.MapGroup("/users").MapUserEndpoints();
+api.MapGroup("/rooms").MapRoomEndpoints();
 
 app.Run();
 
