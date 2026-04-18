@@ -415,6 +415,12 @@ erDiagram
         timestamp RevokedAt
     }
 
+    ContextSequences {
+        varchar   ContextType         PK "room|dialog"
+        uuid      ContextId           PK
+        bigint    NextValue               "next unassigned sequence number; starts at 1"
+    }
+
     Users                  ||--o{ Sessions                 : "owns"
     Users                  ||--o{ PasswordResetTokens      : "requests"
     Users                  ||--o{ RoomMembership           : "has"
@@ -648,7 +654,9 @@ JWT as `?access_token=` query string. Angular `SignalRService` manages both conn
 
 | Method | Parameters | Description |
 |--------|-----------|-------------|
-| `Heartbeat` | — | Updates tab score in Redis Sorted Set; resets AFK timer |
+| `Heartbeat` | — | Updates tab liveness score in Redis Sorted Set; if user status was `"afk"`, transitions back to `"online"` and broadcasts |
+| `SetAfk` | — | Client reports this tab has been inactive for 60 s; server adds connId to `afk_tabs:{userId}`; if all tabs AFK → status `"afk"`, broadcast |
+| `SetActive` | — | Client reports user interaction after AFK; server removes connId from `afk_tabs:{userId}`; if user was `"afk"` → status `"online"`, broadcast |
 | `JoinRoom` | `roomId` | Add connection to SignalR group `room:{roomId}` |
 | `LeaveRoom` | `roomId` | Remove connection from room group |
 
@@ -660,7 +668,9 @@ JWT as `?access_token=` query string. Angular `SignalRService` manages both conn
 5. Send unread counts from Redis (or recompute from DB if Redis is cold) → `UnreadCountChanged` events.
 
 **OnDisconnectedAsync:**
-1. Remove tab from Redis Sorted Set. If tab count → 0: status → `"offline"`, broadcast `UserStatusChanged` to `user-presence:{userId}`.
+1. `ZREM presence:tabs:{userId} {connId}` + `SREM afk_tabs:{userId} {connId}`.
+2. If `ZCARD presence:tabs:{userId}` → 0: status → `"offline"`, broadcast `UserStatusChanged` to `user-presence:{userId}`; `SREM active:users {userId}`.
+3. Else if `SCARD afk_tabs == ZCARD presence:tabs` (remaining tabs all AFK): status → `"afk"`, broadcast.
 
 **Server → Client:**
 
@@ -798,7 +808,22 @@ Returns newest-first; Angular reverses the list before rendering, producing stri
 
 ### Sequence Numbers and Gap Detection
 
-Every message carries a per-context monotonic `SequenceNumber` unique within `RoomId` or `DialogId`. Generated server-side: `SELECT MAX(SequenceNumber) + 1 FROM Messages WHERE RoomId = X` inside the INSERT transaction. At 300-user scale, per-room write serialisation under a row-level lock is acceptable; this can be replaced with `INCR room:seq:{roomId}` in Redis for higher throughput if needed.
+Every message carries a per-context monotonic `SequenceNumber` unique within `RoomId` or `DialogId`. Sequence numbers are allocated from the `ContextSequences` counter table using an atomic `UPDATE … RETURNING` statement executed **within the same transaction** as the message INSERT:
+
+```sql
+-- Allocate next sequence number for a room message (single atomic statement):
+UPDATE ContextSequences
+SET    NextValue = NextValue + 1
+WHERE  ContextType = 'room' AND ContextId = @roomId
+RETURNING NextValue;   -- value just assigned to this message
+```
+
+PostgreSQL row-locking semantics guarantee that two concurrent transactions targeting the same `(ContextType, ContextId)` row execute serially — the second writer blocks until the first commits. There is no window for two messages to receive the same sequence number. `MAX() + 1` is explicitly avoided: it requires a scan of the Messages table and still has a race window under concurrent inserts even with a unique index (both transactions read the same MAX, both try to insert the same seq, second fails the unique constraint).
+
+**Counter lifecycle:**
+- Row created with `NextValue = 1` when the room or dialog is created.
+- Deleted (CASCADE) when the room or dialog is deleted.
+- No Redis dependency for sequence allocation — correctness does not depend on Redis liveness.
 
 **Client gap detection logic:**
 
@@ -925,10 +950,14 @@ Client opens room or dialog
 ```
 active:users                    Set        members=userId[]
                                            Maintained by OnConnected/OnDisconnected;
-                                           enumerated by PresenceMonitorService
+                                           enumerated by PresenceMonitorService (safety-net role only)
 
-presence:tabs:{userId}          SortedSet  member="{connId}:{tabId}"
-                                           score=Unix timestamp of last heartbeat
+presence:tabs:{userId}          SortedSet  member="{connId}"
+                                           score=Unix timestamp of last heartbeat (liveness)
+
+afk_tabs:{userId}               Set        members=connId[] of tabs that have called SetAfk
+                                           Empty → at least one tab is active (user is online)
+                                           SCARD == ZCARD presence:tabs → all tabs AFK (user is afk)
 
 presence:conn:{connId}          String     value=userId    TTL=70s
 
@@ -948,26 +977,71 @@ Client sends `Heartbeat()` to PresenceHub every **30 seconds** per active tab (2
 2. `SET presence:conn:{connId} {userId} EX 70`.
 3. If current status was `"afk"` → recompute to `"online"`, broadcast `UserStatusChanged` to `user-presence:{userId}`.
 
-### AFK Detection — `PresenceMonitorService`
+### AFK Detection — Client-Driven (Primary Path)
 
-`IHostedService` polling every **20 seconds**:
+AFK state is signalled directly by the browser — the only component with direct access to user input events. The server receives and acts on these signals instantly; no polling lag is introduced.
+
+**Client-side (Angular `PresenceService`):**
+```
+Track DOM events: mousemove, keydown, click, scroll, touchstart (debounced, per-tab)
+After 60 s of no events on this tab:
+  → call PresenceHub.SetAfk()
+On any event while status == "afk" on this tab:
+  → call PresenceHub.SetActive()
+```
+
+**Server-side `SetAfk(connId)` handler:**
+```
+SADD afk_tabs:{userId} {connId}
+If SCARD afk_tabs:{userId} == ZCARD presence:tabs:{userId}:  ← all tabs AFK
+    SET presence:status:{userId} "afk"
+    broadcast UserStatusChanged("afk") to user-presence:{userId}
+```
+
+**Server-side `SetActive(connId)` handler:**
+```
+SREM afk_tabs:{userId} {connId}
+If previous status == "afk":
+    SET presence:status:{userId} "online"
+    broadcast UserStatusChanged("online") to user-presence:{userId}
+```
+
+**Server-side `Heartbeat()` handler (unchanged semantics, updated role):**
+```
+ZADD presence:tabs:{userId} {now} {connId}    ← liveness keepalive (every 30s)
+SET  presence:conn:{connId} {userId} EX 70
+SREM afk_tabs:{userId} {connId}               ← implicit SetActive on heartbeat
+If previous status == "afk":
+    SET presence:status:{userId} "online"
+    broadcast UserStatusChanged("online") to user-presence:{userId}
+```
+
+**AFK transition latency:** JS inactivity check fires within 1 s after the 60 s threshold + WebSocket round-trip < 100 ms = **≤ 1.1 s from threshold to server broadcast**. Satisfies the §3.1 `< 2s` SLA for all presence transitions (online/offline AND AFK).
+
+### AFK Safety Net — `PresenceMonitorService`
+
+`IHostedService` polling every **20 seconds**. This is now a **ghost-cleanup mechanism only** — it handles tabs that stopped heartbeating without calling `SetAfk()` or triggering `OnDisconnectedAsync` (browser crash, OS kill, network partition):
 
 ```
-afk_threshold = now − 60s
+stale_threshold = now − 70s  (TTL of presence:conn:*)
 
 for each userId in SMEMBERS active:users:
-    live  = ZRANGEBYSCORE presence:tabs:{userId} {afk_threshold} +inf
-    total = ZCARD presence:tabs:{userId}
+    stale = ZRANGEBYSCORE presence:tabs:{userId} 0 {stale_threshold}
+    for each connId in stale:
+        ZREM presence:tabs:{userId} {connId}
+        SREM afk_tabs:{userId} {connId}
 
-    if total > 0 AND count(live) == 0 AND status != "afk":
+    remaining = ZCARD presence:tabs:{userId}
+    if remaining == 0:
+        SET presence:status:{userId} "offline"
+        SREM active:users {userId}
+        broadcast UserStatusChanged("offline") to user-presence:{userId}
+    elif SCARD afk_tabs:{userId} == remaining AND status != "afk":
         SET presence:status:{userId} "afk"
-        broadcast UserStatusChanged to user-presence:{userId}
-        broadcast UserStatusChanged to each room group (room:{roomId}) per user's memberships
+        broadcast UserStatusChanged("afk") to user-presence:{userId}
 ```
 
-`ZRANGEBYSCORE` is O(log N + M) where M is only the matching entries — O(stale connections), not O(all connections). The 70s TTL on `presence:conn:*` self-heals ghost-online users if the monitor stops.
-
-**AFK latency note:** Maximum AFK detection lag = 60s heartbeat threshold + 20s monitor interval = **≤ 80s from last interaction to AFK broadcast**. This is intentional and correct: §2.2.2 defines AFK as "not interacted for *more than* 1 minute", making sub-second AFK detection neither required nor meaningful. The §3.1 `< 2s` presence SLA applies exclusively to **online/offline** transitions, which are handled synchronously in `OnConnectedAsync` / `OnDisconnectedAsync`.
+Under normal operation, `PresenceMonitorService` finds nothing to do. All AFK/online transitions are handled synchronously via `SetAfk` / `SetActive` / `Heartbeat`. The monitor is a correctness guarantee, not a latency-sensitive path.
 
 ### Friend Presence Subscription
 
@@ -1187,7 +1261,7 @@ Manage Room: #engineering-room
 | Tab | Data Source | Actions Available |
 |-----|------------|------------------|
 | Members | `GET /rooms/{id}/members` | Make Admin, Ban (= remove from room) |
-| Admins | `GET /rooms/{id}/members?role=admin` | Remove Admin (any admin; cannot demote owner) |
+| Admins | `GET /rooms/{id}/members?role=admin` | Remove Admin (cannot target owner or self) |
 | Banned users | `GET /rooms/{id}/bans` | Unban; shows who banned and when |
 | Invitations | `GET /rooms/{id}/invitations` | Send invite by username |
 | Settings | Room record | Edit name/description/visibility; Delete room |
@@ -1221,8 +1295,11 @@ Updated by `UnreadCountChanged` SignalR event. Cleared by `POST /api/rooms/{id}/
 ### Presence Update Latency
 
 **Requirement:** < 2 seconds (§3.1).
-- **Online/offline (connect/disconnect):** < 500ms — triggered immediately in hub lifecycle methods, broadcast synchronously to `user-presence:{userId}` groups via Redis backplane. Satisfies the < 2s SLA.
-- **AFK detection:** ≤ 80s from last interaction (60s threshold + 20s monitor interval). This exceeds the < 2s SLA, but that SLA applies to online/offline transitions only. AFK is inherently a coarse-grained state (§2.2.2 defines it as "more than 1 minute inactive") — sub-second AFK detection is neither required nor meaningful. Monitor poll interval is a tunable parameter and can be tightened if product requirements change.
+- **Online/offline (connect/disconnect):** < 500ms — triggered immediately in hub lifecycle methods, broadcast synchronously via Redis backplane.
+- **AFK (active → afk):** ≤ 1.1s after the 60s inactivity threshold — client fires `SetAfk()` within 1s of detection, server broadcasts within one WebSocket RTT.
+- **AFK recovery (afk → online):** < 100ms — `SetActive()` or `Heartbeat()` triggers immediate broadcast.
+
+All three transitions satisfy the < 2s SLA. The `PresenceMonitorService` (20s poll) is a crash-recovery safety net only and is not on the latency-sensitive path.
 
 ### Message History
 

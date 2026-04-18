@@ -193,3 +193,19 @@ Format: `[Timestamp] | Task | Reasoning | Changes`
 ---
 
 `[2026-04-18 T45]` | **Introduce per-chat message sequence numbers** | Without monotonic sequence numbers, the client has no reliable mechanism to detect dropped or out-of-order messages during WebSocket reconnections or replica failover — silent message gaps are a correctness risk | Design: `SequenceNumber bigint` column added to `Messages` and `PersonalDialogMessages`. Unique indexes `(RoomId, SequenceNumber)` and `(DialogId, SequenceNumber)`. Generated server-side via `SELECT MAX + 1` inside INSERT transaction (Redis `INCR` available as higher-throughput alternative). `MessageDto` extended with `sequenceNumber`. Client gap detection: `seq == last+1` → accept; `seq > last+1` → re-fetch via recovery endpoint; `seq <= last` → discard duplicate. Recovery endpoints added: `GET /rooms/{id}/messages?afterSeq=X` and `GET /dialogs/{id}/messages?afterSeq=X`. SequenceNumbers are orthogonal to ReadMarkers — integrity vs. unread tracking.
+
+---
+
+## 2026-04-18 — Three Targeted Precision Fixes
+
+---
+
+`[2026-04-18 T46]` | **Fix admin modal UI wording for admin demotion** | After fixing the permission matrix (T35) to allow admins to demote other admins, the Admin Modal "Admins" tab description still read "Remove Admin (any admin; cannot demote owner)" — inconsistent with the API comment `[admin] demote admin (cannot target owner or self)` and the matrix cell `✓ (not owner, not self)` | Fix: Tab description changed to exactly "Remove Admin (cannot target owner or self)" — three-way match between matrix, API, and UI.
+
+---
+
+`[2026-04-18 T47]` | **Replace poll-based AFK detection with client-driven signaling** | Poll-based detection (PresenceMonitorService every 20s) produced up to 80s AFK lag, technically challenging the §3.1 < 2s presence SLA even with the earlier justification; a latency-proof design requires the AFK signal to originate at the browser | Design: Added `SetAfk()` and `SetActive()` to PresenceHub client→server methods. Angular `PresenceService` monitors DOM events (mousemove, keydown, click, scroll) and calls `SetAfk()` within 1s of crossing the 60s inactivity threshold; calls `SetActive()` on any subsequent event. Server uses `afk_tabs:{userId}` Redis Set to track per-connection AFK state; broadcasts `UserStatusChanged` when all tabs enter/exit AFK. AFK transition latency now ≤ 1.1s — inside the < 2s SLA. `PresenceMonitorService` demoted to safety-net role only: cleans up ghost connections (browser crash, network partition) that never called `SetAfk()` or triggered `OnDisconnectedAsync`. Also updated `OnDisconnectedAsync` to clean `afk_tabs` and correctly re-evaluate AFK state for remaining tabs. Section 16 Presence latency updated to confirm all three transitions (online/offline/AFK) satisfy the < 2s SLA.
+
+---
+
+`[2026-04-18 T48]` | **Replace MAX()+1 sequence generation with ContextSequences counter table** | `SELECT MAX(SequenceNumber) + 1 FROM Messages WHERE RoomId = X` has a race condition: two concurrent transactions can both read the same MAX and both attempt to insert the same sequence number, violating the unique index. The earlier spec presented this as safe with a "row-level lock" but no explicit lock target was identified — the lock must be on a dedicated counter row, not on the Messages table scan | Fix: New `ContextSequences` table `(ContextType varchar PK, ContextId uuid PK, NextValue bigint)`. Row created when room/dialog is created; deleted when room/dialog is deleted. Sequence allocation: `UPDATE ContextSequences SET NextValue = NextValue + 1 WHERE ContextType = 'room' AND ContextId = @roomId RETURNING NextValue` — executes in the same transaction as the message INSERT. PostgreSQL row-level lock on the ContextSequences row serializes concurrent writers for the same context. No MAX() scan, no race window, no Redis dependency for sequence correctness.
