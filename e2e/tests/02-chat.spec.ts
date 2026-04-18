@@ -131,15 +131,16 @@ test.describe('Room chat', () => {
   });
 
   test.skip('user B receives a room message in the browser within 3 seconds', async () => {
-    // BLOCKED: ChatHub has no JoinRoom method and the current room UI does not bind ChatService events
-    // into visible message rows. Backend persistence is covered above; browser-visible SignalR delivery is not.
+    // BLOCKED: RoomChat now renders message state, but ChatHub still has no JoinRoom method for the chat
+    // connection and message text lacks the required data-testid="message-text" selector.
   });
 
   test.skip('sender sees their own message immediately in the browser', async () => {
-    // BLOCKED: current room chat template is static and does not append sent messages.
+    // BLOCKED: RoomChat sends through ChatService, but visible message assertions need data-testid="message-text"
+    // and reliable ChatHub room-group membership for the sender connection.
   });
 
   test.skip('reply/reference flow shows quoted message UI', async () => {
-    // BLOCKED: no browser-visible reply controls are wired to ChatService yet.
+    // BLOCKED: no browser-visible reply controls or reply quote test IDs are wired yet.
   });
 });

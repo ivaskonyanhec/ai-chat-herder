@@ -3,9 +3,9 @@
 ## 11.1 Summary
 
 - Total requirements reviewed: 77
-- Covered: 22
+- Covered: 24
 - Partially covered: 18
-- Blocked: 26
+- Blocked: 24
 - Not covered: 11
 
 This audit is intentionally conservative. A requirement is not marked `COVERED` unless a concrete Playwright test exists and exercises the behavior. Tests that are present but skipped are counted as `BLOCKED`, not covered.
@@ -25,6 +25,8 @@ This audit is intentionally conservative. A requirement is not marked `COVERED` 
 - FR-2.2.1-1 online/AFK/offline statuses
 - FR-2.2.3-1 active tab keeps user online
 - FR-2.2.3-2 offline only when all tabs close
+- FR-2.2.4-1 view active sessions with browser/IP details
+- FR-2.2.4-2 revoke selected active sessions
 - FR-2.4.1-1 room creation
 - FR-2.4.2-2 unique room names
 - FR-2.4.3-1 public catalog fields
@@ -59,7 +61,6 @@ This audit is intentionally conservative. A requirement is not marked `COVERED` 
 
 | Requirement ID | Reason | Change Needed |
 | -------------- | ------ | ------------- |
-| FR-2.2.4-1, FR-2.2.4-2 | Active-session UI needs stable live rows for multi-session E2E. | Bind sessions panel to API with stable row/test IDs and revoke controls. |
 | FR-2.3.* | Friend/contact endpoints and dynamic UI are absent or static. | Implement/map friend request, friendship, remove friend, and user block endpoints and UI. |
 | FR-2.4.6-1 | File deletion side effects cannot be verified without file endpoints. | Map upload/download endpoints and room deletion file assertions. |
 | FR-2.4.8-1 | No remove-member UI/action separate from explicit ban endpoint. | Add remove member action that records a room ban. |
@@ -68,7 +69,7 @@ This audit is intentionally conservative. A requirement is not marked `COVERED` 
 | FR-2.5.3-1 | Reply controls and dynamic quoted rendering are absent. | Add reply composer state, send `replyToId`, render quote blocks with test IDs. |
 | FR-2.6.* and NFR-3.4-2 | No file upload/download endpoints are mapped in `Program.cs`; upload UI is absent. | Create `FileEndpoints`, enforce size/access rules, add `file-input`, `upload-submit`, and download link test IDs. |
 | UI-4.1.1-1 | Member list/status UI is static. | Bind room members to `/api/rooms/{id}/members` and PresenceService updates. |
-| UI-4.2-* | Dynamic message list/autoscroll/infinite scroll not implemented. | Bind room UI to messages API/ChatService with scroll state tests. |
+| UI-4.2-* | Initial dynamic message loading exists, but autoscroll preservation and infinite scroll are not implemented/testable. | Add scroll state logic and stable test IDs for message rows. |
 | UI-4.4-1 | Unread indicators not wired to UI. | Render UnreadService counts near rooms/contacts. |
 | UI-4.5-1 | Admin modal/menu actions are static. | Implement management modal actions with stable test IDs. |
 
@@ -87,4 +88,4 @@ This audit is intentionally conservative. A requirement is not marked `COVERED` 
 - Moderation: ban persistence works through API, but immediate removal of active users is not broadcast.
 - Attachment security: high risk until upload/download endpoints enforce membership checks and size limits.
 - Persistence/history: message refetch and chronological API fetch are covered, but infinite scroll and offline delivery need tests.
-- Non-functional timing: presence timing is covered; message delivery timing is blocked by ChatHub group/browser rendering gaps.
+- Non-functional timing: presence timing is covered; message delivery timing is blocked by missing ChatHub room join for chat connections and missing message text test IDs.

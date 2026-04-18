@@ -155,6 +155,26 @@ services:
     networks:
       - chatnet
 
+  # ── Load Test Runner (k6 + SignalR WebSocket) ───────────────────────────────
+  # Run with: docker compose run load-tester
+  load-tester:
+    image: grafana/k6
+    volumes:
+      - ./tests/load:/scripts
+    environment:
+      - TARGET_URL=http://backend:5000/chatHub
+      - API_BASE_URL=http://backend:8080
+      - LOAD_USERS=300
+      - LOAD_RAMP_UP=60s
+      - LOAD_STEADY_DURATION=10m
+      - LOAD_RAMP_DOWN=30s
+    entrypoint: ["k6", "run", "/scripts/load-test.js"]
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - chatnet
+
 # ── Named Volumes ─────────────────────────────────────────────────────────────
 volumes:
   postgres_data:

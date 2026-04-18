@@ -28,8 +28,8 @@ Source of truth: `requirements.md`. Status values mean:
 | FR-2.2.2-1 | AFK after more than 1 minute inactivity across all tabs | E2E/UAT | `e2e/tests/03-presence.spec.ts`, `e2e/tests/uat/02-multitab-afk.uat.spec.ts` | AFK only after all tabs are AFK | PARTIALLY COVERED | Deterministic hub calls cover server semantics; natural 61-second browser inactivity UI is blocked. |
 | FR-2.2.3-1 | Multi-tab: any active tab keeps user online | E2E/UAT | `e2e/tests/03-presence.spec.ts`, `e2e/tests/uat/02-multitab-afk.uat.spec.ts` | activity in one tab restores online | COVERED | Uses independent SignalR connections as tabs. |
 | FR-2.2.3-2 | Offline only when all tabs close | E2E | `e2e/tests/03-presence.spec.ts` | offline status appears only after all tabs close | COVERED | SignalR connection lifecycle covered. |
-| FR-2.2.4-1 | View active sessions with browser/IP details | E2E | `e2e/tests/01-auth.spec.ts` | active sessions can be viewed through UI | BLOCKED | UI exists but live E2E stable row flow is not completed. |
-| FR-2.2.4-2 | Revoke selected active sessions | E2E | `e2e/tests/01-auth.spec.ts` | active sessions can be selectively revoked | BLOCKED | Needs stable UI flow and multi-session fixture. |
+| FR-2.2.4-1 | View active sessions with browser/IP details | E2E | `e2e/tests/01-auth.spec.ts` | active sessions can be viewed and selectively revoked through the UI | COVERED | Browser UI verifies current-session card and other-session row with browser/IP details. |
+| FR-2.2.4-2 | Revoke selected active sessions | E2E | `e2e/tests/01-auth.spec.ts` | active sessions can be viewed and selectively revoked through the UI | COVERED | Browser UI clicks `revoke-session-{id}` and verifies revoked token is invalid. |
 | FR-2.3.1-1 | Personal contact/friend list | E2E | None | None | BLOCKED | Contacts UI is static; friend endpoints are not mapped. |
 | FR-2.3.2-1 | Send friend request by username | E2E | None | None | BLOCKED | Friend request endpoints/UI absent. |
 | FR-2.3.2-2 | Send friend request from room user list with optional text | E2E | None | None | BLOCKED | Dynamic room members UI and friend request endpoint absent. |
@@ -67,7 +67,7 @@ Source of truth: `requirements.md`. Status values mean:
 | FR-2.7.2-1 | Presence updates low latency | E2E | `e2e/tests/03-presence.spec.ts` | online/AFK/offline propagation tests | COVERED | Uses 2-second assertions. |
 | NFR-3.1-1 | Support up to 300 simultaneous users | E2E | None | None | NOT COVERED | Load testing belongs to k6, not Playwright. |
 | NFR-3.1-2 | Room up to 1000 participants, unlimited rooms, typical sizing | E2E | None | None | NOT COVERED | Load/capacity concern; not Playwright. |
-| NFR-3.2-1 | Message delivery to recipients within 3 seconds | E2E/UAT | `e2e/tests/02-chat.spec.ts`, `e2e/tests/uat/03-realtime-messaging.uat.spec.ts` | live browser delivery skipped | BLOCKED | ChatHub group join/browser rendering gap prevents validating recipient delivery. |
+| NFR-3.2-1 | Message delivery to recipients within 3 seconds | E2E/UAT | `e2e/tests/02-chat.spec.ts`, `e2e/tests/uat/03-realtime-messaging.uat.spec.ts` | live browser delivery skipped | BLOCKED | RoomChat now renders message state, but ChatHub lacks chat-connection room join and message text lacks `data-testid="message-text"`. |
 | NFR-3.2-2 | Presence propagation below 2 seconds | E2E/UAT | `e2e/tests/03-presence.spec.ts`, `e2e/tests/uat/02-multitab-afk.uat.spec.ts` | status propagation tests | COVERED | SignalR propagation tested with 2-second limits. |
 | NFR-3.2-3 | Usable with 10,000-message history | E2E | None | None | NOT COVERED | Needs seeded history/performance test strategy. |
 | NFR-3.3-1 | Messages persist for years; older history infinite scroll | E2E | `e2e/tests/02-chat.spec.ts` | history refetch | PARTIALLY COVERED | Persistence refetch covered; years/infinite scroll not covered. |
@@ -78,9 +78,9 @@ Source of truth: `requirements.md`. Status values mean:
 | NFR-3.6-1 | Consistency of membership, bans, file access, history, permissions | E2E | `e2e/tests/02-chat.spec.ts`, `e2e/tests/05-admin.spec.ts` | history and ban scenarios | PARTIALLY COVERED | Membership/bans/history partly covered; files and full permissions incomplete. |
 | UI-4.1-1 | Classic web chat layout with top menu, center messages, input bottom, side rooms/contacts | E2E | `e2e/tests/02-chat.spec.ts` | room surface has chat area and input | PARTIALLY COVERED | Minimal selector check only; visual layout not audited here. |
 | UI-4.1.1-1 | Rooms/contacts on right, accordion room list, member statuses on right | E2E | None | None | BLOCKED | Current room member sidebar is static and not data-bound. |
-| UI-4.2-1 | Autoscroll to new messages and no forced autoscroll when reading older messages | E2E | None | None | BLOCKED | Dynamic message list not implemented. |
-| UI-4.2-2 | Infinite scroll for older history | E2E | None | None | BLOCKED | Dynamic message list not implemented. |
-| UI-4.3-1 | Composer supports multiline, emoji, file/image, reply | E2E | `e2e/tests/02-chat.spec.ts`, `e2e/tests/04-attachments.spec.ts` | multiline/emoji covered via hub/history; file/reply skipped | PARTIALLY COVERED | Browser composer controls are not wired to message send/reply/upload. |
+| UI-4.2-1 | Autoscroll to new messages and no forced autoscroll when reading older messages | E2E | None | None | BLOCKED | Dynamic message list exists, but scroll behavior is not implemented/testable. |
+| UI-4.2-2 | Infinite scroll for older history | E2E | None | None | BLOCKED | Initial message loading exists, but older-history infinite scroll is not implemented/testable. |
+| UI-4.3-1 | Composer supports multiline, emoji, file/image, reply | E2E | `e2e/tests/02-chat.spec.ts`, `e2e/tests/04-attachments.spec.ts` | multiline/emoji covered via hub/history; file/reply skipped | PARTIALLY COVERED | Browser text composer is wired, but reply/upload controls and message-text test IDs are missing. |
 | UI-4.4-1 | Unread visual indicators near rooms/contacts | E2E | None | None | BLOCKED | UI indicators not wired. |
 | UI-4.5-1 | Admin actions available from menus/modal dialogs | E2E | `e2e/tests/05-admin.spec.ts` | UI moderation skipped | BLOCKED | Manage room/admin modals are static. |
 | ADV-6-1 | Jabber client support | E2E | None | None | NOT COVERED | Advanced optional requirement not implemented. |

@@ -175,7 +175,27 @@ test.describe('Authentication', () => {
     expect(members.map((m) => m.userId)).not.toContain(member.id);
   });
 
-  test.skip('active sessions can be viewed and selectively revoked through the UI', async () => {
-    // BLOCKED: sessions UI exists, but E2E selectors for stable multi-session rows depend on live API wiring.
+  test('active sessions can be viewed and selectively revoked through the UI', async ({ userAPage, userA, api }) => {
+    const secondSession = await api.login(userA.email, userA.password);
+    const sessionsCtx = await api.authContext(userA.accessToken);
+    const sessionsResponse = await sessionsCtx.get('/api/sessions');
+    expect(sessionsResponse.status(), await sessionsResponse.text()).toBe(200);
+    const sessions = await sessionsResponse.json();
+    const otherSession = sessions.find((session: { id: string; isCurrent: boolean }) => !session.isCurrent);
+    expect(otherSession?.id).toBeTruthy();
+
+    await userAPage.goto('/app/sessions');
+    await expect(userAPage.locator('[data-testid="sessions-title"]')).toBeVisible({ timeout: 10_000 });
+    const sessionRow = userAPage.locator(`[data-testid="session-row-${otherSession.id}"]`);
+    await expect(sessionRow).toBeVisible({ timeout: 10_000 });
+
+    await userAPage.locator(`[data-testid="revoke-session-${otherSession.id}"]`).click();
+    await expect(sessionRow).not.toBeVisible({ timeout: 10_000 });
+
+    const revokedCtx = await api.authContext(secondSession.accessToken);
+    expect((await revokedCtx.get('/api/rooms/my')).status()).toBe(401);
+
+    await revokedCtx.dispose();
+    await sessionsCtx.dispose();
   });
 });
