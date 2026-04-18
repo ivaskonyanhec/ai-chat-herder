@@ -120,4 +120,11 @@ public sealed class ChatHubTests
 
         await Assert.ThrowsAsync<HubException>(() => hub.EditMessage(msg.Id, "changed"));
     }
+
+    [Fact]
+    public void ChatHub_CanBeInstantiated_WithMockedDependencies()
+    {
+        var hub = new ChatHub(BuildDb(), Substitute.For<IUnreadStore>(), Substitute.For<IPresenceStore>());
+        Assert.NotNull(hub);
+    }
 }

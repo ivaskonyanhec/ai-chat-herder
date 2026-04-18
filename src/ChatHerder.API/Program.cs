@@ -89,6 +89,10 @@ api.MapGroup("").MapRoomInvitationEndpoints();   // mounts /rooms/{id}/invitatio
 api.MapGroup("/messages").MapMessageEndpoints();
 api.MapGroup("").MapNotificationEndpoints();     // mounts /unread, /rooms/{id}/read, /dialogs/{id}/read at /api
 
+// SignalR hubs — JWT over WebSocket arrives as ?access_token= (already configured in OnMessageReceived above)
+app.MapHub<ChatHerder.API.Hubs.PresenceHub>("/hubs/presence").RequireAuthorization();
+app.MapHub<ChatHerder.API.Hubs.ChatHub>("/hubs/chat").RequireAuthorization();
+
 app.Run();
 
 public partial class Program { }

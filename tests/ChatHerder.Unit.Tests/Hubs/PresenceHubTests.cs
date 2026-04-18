@@ -119,4 +119,14 @@ public sealed class PresenceHubTests
         await callerProxy.Received(1).SendCoreAsync(
             "RoomMembersSnapshot", Arg.Any<object[]>(), Arg.Any<CancellationToken>());
     }
+
+    [Fact]
+    public void PresenceHub_CanBeInstantiated_WithMockedDependencies()
+    {
+        var store   = Substitute.For<IPresenceStore>();
+        var chatCtx = Substitute.For<IHubContext<ChatHub>>();
+        chatCtx.Groups.Returns(Substitute.For<IGroupManager>());
+        var hub = new PresenceHub(store, chatCtx, BuildDb());
+        Assert.NotNull(hub);
+    }
 }
