@@ -151,6 +151,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             e.HasIndex(dm => new { dm.DialogId, dm.SequenceNumber }).IsUnique();
             e.Property(dm => dm.Content).HasMaxLength(3072).IsRequired();
             e.Property(dm => dm.EditedAt);
+            e.Property(dm => dm.DeletedByUserId);
+            e.HasOne<User>().WithMany().HasForeignKey(dm => dm.DeletedByUserId).OnDelete(DeleteBehavior.SetNull);
             e.HasOne(dm => dm.Dialog).WithMany().HasForeignKey(dm => dm.DialogId).OnDelete(DeleteBehavior.Cascade);
             e.HasOne(dm => dm.Author).WithMany().HasForeignKey(dm => dm.AuthorId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne(dm => dm.ReplyToMessage).WithMany().HasForeignKey(dm => dm.ReplyToMessageId).OnDelete(DeleteBehavior.SetNull);

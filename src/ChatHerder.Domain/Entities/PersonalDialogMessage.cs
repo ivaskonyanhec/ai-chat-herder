@@ -11,6 +11,7 @@ public sealed class PersonalDialogMessage
     public DateTime SentAt { get; init; } = DateTime.UtcNow;
     public DateTime? EditedAt { get; set; }
     public DateTime? DeletedAt { get; set; }
+    public Guid? DeletedByUserId { get; set; }
 
     public PersonalDialog Dialog { get; init; } = null!;
     public User Author { get; init; } = null!;

@@ -79,4 +79,18 @@ public sealed class MessageEntityTests
 
         Assert.Null(dm.EditedAt);
     }
+
+    [Fact]
+    public void PersonalDialogMessage_DeletedByUserId_IsNullByDefault()
+    {
+        var dm = new PersonalDialogMessage
+        {
+            DialogId = Guid.NewGuid(),
+            AuthorId = Guid.NewGuid(),
+            Content = "hello",
+            SequenceNumber = 1,
+        };
+
+        Assert.Null(dm.DeletedByUserId);
+    }
 }
