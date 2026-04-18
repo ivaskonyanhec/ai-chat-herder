@@ -22,9 +22,9 @@ export interface RoomMemberDto {
   userId: string;
   username: string;
   avatarUrl: string | null;
-  role: string;
+  role: 'Owner' | 'Admin' | 'Member';
   joinedAt: string;
-  presenceStatus: string;
+  presenceStatus: 'online' | 'afk' | 'offline';
 }
 
 export interface CreateRoomRequest {

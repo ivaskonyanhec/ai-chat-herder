@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { RoomCatalogItem, RoomDto, RoomMemberDto, CreateRoomRequest } from './rooms.models';
+import type { RoomCatalogItem, RoomDto, RoomMemberDto, CreateRoomRequest } from './rooms.models';
 import type { MessageDto } from '../signalr/hub.models';
 
 @Injectable({ providedIn: 'root' })

@@ -78,4 +78,26 @@ describe('RoomsApiService', () => {
     expect(req.request.method).toBe('GET');
     req.flush([]);
   });
+
+  it('creates a room', () => {
+    service.createRoom({ name: 'New Room', description: null, visibility: 'Public' }).subscribe();
+    const req = httpMock.expectOne('/api/rooms');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ name: 'New Room', description: null, visibility: 'Public' });
+    req.flush({ id: 'r1', name: 'New Room', description: null, visibility: 'Public', ownerId: 'u1', createdAt: '2026-01-01T00:00:00Z', memberCount: 1, callerRole: 'Owner' });
+  });
+
+  it('leaves a room', () => {
+    service.leaveRoom('room-1').subscribe();
+    const req = httpMock.expectOne('/api/rooms/room-1/leave');
+    expect(req.request.method).toBe('DELETE');
+    req.flush(null);
+  });
+
+  it('fetches room members', () => {
+    service.getMembers('room-1').subscribe();
+    const req = httpMock.expectOne('/api/rooms/room-1/members');
+    expect(req.request.method).toBe('GET');
+    req.flush([]);
+  });
 });
