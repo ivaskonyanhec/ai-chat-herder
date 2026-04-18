@@ -6,6 +6,7 @@ obj/
 *.user
 *.suo
 .vs/
+.idea
 
 # Angular build artifacts
 frontend/dist/
