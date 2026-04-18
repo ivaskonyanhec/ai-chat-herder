@@ -88,6 +88,10 @@ api.MapGroup("/rooms").MapRoomEndpoints();
 api.MapGroup("").MapRoomInvitationEndpoints();   // mounts /rooms/{id}/invitations and /invitations at /api
 api.MapGroup("/messages").MapMessageEndpoints();
 api.MapGroup("").MapNotificationEndpoints();     // mounts /unread, /rooms/{id}/read, /dialogs/{id}/read at /api
+api.MapGroup("/friends").MapFriendsEndpoints();
+api.MapGroup("/blocks").MapBlocksEndpoints();
+api.MapGroup("/dialogs").MapDialogEndpoints();
+api.MapGroup("/dm-messages").MapDmMessageEndpoints();
 
 // SignalR hubs — JWT over WebSocket arrives as ?access_token= (already configured in OnMessageReceived above)
 app.MapHub<ChatHerder.API.Hubs.PresenceHub>("/hubs/presence").RequireAuthorization();
