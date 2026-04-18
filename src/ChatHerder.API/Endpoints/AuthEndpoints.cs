@@ -10,10 +10,12 @@ namespace ChatHerder.API.Endpoints;
 public static class AuthEndpoints
 {
     // 16 zero bytes (salt) + 32 zero bytes (hash) in self-describing base64 format.
-    // ArgonPasswordHasher.Verify always runs a full Argon2id against this when the
-    // email is not found, making missing vs. wrong-password timing indistinguishable.
+    // Segments: Convert.ToBase64String(new byte[16]) = 22 A's + "==" (24 chars);
+    //           Convert.ToBase64String(new byte[32]) = 43 A's + "="  (44 chars).
+    // Both are multiples of 4 so Convert.FromBase64String succeeds and Argon2id always runs,
+    // making missing vs. wrong-password timing indistinguishable (~100 ms in both paths).
     private const string SentinelHash =
-        "AAAAAAAAAAAAAAAAAAAAAA==.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==";
+        "AAAAAAAAAAAAAAAAAAAAAA==.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
 
     public static RouteGroupBuilder MapAuthEndpoints(this RouteGroupBuilder group)
     {
