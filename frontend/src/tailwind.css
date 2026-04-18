@@ -16,12 +16,18 @@
 
   /* Surface */
   --color-surface: var(--color-surface);
+  --color-surface-bright: var(--color-surface-bright);
+  --color-surface-dim: var(--color-surface-dim);
   --color-surface-container: var(--color-surface-container);
   --color-surface-container-low: var(--color-surface-container-low);
   --color-surface-container-lowest: var(--color-surface-container-lowest);
   --color-surface-container-high: var(--color-surface-container-high);
   --color-surface-container-highest: var(--color-surface-container-highest);
   --color-surface-variant: var(--color-surface-variant);
+
+  /* Background */
+  --color-background: var(--color-background);
+  --color-on-background: var(--color-on-background);
 
   /* Text / outline */
   --color-on-surface: var(--color-on-surface);
@@ -43,4 +49,18 @@
 
   /* Shadow */
   --shadow-ambient: var(--shadow-ambient);
+
+  /* Border radius — matching design's Tailwind config (ROUND_FOUR system)
+   * rounded       = 0.125rem (xs)
+   * rounded-lg    = 0.25rem  (not a token; halfway between xs and md)
+   * rounded-xl    = 0.5rem   (maps to our --radius-lg)
+   * rounded-full  = 0.75rem  (maps to our --radius-xl; editorial heavy-round)
+   * For true circles (avatars): use style="border-radius:50%" or w-N h-N rounded-full
+   */
+  --radius: var(--radius-xs);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: 0.25rem;
+  --radius-xl: var(--radius-lg);
+  --radius-full: var(--radius-xl);
 }
