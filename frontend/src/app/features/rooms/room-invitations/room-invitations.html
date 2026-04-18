@@ -1,68 +1,143 @@
-<div class="invitations">
-  <header class="invitations__header">
-    <div class="invitations__title-group">
-      <h2 class="invitations__title">Room Invitations</h2>
-      <p class="invitations__subtitle">Manage pending requests to join specialized architectural workgroups.</p>
-    </div>
-    <div class="invitations__actions">
-      <div class="filter-btn">
-        <span class="material-symbols-outlined">filter_list</span>
-        <span>Sort by Recent</span>
+<div class="p-8 h-full overflow-y-auto bg-surface">
+  <div class="max-w-5xl mx-auto">
+    <!-- Header -->
+    <div class="mb-10 flex items-end justify-between">
+      <div>
+        <h2 class="text-3xl font-bold tracking-tight text-on-surface mb-2">Room Invitations</h2>
+        <p class="text-on-surface-variant text-sm font-medium">Manage pending requests to join specialized architectural workgroups.</p>
       </div>
-    </div>
-  </header>
-
-  <div class="invitations__grid">
-    <!-- Invitation Card 1 -->
-    <div class="invitation-card">
-      <div class="invitation-card__header">
-        <div class="invitation-card__room">
-          <div class="room-icon room-icon--primary">M</div>
-          <div class="room-info">
-            <h3 class="room-info__name">Modernist Loft Project</h3>
-            <p class="room-info__meta">Interior Design & Structural Planning</p>
-          </div>
-        </div>
-        <span class="invitation-card__time">2 hours ago</span>
-      </div>
-      <p class="invitation-card__description">
-        Discussion channel for the new West End residential project. Reviewing material palettes and spatial zoning.
-      </p>
-      <div class="invitation-card__inviter">
-        <img class="inviter-avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtrLXwoBY6IbSRkbd0DGOiqACa0LmvwvAUPXdzY7ApMMMFQcixLRD6U_zxT82Zsy7CKR65oF0swXQY1c5M_BY8JscWHwzvCYn9Mnzxpg2I996lY5jnt0RMqulhWvNhy-vN1BP5C5FVoxwSpbU-GeEKwhdaeXbyAo2GELeFRm_PPZ46nKAoc2ZOSLa_gBkoPs5sBacWYDD1dIwjMdbfut60hwuWagvdZDs-KHa1FtCLdnBuow99XqE5WtTIh3QNNpODPtULgdvFfP4" alt="Inviter">
-        <span class="inviter-name">Invited by <span class="inviter-handle">@alandon</span></span>
-      </div>
-      <div class="invitation-card__actions">
-        <button class="btn btn--primary">Accept Invitation</button>
-        <button class="btn btn--ghost">Decline</button>
+      <div class="flex items-center space-x-3 text-on-surface-variant bg-surface-container-low px-4 py-2 rounded-lg">
+        <span class="material-symbols-outlined text-lg">filter_list</span>
+        <span class="text-xs font-semibold uppercase tracking-wider">Sort by Recent</span>
       </div>
     </div>
 
-    <!-- Invitation Card 2 -->
-    <div class="invitation-card">
-      <div class="invitation-card__header">
-        <div class="invitation-card__room">
-          <div class="room-icon room-icon--tertiary">
-            <span class="material-symbols-outlined">architecture</span>
+    <!-- Invitation Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+      <!-- Invitation Card 1: Modernist Loft Project -->
+      <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm transition-all duration-300 hover:-translate-y-0.5">
+        <div class="flex items-start justify-between mb-4">
+          <div class="flex items-center space-x-4">
+            <div class="w-12 h-12 flex items-center justify-center bg-primary-container text-on-primary-container rounded-lg font-bold text-xl">
+              M
+            </div>
+            <div>
+              <h3 class="text-base font-semibold text-on-surface leading-none">Modernist Loft Project</h3>
+              <p class="text-xs text-on-surface-variant mt-1">Interior Design &amp; Structural Planning</p>
+            </div>
           </div>
-          <div class="room-info">
-            <h3 class="room-info__name">Sustainability Audit</h3>
-            <p class="room-info__meta">Green Building Certification</p>
+          <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">2 hours ago</span>
+        </div>
+        <p class="text-sm text-on-surface-variant leading-relaxed mb-6">
+          Discussion channel for the new West End residential project. Reviewing material palettes and spatial zoning.
+        </p>
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <img alt="Inviter Avatar" class="w-6 h-6 rounded-full border-2 border-surface-container-lowest ring-1 ring-outline-variant/15" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtrLXwoBY6IbSRkbd0DGOiqACa0LmvwvAUPXdzY7ApMMMFQcixLRD6U_zxT82Zsy7CKR65oF0swXQY1c5M_BY8JscWHwzvCYn9Mnzxpg2I996lY5jnt0RMqulhWvNhy-vN1BP5C5FVoxwSpbU-GeEKwhdaeXbyAo2GELeFRm_PPZ46nKAoc2ZOSLa_gBkoPs5sBacWYDD1dIwjMdbfut60hwuWagvdZDs-KHa1FtCLdnBuow99XqE5WtTIh3QNNpODPtULgdvFfP4">
+            <span class="text-xs font-medium text-on-surface">Invited by <span class="text-primary font-semibold">&#64;alandon</span></span>
           </div>
         </div>
-        <span class="invitation-card__time">Yesterday</span>
+        <div class="mt-6 flex space-x-3">
+          <button class="flex-grow bg-primary text-on-primary text-xs font-bold py-2.5 rounded-md hover:opacity-90 active:scale-[0.99] transition-all">Accept Invitation</button>
+          <button class="px-4 text-on-surface-variant text-xs font-bold hover:bg-surface-container-low py-2.5 rounded-md transition-all">Decline</button>
+        </div>
       </div>
-      <p class="invitation-card__description">
-        Reviewing LEED certification requirements for the Project Alpha skyscraper. Data analysis and compliance tracking.
-      </p>
-      <div class="invitation-card__inviter">
-        <img class="inviter-avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDyfCr0QbTz2598uj_YCkAifojMrChv3Y3eIciVwiRLYb_g3YCuDq1u-tuBR9ZHiti-1BXCc6lxPQLQCcFQ6CWPi8dyHGR3fltfkP9nRonbXWZfJbhTIvDw4fPXhauHh9FYH98xBC8i5-iRHBZKN1gff2l5XVJakqZ6hxQjDzQSaK8VIhUU4UKPyJGC2uYZRGshQ-wc2vZShGiEDINY2qVAZy6gAZ0KYwjPPTforiUrsCwRVpZYAz7Da8t5M5rNOYQ_gySoad8Vq3c" alt="Inviter">
-        <span class="inviter-name">Invited by <span class="inviter-handle">@mrossi</span></span>
+
+      <!-- Invitation Card 2: Sustainability Audit -->
+      <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm transition-all duration-300 hover:-translate-y-0.5">
+        <div class="flex items-start justify-between mb-4">
+          <div class="flex items-center space-x-4">
+            <div class="w-12 h-12 flex items-center justify-center bg-tertiary-container text-on-tertiary-container rounded-lg font-bold text-xl">
+              <span class="material-symbols-outlined">architecture</span>
+            </div>
+            <div>
+              <h3 class="text-base font-semibold text-on-surface leading-none">Sustainability Audit</h3>
+              <p class="text-xs text-on-surface-variant mt-1">Green Building Certification</p>
+            </div>
+          </div>
+          <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Yesterday</span>
+        </div>
+        <p class="text-sm text-on-surface-variant leading-relaxed mb-6">
+          Reviewing LEED certification requirements for the Project Alpha skyscraper. Data analysis and compliance tracking.
+        </p>
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <img alt="Inviter Avatar" class="w-6 h-6 rounded-full border-2 border-surface-container-lowest ring-1 ring-outline-variant/15" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDyfCr0QbTz2598uj_YCkAifojMrChv3Y3eIciVwiRLYb_g3YCuDq1u-tuBR9ZHiti-1BXCc6lxPQLQCcFQ6CWPi8dyHGR3fltfkP9nRonbXWZfJbhTIvDw4fPXhauHh9FYH98xBC8i5-iRHBZKN1gff2l5XVJakqZ6hxQjDzQSaK8VIhUU4UKPyJGC2uYZRGshQ-wc2vZShGiEDINY2qVAZy6gAZ0KYwjPPTforiUrsCwRVpZYAz7Da8t5M5rNOYQ_gySoad8Vq3c">
+            <span class="text-xs font-medium text-on-surface">Invited by <span class="text-primary font-semibold">&#64;mrossi</span></span>
+          </div>
+        </div>
+        <div class="mt-6 flex space-x-3">
+          <button class="flex-grow bg-primary text-on-primary text-xs font-bold py-2.5 rounded-md hover:opacity-90 active:scale-[0.99] transition-all">Accept Invitation</button>
+          <button class="px-4 text-on-surface-variant text-xs font-bold hover:bg-surface-container-low py-2.5 rounded-md transition-all">Decline</button>
+        </div>
       </div>
-      <div class="invitation-card__actions">
-        <button class="btn btn--primary">Accept Invitation</button>
-        <button class="btn btn--ghost">Decline</button>
+
+      <!-- Invitation Card 3: Zoning Strategy -->
+      <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm transition-all duration-300 hover:-translate-y-0.5">
+        <div class="flex items-start justify-between mb-4">
+          <div class="flex items-center space-x-4">
+            <div class="w-12 h-12 flex items-center justify-center bg-secondary-container text-on-secondary-container rounded-lg font-bold text-xl">
+              Z
+            </div>
+            <div>
+              <h3 class="text-base font-semibold text-on-surface leading-none">Zoning Strategy</h3>
+              <p class="text-xs text-on-surface-variant mt-1">Urban Development Division</p>
+            </div>
+          </div>
+          <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Yesterday</span>
+        </div>
+        <p class="text-sm text-on-surface-variant leading-relaxed mb-6">
+          Urban planning room for municipal approval cycles. Coordination with city officials and legal teams.
+        </p>
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <img alt="Inviter Avatar" class="w-6 h-6 rounded-full border-2 border-surface-container-lowest ring-1 ring-outline-variant/15" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCoyYEhKCQofqkDV2dAS7CWLir714KODnmETXktZhoOFuaCK2BLIZRrYtKR6dqzVjF813GxBuxrNUmsI_qhQ9Pl42udexEeNUyXw05o9_FPyBguTpi1aegpDMZs1ehU3sr-7LX0S_sBGRCJZyXcpXlC3NX9uVrZ2efrOqFjT43aK8xs5RyakwZptAUCQWWH9dTZAlHnlgdfrwrBD6yLqSjm5sJmZZQP9rGsiag8mHEeNvmBgBNgtKSGbfHWr3RVgkg0WlQOZ7oFdu4">
+            <span class="text-xs font-medium text-on-surface">Invited by <span class="text-primary font-semibold">&#64;skeller</span></span>
+          </div>
+        </div>
+        <div class="mt-6 flex space-x-3">
+          <button class="flex-grow bg-primary text-on-primary text-xs font-bold py-2.5 rounded-md hover:opacity-90 active:scale-[0.99] transition-all">Accept Invitation</button>
+          <button class="px-4 text-on-surface-variant text-xs font-bold hover:bg-surface-container-low py-2.5 rounded-md transition-all">Decline</button>
+        </div>
       </div>
+
+      <!-- Invitation Card 4: HQ Lobby Redesign -->
+      <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm transition-all duration-300 hover:-translate-y-0.5">
+        <div class="flex items-start justify-between mb-4">
+          <div class="flex items-center space-x-4">
+            <div class="w-12 h-12 flex items-center justify-center bg-surface-container-high text-primary rounded-lg font-bold text-xl">
+              <span class="material-symbols-outlined">corporate_fare</span>
+            </div>
+            <div>
+              <h3 class="text-base font-semibold text-on-surface leading-none">HQ Lobby Redesign</h3>
+              <p class="text-xs text-on-surface-variant mt-1">Hospitality &amp; Corporate</p>
+            </div>
+          </div>
+          <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">3 days ago</span>
+        </div>
+        <p class="text-sm text-on-surface-variant leading-relaxed mb-6">
+          Internal workspace for the lobby facelift. Focusing on grand entrance lighting and marble finishes.
+        </p>
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <img alt="Inviter Avatar" class="w-6 h-6 rounded-full border-2 border-surface-container-lowest ring-1 ring-outline-variant/15" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDYUpmYp5wnAtPvzduFzR6DNXJKJ6YCTBilfgs_GufhOw1lzFdCWORsju9cXpT2YKM2SMEwg4JwmyBAheqzaRVRXHGZy-4Tq8UvyQe7G8slv6U_HeyDOvOjC8SEdM1abIA0EFSGkv21nHJzXt2yz92p_Z37Cdzv5sP6IkL0Ham7KiA8GyFI-XTjYiisxLgs8LMx92sjAOo2m2-oE5vvLHUumYCVdvUrnQvwSxgCPCHuYGDCbvtQE85cnwrajfNbL0dyL6m0ia65pzA">
+            <span class="text-xs font-medium text-on-surface">Invited by <span class="text-primary font-semibold">&#64;jdoe_hq</span></span>
+          </div>
+        </div>
+        <div class="mt-6 flex space-x-3">
+          <button class="flex-grow bg-primary text-on-primary text-xs font-bold py-2.5 rounded-md hover:opacity-90 active:scale-[0.99] transition-all">Accept Invitation</button>
+          <button class="px-4 text-on-surface-variant text-xs font-bold hover:bg-surface-container-low py-2.5 rounded-md transition-all">Decline</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Empty State (hidden by default) -->
+    <div class="hidden flex-col items-center justify-center py-20 text-center">
+      <span class="material-symbols-outlined text-6xl text-surface-container-highest mb-4">mail_outline</span>
+      <h3 class="text-lg font-semibold text-on-surface">All caught up</h3>
+      <p class="text-on-surface-variant text-sm mt-1">You have no pending room invitations at this time.</p>
     </div>
   </div>
 </div>
