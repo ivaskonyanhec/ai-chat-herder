@@ -6,7 +6,7 @@ namespace ChatHerder.Integration.Tests.Infrastructure;
 
 public sealed class RedisUnreadStoreTests : IAsyncLifetime
 {
-    private readonly RedisContainer _redis = new RedisBuilder().Build();
+    private readonly RedisContainer _redis = new RedisBuilder().WithImage("redis:7-alpine").Build();
     private IConnectionMultiplexer _mux = null!;
 
     public async Task InitializeAsync()

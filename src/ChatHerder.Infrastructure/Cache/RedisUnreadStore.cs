@@ -8,7 +8,7 @@ public sealed class RedisUnreadStore(IConnectionMultiplexer redis) : IUnreadStor
     private IDatabase Db => redis.GetDatabase();
 
     private static RedisKey Key(Guid userId, string contextType, Guid contextId)
-        => $"unread:{userId}:{contextType}:{contextId}";
+        => $"unread:{userId}:{contextType.ToLowerInvariant()}:{contextId}";
 
     public async Task IncrementAsync(Guid userId, string contextType, Guid contextId, CancellationToken ct = default)
         => await Db.StringIncrementAsync(Key(userId, contextType, contextId));
