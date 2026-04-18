@@ -10,5 +10,5 @@
     "baseUrl": "."
   },
   "include": ["**/*.ts"],
-  "exclude": [".tsbuild", "node_modules", "playwright-report"]
+  "exclude": [".tsbuild", "node_modules", "playwright-report", "../e2e-reports"]
 }

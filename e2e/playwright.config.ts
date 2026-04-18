@@ -12,15 +12,15 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
 
   reporter: [
-    ['html', { outputFolder: 'playwright-report', open: 'never' }],
-    ['json', { outputFile: 'playwright-report/results.json' }],
+    ['html', { outputFolder: '../e2e-reports', open: 'never' }],
+    ['json', { outputFile: '../e2e-reports/results.json' }],
     ['list'],
   ],
 
   use: {
-    baseURL:    process.env.BASE_URL ?? 'http://localhost',
-    trace:      'retain-on-failure',
-    video:      'retain-on-failure',
+    baseURL: process.env.BASE_URL ?? 'http://localhost',
+    trace: 'retain-on-failure',
+    video: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
 

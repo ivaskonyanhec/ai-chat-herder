@@ -146,7 +146,7 @@ services:
       BASE_URL: http://frontend
       CI:       "true"
     volumes:
-      - ./e2e-reports:/e2e/playwright-report
+      - ./e2e-reports:/e2e-reports
     depends_on:
       frontend:
         condition: service_healthy

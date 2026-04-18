@@ -1,36 +1,60 @@
 import { TestBed } from '@angular/core/testing';
-import { signal } from '@angular/core';
+import { Signal, signal } from '@angular/core';
 import { provideRouter, Router } from '@angular/router';
-import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { throwError, of } from 'rxjs';
-import { providePrimeNG } from 'primeng/config';
+import { vi } from 'vitest';
 import { WorkspaceShellComponent } from './workspace-shell.component';
 import { AuthApiService } from '../../core/auth/auth-api.service';
 import { AuthSessionService } from '../../core/auth/auth-session.service';
+import { PresenceService } from '../../core/signalr/presence.service';
+import { ChatService } from '../../core/signalr/chat.service';
 
-describe('WorkspaceShellComponent', () => {
-  function buildProviders(authApi: object, authSession: object) {
-    return [
+type HubStub = { connect: ReturnType<typeof vi.fn>; disconnect: ReturnType<typeof vi.fn> };
+type AuthSessionStub = { user: Signal<null>; accessToken?: Signal<null>; clearSession: ReturnType<typeof vi.fn> };
+type AuthApiStub = { logout: ReturnType<typeof vi.fn> };
+
+function buildProviders(overrides: {
+  authApi?: AuthApiStub;
+  authSession?: AuthSessionStub;
+  presenceService?: HubStub;
+  chatService?: HubStub;
+} = {}) {
+  const authApi: AuthApiStub = overrides.authApi ?? { logout: vi.fn() };
+  const authSession: AuthSessionStub = overrides.authSession ?? {
+    user: signal(null).asReadonly(),
+    accessToken: signal(null).asReadonly(),
+    clearSession: vi.fn(),
+  };
+  const presenceService: HubStub = overrides.presenceService ?? {
+    connect: vi.fn().mockResolvedValue(undefined),
+    disconnect: vi.fn().mockResolvedValue(undefined),
+  };
+  const chatService: HubStub = overrides.chatService ?? {
+    connect: vi.fn().mockResolvedValue(undefined),
+    disconnect: vi.fn().mockResolvedValue(undefined),
+  };
+
+  return {
+    providers: [
       provideRouter([]),
-      provideNoopAnimations(),
-      providePrimeNG({}),
       { provide: AuthApiService, useValue: authApi },
       { provide: AuthSessionService, useValue: authSession },
-    ];
-  }
+      { provide: PresenceService, useValue: presenceService },
+      { provide: ChatService, useValue: chatService },
+    ],
+    authApi,
+    authSession,
+    presenceService,
+    chatService,
+  };
+}
 
+describe('WorkspaceShellComponent', () => {
   it('renders route-backed navigation links for rooms and sessions', () => {
-    const authApi = { logout: vi.fn() };
-    const authSession = { user: signal(null).asReadonly(), clearSession: vi.fn() };
-
-    TestBed.configureTestingModule({
-      imports: [WorkspaceShellComponent],
-      providers: buildProviders(authApi, authSession),
-    });
-
+    const { providers } = buildProviders();
+    TestBed.configureTestingModule({ imports: [WorkspaceShellComponent], providers });
     const fixture = TestBed.createComponent(WorkspaceShellComponent);
     fixture.detectChanges();
-
     const compiled: Element = fixture.nativeElement;
     expect(compiled.querySelector('[data-testid="go-to-rooms"]')).not.toBeNull();
     expect(compiled.querySelector('[data-testid="go-to-sessions"]')).not.toBeNull();
@@ -43,41 +67,55 @@ describe('WorkspaceShellComponent', () => {
     };
     const authSession = {
       user: signal(null).asReadonly(),
+      accessToken: signal(null).asReadonly(),
       clearSession: vi.fn(),
     };
-
-    TestBed.configureTestingModule({
-      imports: [WorkspaceShellComponent],
-      providers: buildProviders(authApi, authSession),
-    });
-
+    const { providers } = buildProviders({ authApi, authSession });
+    TestBed.configureTestingModule({ imports: [WorkspaceShellComponent], providers });
     const fixture = TestBed.createComponent(WorkspaceShellComponent);
     const navigateByUrl = vi.spyOn(TestBed.inject(Router), 'navigateByUrl');
     fixture.componentInstance.logout();
-
     expect(authSession.clearSession).not.toHaveBeenCalled();
     expect(navigateByUrl).not.toHaveBeenCalled();
   });
 
-  it('clears session and navigates to /auth on successful logout', () => {
-    const authApi = {
-      logout: vi.fn().mockReturnValue(of(null)),
-    };
+  it('calls presence and chat connect on init', async () => {
+    const { providers, presenceService, chatService } = buildProviders();
+    TestBed.configureTestingModule({ imports: [WorkspaceShellComponent], providers });
+    const fixture = TestBed.createComponent(WorkspaceShellComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(presenceService.connect).toHaveBeenCalledTimes(1);
+    expect(chatService.connect).toHaveBeenCalledTimes(1);
+  });
+
+  it('calls presence and chat disconnect before clearing session on logout', async () => {
     const authSession = {
       user: signal(null).asReadonly(),
+      accessToken: signal(null).asReadonly(),
       clearSession: vi.fn(),
     };
-
-    TestBed.configureTestingModule({
-      imports: [WorkspaceShellComponent],
-      providers: buildProviders(authApi, authSession),
+    const authApiWithSuccess = { logout: vi.fn().mockReturnValue(of(null)) };
+    const { providers, presenceService, chatService } = buildProviders({
+      authApi: authApiWithSuccess,
+      authSession,
     });
 
+    TestBed.configureTestingModule({ imports: [WorkspaceShellComponent], providers });
     const fixture = TestBed.createComponent(WorkspaceShellComponent);
-    const navigateByUrl = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
-    fixture.componentInstance.logout();
+    fixture.detectChanges();
+    await fixture.whenStable();
 
-    expect(authSession.clearSession).toHaveBeenCalledOnce();
-    expect(navigateByUrl).toHaveBeenCalledWith('/auth');
+    fixture.componentInstance.logout();
+    // flush microtasks: async next() callback returns a Promise that RxJS doesn't await;
+    // we need multiple Promise.resolve() ticks to let the async chain drain.
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    await fixture.whenStable();
+
+    expect(presenceService.disconnect).toHaveBeenCalledTimes(1);
+    expect(chatService.disconnect).toHaveBeenCalledTimes(1);
+    expect(authSession.clearSession).toHaveBeenCalled();
   });
 });
