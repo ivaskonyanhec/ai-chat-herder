@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { FriendRequestsComponent } from './friend-requests';
 
 describe('FriendRequestsComponent', () => {
@@ -8,9 +9,9 @@ describe('FriendRequestsComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [FriendRequestsComponent]
-    })
-    .compileComponents();
+      imports: [FriendRequestsComponent],
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(FriendRequestsComponent);
     component = fixture.componentInstance;
@@ -19,5 +20,9 @@ describe('FriendRequestsComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should start in loading state', () => {
+    expect(component.isLoading()).toBe(true);
   });
 });

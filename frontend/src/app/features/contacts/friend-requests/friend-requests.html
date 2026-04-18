@@ -15,88 +15,55 @@
           <h3 class="font-semibold text-lg flex items-center gap-2">
             <span class="material-symbols-outlined text-primary">inbox</span>
             Incoming Requests
-            <span class="bg-primary-container text-on-primary-container text-xs px-2 py-0.5 rounded-full ml-1">3</span>
+            <span class="bg-primary-container text-on-primary-container text-xs px-2 py-0.5 rounded-full ml-1">{{ incomingRequests().length }}</span>
           </h3>
         </div>
 
         <div class="flex flex-col gap-3">
-          <!-- Request Card 1: Elena Rodriguez -->
-          <div class="bg-surface-container-lowest p-5 rounded-xl shadow-[0_4px_24px_rgba(42,52,57,0.02)] flex items-start gap-4 transition-all hover:shadow-[0_8px_32px_rgba(42,52,57,0.06)]">
-            <div class="relative flex-shrink-0">
-              <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCM7dGc7KxhhTlTtNGwJaa40hJIIY_qJIpXkZakHx8akeLXJTg3upFDAkCK1bGyaa4Z1KmJDp5YI8Haino57CICzqVCcDTdNLz3XB0E-xxZo2WYUuNE3hbw6sIoMvPRj3cW04kbWQLEDXfXlKzOoskCswHtTI4YLtZy2UIUxZw1F_A5y3SG2pEcGbMNBzUB0HkwPJuSNTezsdoZ5rAlVOYcd6m3b0VZbI-uwEuBwkcHb4JuTpNzefa-qgPePf8PxNnzsYqwr7NMBs0" alt="Elena" class="w-12 h-12 rounded-full object-cover">
-              <span class="absolute bottom-0 right-0 w-3 h-3 bg-[#4caf50] rounded-full border-2 border-surface-container-lowest"></span>
+          @if (isLoading()) {
+            <div class="flex justify-center py-8">
+              <span class="material-symbols-outlined text-2xl text-outline animate-spin">progress_activity</span>
             </div>
-            <div class="flex-1">
-              <div class="flex justify-between items-start">
-                <div>
-                  <h4 class="font-bold text-on-surface">Elena Rodriguez</h4>
-                  <p class="text-xs text-outline mb-2">Senior Architect at UrbanFlow</p>
+          } @else if (errorMessage()) {
+            <p class="text-error text-sm bg-error-container/20 border border-error/20 rounded-xl px-4 py-3">{{ errorMessage() }}</p>
+          } @else if (incomingRequests().length === 0) {
+            <div class="text-center py-8 text-on-surface-variant text-sm">No pending incoming requests.</div>
+          } @else {
+            @for (req of incomingRequests(); track req.id) {
+              <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/10 p-5 flex flex-col gap-4">
+                <div class="flex items-start gap-4">
+                  <div class="w-12 h-12 rounded-full bg-surface-container overflow-hidden shrink-0">
+                    @if (req.senderAvatarUrl) {
+                      <img [src]="req.senderAvatarUrl" class="w-full h-full object-cover" alt="" />
+                    } @else {
+                      <div class="w-full h-full flex items-center justify-center">
+                        <span class="material-symbols-outlined text-on-surface-variant">person</span>
+                      </div>
+                    }
+                  </div>
+                  <div class="flex-1">
+                    <p class="font-bold text-on-surface text-sm">{{ req.senderUsername }}</p>
+                    <p class="text-[11px] text-on-surface-variant mt-0.5">{{ formatDate(req.createdAt) }}</p>
+                    @if (req.message) {
+                      <p class="text-xs text-on-surface-variant mt-2 italic">{{ req.message }}</p>
+                    }
+                  </div>
                 </div>
-                <span class="text-[10px] font-medium text-outline uppercase tracking-wider">2h ago</span>
-              </div>
-              <p class="text-sm italic text-on-surface-variant mb-4">"Hey, worked with you on the API project last quarter. Would love to stay in touch!"</p>
-              <div class="flex gap-3">
-                <button class="bg-primary text-on-primary px-5 py-2 rounded-md text-xs font-bold hover:opacity-90 transition-all flex items-center gap-2">
-                  Accept
-                </button>
-                <button class="text-primary px-5 py-2 rounded-md text-xs font-bold hover:bg-surface-container transition-all">
-                  Decline
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Request Card 2: Marcus Chen -->
-          <div class="bg-surface-container-lowest p-5 rounded-xl shadow-[0_4px_24px_rgba(42,52,57,0.02)] flex items-start gap-4 transition-all hover:shadow-[0_8px_32px_rgba(42,52,57,0.06)]">
-            <div class="relative flex-shrink-0">
-              <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAaUK2-Y3YoCfu_onVfCzaqmriyuBQ0mC6LyH-KEisUGcsNlBX3mEESoume_Q8o3WbQInpC7XxGKcR3mgvL_6OyGzwCtT27sGITXqLUsxdXte1KKu3TQ7X5pB5VFP54mPe-TtbfRU8J0fhW9Zkue7HfuPI9OFJp6TjFFLtKNV2XYTa4vrXT0GVLU1Thm-_LhKq3Hk1-Is6563Uqu9gSteQZCE5ELus8LfR6qtlYk5Y0bBIXaTzIMkfc7rm2DxJSY9q6Y8ozg_k6mPk" alt="Marcus" class="w-12 h-12 rounded-full object-cover">
-              <span class="absolute bottom-0 right-0 w-3 h-3 bg-outline rounded-full border-2 border-surface-container-lowest"></span>
-            </div>
-            <div class="flex-1">
-              <div class="flex justify-between items-start">
-                <div>
-                  <h4 class="font-bold text-on-surface">Marcus Chen</h4>
-                  <p class="text-xs text-outline mb-2">Lead Developer at Nexus</p>
+                <div class="flex gap-3">
+                  <button
+                    class="flex-1 py-2 bg-primary text-on-primary text-sm font-bold rounded-lg hover:bg-primary-dim transition-colors disabled:opacity-50"
+                    [disabled]="processingId() === req.id"
+                    (click)="accept(req.id)"
+                  >{{ processingId() === req.id ? '…' : 'Accept' }}</button>
+                  <button
+                    class="flex-1 py-2 bg-surface-container text-on-surface-variant text-sm font-bold rounded-lg hover:bg-surface-container-high transition-colors disabled:opacity-50"
+                    [disabled]="processingId() === req.id"
+                    (click)="reject(req.id)"
+                  >Decline</button>
                 </div>
-                <span class="text-[10px] font-medium text-outline uppercase tracking-wider">Yesterday</span>
               </div>
-              <p class="text-sm italic text-on-surface-variant mb-4">"Interested in discussing the upcoming structural integration specs."</p>
-              <div class="flex gap-3">
-                <button class="bg-primary text-on-primary px-5 py-2 rounded-md text-xs font-bold hover:opacity-90 transition-all">
-                  Accept
-                </button>
-                <button class="text-primary px-5 py-2 rounded-md text-xs font-bold hover:bg-surface-container transition-all">
-                  Decline
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Request Card 3: Sarah Drasner -->
-          <div class="bg-surface-container-lowest p-5 rounded-xl shadow-[0_4px_24px_rgba(42,52,57,0.02)] flex items-start gap-4 transition-all hover:shadow-[0_8px_32px_rgba(42,52,57,0.06)]">
-            <div class="relative flex-shrink-0">
-              <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAY-SjsD4EvmmzBfseHx-iAWOG1g0r1T4Tk_Xh8Uc0YIOKA1pApq7u6WLd_dTfKaiCEJoJ9ppnRdtcFQTj7z4FfFhSP0mXwaCO_UsLqodE1gkIOMyl2xh2HwaFAbSMUeE2bHt6KYB0JRTthlpFOcM1lEKIixkX-sUNa9M7o_Nut8Ck2-wiXyaqjHb-rbKvM924i22H2dEPGLYmnLnYpdJp-mxbJi7ELzuTVYv-zRtIKG2n0uE009B5Ag-mDLTUoNkhWGqdCOjBM2ME" alt="Sarah" class="w-12 h-12 rounded-full object-cover">
-              <span class="absolute bottom-0 right-0 w-3 h-3 bg-[#ffb300] rounded-full border-2 border-surface-container-lowest"></span>
-            </div>
-            <div class="flex-1">
-              <div class="flex justify-between items-start">
-                <div>
-                  <h4 class="font-bold text-on-surface">Sarah Drasner</h4>
-                  <p class="text-xs text-outline mb-2">Technical Director</p>
-                </div>
-                <span class="text-[10px] font-medium text-outline uppercase tracking-wider">3 days ago</span>
-              </div>
-              <p class="text-sm italic text-on-surface-variant mb-4">"Saw your presentation at the summit. Brilliant insights!"</p>
-              <div class="flex gap-3">
-                <button class="bg-primary text-on-primary px-5 py-2 rounded-md text-xs font-bold hover:opacity-90 transition-all">
-                  Accept
-                </button>
-                <button class="text-primary px-5 py-2 rounded-md text-xs font-bold hover:bg-surface-container transition-all">
-                  Decline
-                </button>
-              </div>
-            </div>
-          </div>
+            }
+          }
         </div>
       </section>
 
@@ -111,39 +78,23 @@
 
         <!-- Sent List -->
         <div class="bg-surface-container p-6 rounded-xl space-y-4">
-          <!-- Sent: Jordan Whitmore (Pending) -->
-          <div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-lowest shadow-sm">
-            <div class="flex items-center gap-3">
-              <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuChskIclIApvQKzLchkrF0iVT4c-Rvo2RmNzobBpJKIBvUWMUsZE-lOcm4mDWrr1-mHjJ7oGUzspO_63eTnvel6Cq8ZXxAWjv3ywNPc2wQbWgeyGWdC7GhcHyqnXLmIt4cPDMfEQaLr9LqUd-wA0Eoinvp05jaJ3YeydT9_gjAnkMjbtLYtXOH9XA60Ku5yBH2kUq1P3bfUfc6_hL1ANp8SWbHEo8560__EvAZGZjEaiV-XxGjl3k5Vk_-B3FES40ZfOe0OEVuxBAE" alt="Jordan" class="w-10 h-10 rounded-full object-cover">
-              <div>
-                <p class="text-sm font-bold text-on-surface">Jordan Whitmore</p>
-                <div class="flex items-center gap-1.5 mt-0.5">
-                  <span class="w-1.5 h-1.5 rounded-full bg-primary-dim"></span>
-                  <span class="text-[10px] text-primary-dim font-bold uppercase tracking-tighter">Pending</span>
+          @if (outgoingRequests().length === 0) {
+            <p class="text-xs text-on-surface-variant">No pending sent requests.</p>
+          } @else {
+            @for (req of outgoingRequests(); track req.id) {
+              <div class="flex items-center gap-3 py-2 border-b border-surface-container last:border-0">
+                <div class="w-8 h-8 rounded-full bg-surface-container overflow-hidden shrink-0">
+                  @if (req.senderAvatarUrl) {
+                    <img [src]="req.senderAvatarUrl" class="w-full h-full object-cover" alt="" />
+                  }
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-semibold text-on-surface truncate">{{ req.receiverUsername }}</p>
+                  <p class="text-[10px] text-on-surface-variant">Pending · {{ formatDate(req.createdAt) }}</p>
                 </div>
               </div>
-            </div>
-            <button class="text-[11px] font-bold text-error bg-error-container/10 px-3 py-1.5 rounded hover:bg-error-container/20 transition-colors">
-              Cancel
-            </button>
-          </div>
-
-          <!-- Sent: Aria Stark (Declined) -->
-          <div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-lowest shadow-sm opacity-80">
-            <div class="flex items-center gap-3">
-              <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAa_iK09DI1F50NA8V554xVJAoxyURcpC3ERBpzwp1VdBTCAY1sR4yGWTfEtj4P0-i5M0vge4ptCUr4MeNazimOJpFbwsz6VPc8rKahIEsq7Q6G5NjwYzkL4GVW_rqxXOiVsxyLbLd-1K0cI5dW2CGAn3qq7u1aBQyLICIJFUc1U9gjwxxyQkGkExo7J7SSinsY7a72MYeTtMFC_wmP7gSyOy0XYCbJCaECK_5pdRQ4vDXa9Go-kwy-okPwBpVlnC8vbZ4WOYfEZcA" alt="Aria" class="w-10 h-10 rounded-full object-cover grayscale">
-              <div>
-                <p class="text-sm font-bold text-on-surface">Aria Stark</p>
-                <div class="flex items-center gap-1.5 mt-0.5">
-                  <span class="w-1.5 h-1.5 rounded-full bg-error"></span>
-                  <span class="text-[10px] text-error font-bold uppercase tracking-tighter">Declined</span>
-                </div>
-              </div>
-            </div>
-            <button class="text-[11px] font-bold text-on-surface-variant px-3 py-1.5 rounded hover:bg-surface-container-high transition-colors">
-              Remove
-            </button>
-          </div>
+            }
+          }
         </div>
 
         <!-- Network Insights (Dark Bento Card) -->

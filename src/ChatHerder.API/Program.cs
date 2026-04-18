@@ -3,6 +3,7 @@
 using System.Text;
 using ChatHerder.API.Endpoints;
 using ChatHerder.API.Middleware;
+using ChatHerder.API.OpenApi;
 using ChatHerder.Infrastructure;
 using ChatHerder.Infrastructure.Persistence;
 using ChatHerder.Infrastructure.Security;
@@ -70,7 +71,7 @@ app.UseMiddleware<BanCheckMiddleware>();
 app.UseMiddleware<SessionValidationMiddleware>();
 app.UseAuthorization();
 
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsSwaggerEnabledEnvironment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
