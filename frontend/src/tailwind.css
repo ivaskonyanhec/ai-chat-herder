@@ -1,2 +1,41 @@
 @import 'tailwindcss';
 @import 'primeicons/primeicons.css';
+
+/*
+ * Map design tokens (from public/tokens.css) to Tailwind v4 utility classes.
+ * `@theme inline` means Tailwind inlines the var() reference into generated CSS
+ * rather than creating its own CSS custom property — avoids variable name collisions.
+ */
+@theme inline {
+  /* Brand */
+  --color-primary: var(--color-primary);
+  --color-primary-dim: var(--color-primary-dim);
+  --color-primary-container: var(--color-primary-container);
+  --color-on-primary: var(--color-on-primary);
+  --color-on-primary-container: var(--color-on-primary-container);
+
+  /* Surface */
+  --color-surface: var(--color-surface);
+  --color-surface-container: var(--color-surface-container);
+  --color-surface-container-low: var(--color-surface-container-low);
+  --color-surface-container-lowest: var(--color-surface-container-lowest);
+  --color-surface-container-high: var(--color-surface-container-high);
+  --color-surface-container-highest: var(--color-surface-container-highest);
+  --color-surface-variant: var(--color-surface-variant);
+
+  /* Text / outline */
+  --color-on-surface: var(--color-on-surface);
+  --color-on-surface-variant: var(--color-on-surface-variant);
+  --color-outline: var(--color-outline);
+  --color-outline-variant: var(--color-outline-variant);
+  --color-inverse-surface: var(--color-inverse-surface);
+
+  /* Status / error */
+  --color-error: var(--color-error);
+  --color-status-online: var(--color-status-online);
+  --color-status-afk: var(--color-status-afk);
+  --color-status-offline: var(--color-status-offline);
+
+  /* Shadow */
+  --shadow-ambient: var(--shadow-ambient);
+}
