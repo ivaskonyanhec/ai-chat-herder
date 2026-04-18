@@ -21,4 +21,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="ChatHerder.Unit.Tests" />
+  </ItemGroup>
+
 </Project>
