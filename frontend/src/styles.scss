@@ -60,6 +60,10 @@ a {
   border-radius: var(--radius-lg);
 }
 
+/* NOTE: Auth form inputs (.auth-form__control) apply pInputText alongside custom
+ * inset box-shadow and border-radius. Component styles win via ViewEncapsulation
+ * emulated attribute selectors. Do NOT add !important to these resets — it would
+ * silently override the auth form's focus ring and field shadow. */
 .p-button,
 .p-inputtext,
 .p-select,
