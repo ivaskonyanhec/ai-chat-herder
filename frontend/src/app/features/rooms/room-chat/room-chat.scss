@@ -246,6 +246,7 @@
     padding: var(--spacing-2);
     height: 6rem;
     resize: none;
+    overflow-y: auto;
     color: var(--color-on-surface);
 
     &::placeholder {
