@@ -93,10 +93,12 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
         m.Entity<RoomBan>(e =>
         {
             e.HasKey(b => b.Id);
-            e.Property(b => b.Reason).HasMaxLength(1024).IsRequired();
+            e.HasIndex(b => new { b.RoomId, b.BannedUserId }).HasFilter("\"RevokedAt\" IS NULL");
+            e.Property(b => b.Reason).HasMaxLength(500);
             e.HasOne(b => b.Room).WithMany().HasForeignKey(b => b.RoomId).OnDelete(DeleteBehavior.Cascade);
-            e.HasOne(b => b.User).WithMany().HasForeignKey(b => b.UserId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(b => b.BannedUser).WithMany().HasForeignKey(b => b.BannedUserId).OnDelete(DeleteBehavior.Cascade);
             e.HasOne(b => b.BannedByUser).WithMany().HasForeignKey(b => b.BannedByUserId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<User>().WithMany().HasForeignKey(b => b.RevokedByUserId).OnDelete(DeleteBehavior.SetNull);
         });
 
         // ── RoomInvitations ────────────────────────────────────────────────────
@@ -190,10 +192,10 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
         // ── ReadMarkers ────────────────────────────────────────────────────────
         m.Entity<ReadMarker>(e =>
         {
-            e.HasKey(rm => rm.Id);
-            e.HasIndex(rm => new { rm.UserId, rm.ContextType, rm.ContextId }).IsUnique();
-            e.Property(rm => rm.ContextType).HasConversion<string>().HasMaxLength(8).IsRequired();
-            e.HasOne(rm => rm.User).WithMany().HasForeignKey(rm => rm.UserId).OnDelete(DeleteBehavior.Cascade);
+            e.HasKey(r => r.Id);
+            e.HasIndex(r => new { r.UserId, r.ContextType, r.ContextId }).IsUnique();
+            e.Property(r => r.ContextType).HasMaxLength(10).IsRequired();
+            e.HasOne(r => r.User).WithMany().HasForeignKey(r => r.UserId).OnDelete(DeleteBehavior.Cascade);
         });
 
         // ── ContextSequences ───────────────────────────────────────────────────
