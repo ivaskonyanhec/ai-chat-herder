@@ -5,6 +5,7 @@ export interface FriendRequestDto {
   senderAvatarUrl: string | null;
   receiverId: string;
   receiverUsername: string;
+  receiverAvatarUrl: string | null;
   status: 'Pending' | 'Accepted' | 'Rejected';
   message: string | null;
   createdAt: string;
