@@ -1,0 +1,173 @@
+/**
+ * Slate Protocol — Design Tokens
+ * Source: Stitch project 8437817411820068917 "Classic Pro Messenger"
+ * Design system: "Architectural Workspace" / "Structured Clarity"
+ * Font: Inter (body, headline, label)
+ * Color mode: Light
+ * Roundness scale: ROUND_FOUR (base 0.25rem)
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+
+  /* ── Color Tokens ─────────────────────────────────────────── */
+
+  /* Primary */
+  --color-primary:                #545f73;
+  --color-primary-dim:            #485367;
+  --color-primary-container:      #d8e3fb;
+  --color-primary-fixed:          #d8e3fb;
+  --color-primary-fixed-dim:      #cad5ed;
+  --color-on-primary:             #f6f7ff;
+  --color-on-primary-container:   #475266;
+  --color-on-primary-fixed:       #354053;
+  --color-on-primary-fixed-variant: #515c70;
+  --color-inverse-primary:        #dae6fe;
+
+  /* Secondary */
+  --color-secondary:              #526074;
+  --color-secondary-dim:          #465468;
+  --color-secondary-container:    #d5e3fc;
+  --color-secondary-fixed:        #d5e3fc;
+  --color-secondary-fixed-dim:    #c7d5ed;
+  --color-on-secondary:           #f8f8ff;
+  --color-on-secondary-container: #455367;
+  --color-on-secondary-fixed:     #324053;
+  --color-on-secondary-fixed-variant: #4e5c71;
+
+  /* Tertiary */
+  --color-tertiary:               #575f75;
+  --color-tertiary-dim:           #4b5369;
+  --color-tertiary-container:     #dae2fd;
+  --color-tertiary-fixed:         #dae2fd;
+  --color-tertiary-fixed-dim:     #ccd4ee;
+  --color-on-tertiary:            #f9f8ff;
+  --color-on-tertiary-container:  #4a5167;
+  --color-on-tertiary-fixed:      #373f54;
+  --color-on-tertiary-fixed-variant: #535b71;
+
+  /* Surface hierarchy (The Canvas / Frame / Recess) */
+  --color-surface-container-lowest: #ffffff;   /* Canvas — main message area */
+  --color-surface-container-low:    #f0f4f7;   /* Recess — inputs, search bars */
+  --color-surface-container:        #e8eff3;   /* Frame — sidebars */
+  --color-surface-container-high:   #e1e9ee;   /* Elevated surfaces */
+  --color-surface-container-highest: #d9e4ea;  /* Highest container */
+  --color-surface:                  #f7f9fb;   /* App background */
+  --color-surface-bright:           #f7f9fb;
+  --color-surface-dim:              #cfdce3;
+  --color-surface-variant:          #d9e4ea;
+  --color-surface-tint:             #545f73;
+
+  /* Background */
+  --color-background:             #f7f9fb;
+  --color-on-background:          #2a3439;
+
+  /* On-surface */
+  --color-on-surface:             #2a3439;
+  --color-on-surface-variant:     #566166;
+
+  /* Inverse */
+  --color-inverse-surface:        #0b0f10;   /* Tooltips & dark overlays */
+  --color-inverse-on-surface:     #9a9d9f;
+
+  /* Outline */
+  --color-outline:                #717c82;   /* Offline status dot */
+  --color-outline-variant:        #a9b4b9;   /* Ghost border (15% opacity only) */
+
+  /* Error */
+  --color-error:                  #9f403d;
+  --color-error-dim:              #4e0309;
+  --color-error-container:        #fe8983;
+  --color-on-error:               #fff7f6;
+  --color-on-error-container:     #752121;
+
+  /* Status indicators (custom — not part of Material palette) */
+  --color-status-online:          #4caf50;   /* 8px filled circle */
+  --color-status-afk:             #ffb300;   /* 8px filled circle */
+  --color-status-offline:         #717c82;   /* == --color-outline */
+
+  /* ── Typography ───────────────────────────────────────────── */
+
+  --font-family:                  'Inter', system-ui, -apple-system, sans-serif;
+  --font-family-headline:         'Inter', system-ui, -apple-system, sans-serif;
+  --font-family-label:            'Inter', system-ui, -apple-system, sans-serif;
+
+  /* Scale */
+  --font-size-display-lg:         2.25rem;   /* 36px */
+  --font-size-display-md:         2rem;      /* 32px */
+  --font-size-display-sm:         1.75rem;   /* 28px */
+  --font-size-headline-lg:        2rem;
+  --font-size-headline-md:        1.75rem;
+  --font-size-headline-sm:        1.5rem;    /* Channel/settings headers — use sparingly */
+  --font-size-title-lg:           1.125rem;
+  --font-size-title-md:           1rem;
+  --font-size-title-sm:           0.875rem;  /* User headers — semi-bold, "The Authority" */
+  --font-size-body-lg:            1rem;
+  --font-size-body-md:            0.875rem;  /* Message body — "The Narrative" */
+  --font-size-body-sm:            0.75rem;
+  --font-size-label-lg:           0.75rem;
+  --font-size-label-md:           0.6875rem;
+  --font-size-label-sm:           0.625rem;  /* Timestamps / status — "The Metadata" */
+
+  /* Weights */
+  --font-weight-regular:          400;
+  --font-weight-medium:           500;
+  --font-weight-semibold:         600;       /* "Actionable" text */
+  --font-weight-bold:             700;
+
+  /* Line heights */
+  --line-height-tight:            1.25;
+  --line-height-normal:           1.5;       /* Message body — generous for density */
+  --line-height-relaxed:          1.75;
+
+  /* Letter spacing */
+  --letter-spacing-metadata:      0.02em;    /* Timestamps — "expensive editorial feel" */
+  --letter-spacing-normal:        0;
+  --letter-spacing-wide:          0.05em;
+
+  /* ── Roundness (ROUND_FOUR = base 0.25rem) ────────────────── */
+
+  --radius-none:                  0;
+  --radius-xs:                    0.125rem;  /* sm — tooltips, overlays (sharper edge) */
+  --radius-sm:                    0.125rem;
+  --radius-md:                    0.375rem;  /* Buttons */
+  --radius-lg:                    0.5rem;    /* MAX for structural elements */
+  --radius-xl:                    0.75rem;
+  --radius-full:                  9999px;    /* Avatars, status dots */
+
+  /* ── Spacing (spacingScale = 1 — standard 4px grid) ──────── */
+
+  --spacing-1:                    0.25rem;   /* 4px */
+  --spacing-2:                    0.5rem;    /* 8px */
+  --spacing-3:                    0.75rem;   /* 12px */
+  --spacing-4:                    1rem;      /* 16px — spacing-md */
+  --spacing-5:                    1.25rem;   /* 20px */
+  --spacing-6:                    1.5rem;    /* 24px */
+  --spacing-8:                    2rem;      /* 32px */
+  --spacing-10:                   2.5rem;    /* 40px */
+  --spacing-12:                   3rem;      /* 48px */
+  --spacing-16:                   4rem;      /* 64px */
+
+  /* ── Elevation / Shadow ───────────────────────────────────── */
+
+  /* Ambient shadow for modals — 24px blur, 4% on-surface tint */
+  --shadow-ambient:               0 4px 24px 0 rgba(42, 52, 57, 0.04);
+
+  /* Glassmorphism (context menus, profile cards) */
+  --glass-bg:                     rgba(255, 255, 255, 0.85);
+  --glass-blur:                   12px;
+
+  /* Ghost border fallback (outline_variant at 15% opacity) */
+  --ghost-border:                 rgba(169, 180, 185, 0.15);
+
+  /* ── Navigation Gradient (left sidebar) ──────────────────── */
+
+  --nav-gradient:                 linear-gradient(180deg, #545f73 0%, #485367 100%);
+
+  /* ── Status Dot ───────────────────────────────────────────── */
+
+  --status-dot-size:              8px;
+  /* "porthole" cutout effect — stroke matches lowest surface */
+  --status-dot-border:            2px solid var(--color-surface-container-lowest);
+}

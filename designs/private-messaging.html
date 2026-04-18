@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Architectural Workspace | Messages</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-tertiary-fixed": "#373f54",
+                    "surface-container-high": "#e1e9ee",
+                    "on-secondary": "#f8f8ff",
+                    "error-container": "#fe8983",
+                    "surface-container-highest": "#d9e4ea",
+                    "outline-variant": "#a9b4b9",
+                    "surface-bright": "#f7f9fb",
+                    "surface-container": "#e8eff3",
+                    "on-primary-fixed": "#354053",
+                    "secondary-fixed": "#d5e3fc",
+                    "primary-dim": "#485367",
+                    "on-secondary-container": "#455367",
+                    "error": "#9f403d",
+                    "inverse-surface": "#0b0f10",
+                    "tertiary-fixed-dim": "#ccd4ee",
+                    "primary-fixed-dim": "#cad5ed",
+                    "on-secondary-fixed-variant": "#4e5c71",
+                    "primary-container": "#d8e3fb",
+                    "secondary-fixed-dim": "#c7d5ed",
+                    "surface-container-low": "#f0f4f7",
+                    "secondary-dim": "#465468",
+                    "secondary": "#526074",
+                    "on-primary-container": "#475266",
+                    "surface-container-lowest": "#ffffff",
+                    "primary": "#545f73",
+                    "on-tertiary-fixed-variant": "#535b71",
+                    "on-error-container": "#752121",
+                    "background": "#f7f9fb",
+                    "on-tertiary-container": "#4a5167",
+                    "surface": "#f7f9fb",
+                    "on-secondary-fixed": "#324053",
+                    "surface-tint": "#545f73",
+                    "on-surface-variant": "#566166",
+                    "on-error": "#fff7f6",
+                    "primary-fixed": "#d8e3fb",
+                    "on-tertiary": "#f9f8ff",
+                    "surface-dim": "#cfdce3",
+                    "on-surface": "#2a3439",
+                    "tertiary-container": "#dae2fd",
+                    "on-background": "#2a3439",
+                    "surface-variant": "#d9e4ea",
+                    "inverse-on-surface": "#9a9d9f",
+                    "on-primary-fixed-variant": "#515c70",
+                    "tertiary": "#575f75",
+                    "tertiary-dim": "#4b5369",
+                    "error-dim": "#4e0309",
+                    "outline": "#717c82",
+                    "secondary-container": "#d5e3fc",
+                    "on-primary": "#f6f7ff",
+                    "tertiary-fixed": "#dae2fd",
+                    "inverse-primary": "#dae6fe"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "fontFamily": {
+                    "headline": ["Inter"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .status-online { background-color: #4caf50; border: 2px solid #ffffff; }
+        .status-afk { background-color: #ffb300; border: 2px solid #ffffff; }
+        .status-offline { background-color: #717c82; border: 2px solid #ffffff; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background h-screen overflow-hidden flex flex-col">
+<!-- TopNavBar Execution -->
+<header class="bg-white dark:bg-slate-900 docked full-width top-0 h-16 flex justify-between items-center px-6 w-full border-b border-slate-100 dark:border-slate-800 z-50">
+<div class="flex items-center gap-8">
+<h1 class="text-lg font-bold tracking-tighter text-slate-900 dark:text-white">Architectural Workspace</h1>
+<nav class="hidden md:flex space-x-6">
+<a class="font-sans text-sm font-medium tracking-tight text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors" href="#">Dashboard</a>
+<a class="font-sans text-sm font-medium tracking-tight text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors" href="#">Files</a>
+<a class="font-sans text-sm font-medium tracking-tight text-slate-900 dark:text-white border-b-2 border-slate-900 dark:border-white pb-1" href="#">Directory</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="bg-slate-50 dark:bg-slate-800 rounded-lg px-3 py-1.5 flex items-center gap-2">
+<span class="material-symbols-outlined text-slate-400 text-sm">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm w-48 text-slate-700" placeholder="Search workspace..." type="text"/>
+</div>
+<button class="material-symbols-outlined text-slate-500 hover:text-slate-900 transition-all scale-98 active:opacity-80">notifications</button>
+<button class="material-symbols-outlined text-slate-500 hover:text-slate-900 transition-all scale-98 active:opacity-80">settings</button>
+<img alt="Executive User Profile" class="w-8 h-8 rounded-full border border-slate-200" data-alt="Professional headshot of a senior executive man in a tailored charcoal suit against a clean architectural background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCvx_m8YWVqsP7LDdOLuBEHxSgGObqkZWqvYlT-Ga-Z7GKwSgw2kXHsbn_OV6RmOcnbi-afzRzg-tFii4kKn67mvO5ltN0hjIJhjgRaOHJ30737y07BOOo7Uf5rxiKxPJLMxiPSCRVWlP-6Gk-Lau4cSlQP2tdx18_hEjGlGeysXlWq7nv72876vG1nTE8mwBZMikJSE87r1nBjfgQcIchmhR8F4SwjN_nm6aMbRmcQhdYjX2q8OOLd_LaoX5h_6Gh5YOHSiLk75DY"/>
+</div>
+</header>
+<div class="flex flex-1 overflow-hidden">
+<!-- SideNavBar Execution (Primary Workspace Frame) -->
+<aside class="bg-slate-800 dark:bg-black docked left-0 h-full w-64 flex flex-col flex flex-col h-screen p-4 space-y-4">
+<div class="mb-4">
+<div class="flex items-center gap-3 mb-1">
+<img alt="Workspace Logo" class="w-10 h-10 rounded-lg" data-alt="Minimalist architectural firm logo featuring clean lines and geometric shapes in slate blue" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxRzCpMTvBN9PLBI7Pc67ognXHKt0lSRR-DXTVEV2dUCyozQdOm2d7gbkHo4s29AatPfwfRXQ9CYeCx0qV5rFQAJN8pmJTI0fMiSs9uBINiVEIuHb-IR2cH2ojlbbDWHEXoysRxRhHjjt4S8KHhMAHv6CrxwotiFKW9P9xm2gLy7HcxNjJlMfwLNgzs817l-jOGN4oz9h5PHybe0TpJHkZFJCQQgXgmwdsofEsMO371cQAS2uAYggJ_nctEDs9PI5518m-lT22P1c"/>
+<div>
+<p class="text-white font-black text-sm uppercase tracking-tight">Main Office</p>
+<p class="text-[10px] text-slate-400 font-semibold uppercase tracking-widest">Global Communications</p>
+</div>
+</div>
+</div>
+<button class="w-full bg-primary py-2.5 rounded-md text-white font-semibold text-xs uppercase tracking-widest hover:bg-primary-dim transition-all mb-4">
+                New Thread
+            </button>
+<nav class="flex-1 space-y-1">
+<div class="flex items-center gap-3 bg-slate-700 dark:bg-slate-800 text-white rounded-md px-3 py-2 cursor-pointer transition-all">
+<span class="material-symbols-outlined text-lg">forum</span>
+<span class="font-sans text-xs font-semibold uppercase tracking-widest">Messages</span>
+</div>
+<div class="flex items-center gap-3 text-slate-400 hover:text-slate-200 px-3 py-2 cursor-pointer transition-all hover:bg-slate-700/50">
+<span class="material-symbols-outlined text-lg">chat_bubble</span>
+<span class="font-sans text-xs font-semibold uppercase tracking-widest">Channels</span>
+</div>
+<div class="flex items-center gap-3 text-slate-400 hover:text-slate-200 px-3 py-2 cursor-pointer transition-all hover:bg-slate-700/50">
+<span class="material-symbols-outlined text-lg">drafts</span>
+<span class="font-sans text-xs font-semibold uppercase tracking-widest">Drafts</span>
+</div>
+<div class="flex items-center gap-3 text-slate-400 hover:text-slate-200 px-3 py-2 cursor-pointer transition-all hover:bg-slate-700/50">
+<span class="material-symbols-outlined text-lg">push_pin</span>
+<span class="font-sans text-xs font-semibold uppercase tracking-widest">Pinned</span>
+</div>
+<div class="flex items-center gap-3 text-slate-400 hover:text-slate-200 px-3 py-2 cursor-pointer transition-all hover:bg-slate-700/50">
+<span class="material-symbols-outlined text-lg">inventory_2</span>
+<span class="font-sans text-xs font-semibold uppercase tracking-widest">Archive</span>
+</div>
+</nav>
+<div class="mt-auto pt-4 border-t border-slate-700">
+<div class="flex items-center gap-3 px-2 text-slate-400 text-xs font-medium">
+<span class="w-2 h-2 rounded-full status-online"></span>
+<span>Direct Messages</span>
+</div>
+<div class="mt-3 space-y-2">
+<!-- Contact Item -->
+<div class="flex items-center gap-3 px-2 py-1.5 hover:bg-slate-700/30 rounded cursor-pointer">
+<div class="relative">
+<img class="w-8 h-8 rounded-full" data-alt="Portrait of a female architect with glasses and professional attire" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDntU2otrK67O8sFCbIn8BRG6vBxUBchxxXK7fN-2Q7bhYQ7CKNOX4ZWZvZWZcwyRKRKnMnSqv5Y7jB0vD4soDlVlAtc5GWmYIRP7udOokPPkXY5S8iL2VK4q2538ZER1CyMc6NOuHOm6dyoHDjkQ5fEW3hz7b0G9SV3e-yF6xU6lMuKXd_30QR0fTiV0IcJNnTgOlMWsTm7g_qZaYITVIG46LELjlzKu5Unk3slZkDmTBDEvvMXMZZWNlBi_tF-PxkEv7Jt7LwUI8"/>
+<span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full status-online border-slate-800"></span>
+</div>
+<span class="text-slate-200 text-xs">Elena Vance</span>
+</div>
+<!-- Contact Item -->
+<div class="flex items-center gap-3 px-2 py-1.5 hover:bg-slate-700/30 rounded cursor-pointer border-l-2 border-primary bg-slate-700/50">
+<div class="relative">
+<img class="w-8 h-8 rounded-full" data-alt="Corporate headshot of a middle-aged man in a navy sweater" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDuGyfAWv11JRTIEmYu3Xo9MyceDsg3NFEEpPZdHvThDU0R811XftuDsUBj2zFtXqE85g54ssFwftLATVkGqXNn7m0L7TdDPz6Zdk0riHKuoj74vVe4IbgBwgXBkt7wK4dhH5fivukywoSqJcfn3iYWrRjUYXDPx-w_TIMsVLrbZSSomEcJ40uqznk-vHUot7R5O02vhmnkHk6aSqrl_rHLaxxBvxCf4nCrrPtcqDEQpMnYhDPidcXP8s87yS7edNMmJELEJlscGT4"/>
+<span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full status-afk border-slate-800"></span>
+</div>
+<span class="text-white text-xs font-bold">Julian Thorne</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area: Three-Pane Layout -->
+<main class="flex-1 flex overflow-hidden bg-surface">
+<!-- Pane 1: Recent Chats & Contact List -->
+<section class="w-80 flex flex-col bg-surface-container border-r border-transparent">
+<div class="p-6">
+<h2 class="text-headline-sm font-bold text-on-surface mb-4">Messages</h2>
+<div class="relative mb-6">
+<input class="w-full bg-surface-container-low border-none rounded-lg text-sm px-4 py-2 focus:ring-1 focus:ring-primary/30" placeholder="Jump to message..." type="text"/>
+</div>
+<div class="space-y-1">
+<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-lowest shadow-sm cursor-pointer border border-transparent">
+<div class="flex items-center gap-3">
+<div class="relative">
+<img class="w-10 h-10 rounded-full" data-alt="Professional portrait of Julian Thorne" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVfkNihdOvwX_MxzzvmcSL8ddYZoVpAJWm2PKPAepTGWvKad275LpeVpVwDK8WflthmpZnN8Oq7aII3IZBvhwt0hyOmu5FrHF6NMyUO3QjQ8xtDhjEdr3xEhs1D7_lEQHzyiqFNxLeh6KE93euZ-uX3GvbFrFed3Jqc8g4z8GO-Vm_4IykdAYWzvvNWfTlDPni4VyWO9M8vLZtwjQJOLZBuF6Wr9hF6t2itg29OXd1lpT6ve1Ppnbe39vpA_zzbaJ0smlu3ysEJeU"/>
+<span class="absolute bottom-0 right-0 w-3 h-3 rounded-full status-afk"></span>
+</div>
+<div>
+<p class="text-sm font-bold text-on-surface">Julian Thorne</p>
+<p class="text-xs text-on-surface-variant truncate w-32">The site plan looks correct...</p>
+</div>
+</div>
+<span class="text-[10px] text-outline font-medium tracking-tight">12:45 PM</span>
+</div>
+<div class="flex items-center justify-between p-3 rounded-lg hover:bg-surface-container-high cursor-pointer transition-colors">
+<div class="flex items-center gap-3">
+<div class="relative opacity-60">
+<img class="w-10 h-10 rounded-full" data-alt="Headshot of a man with silver hair and a stern expression" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBDki53kf1xdveGGrZ5N84ARgkTzhtMSgydMLDXWHZCJaEsMte52xNYmN9j-pyPplSjzfSpZzCb5bu18l75iJMYUa94lCjY7745IY-KqWkytTUb_IbvV4gBBp8rrkUUt5aBYHNTEmiabiUWj7Heh34_1IIaZULUnHeyccfBeuiYB4j6H8kvZUlFM_PqpnyrAalCe5p6sXjuYoz1Zcx66-VkotFMjOKeXCJ8A8PVmBD55WnRfKa3ZD_0Xh-NFZcZuu2U8m40H7vyI4w"/>
+<span class="absolute bottom-0 right-0 w-3 h-3 rounded-full status-offline"></span>
+</div>
+<div>
+<p class="text-sm font-bold text-on-surface opacity-60">Marcus Reid</p>
+<p class="text-[10px] text-error font-bold uppercase tracking-widest mt-0.5">Account Suspended</p>
+</div>
+</div>
+<span class="text-[10px] text-outline font-medium tracking-tight">Nov 12</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Pane 2: Central Chat Area -->
+<section class="flex-1 flex flex-col bg-surface-container-lowest relative">
+<!-- Chat Header -->
+<header class="h-16 flex items-center justify-between px-8 border-b border-surface-container-low">
+<div class="flex items-center gap-4">
+<div class="relative">
+<img class="w-10 h-10 rounded-full" data-alt="Julian Thorne profile" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAlEFUEj1TwW0WkEW439J2oM0YObmQs1_f9YMh9NC97CC9z3fLSpHLTfy0P6hkWIWGTkomY13qAlsloGjdtu_qK06iCeZTB1rl3TTTz1poAZYW102dZ7hz-Jv9GrA7EcD8P64EHVPTXiZoBcktoK9WMRWzImV-qOD47TFBKqqqjLr0hBonhFj-hWRQYCm0cnkEOUAMQM4SX-fg8SDtzLPy1Ft4DsSaMqu-0CkPof_Jyxxk1FW6UGeMhlFkpHkANHZy4n-QK0k4TlJc"/>
+<span class="absolute bottom-0 right-0 w-3 h-3 rounded-full status-afk border-surface-container-lowest"></span>
+</div>
+<div>
+<h3 class="text-sm font-bold text-on-surface">Julian Thorne</h3>
+<p class="text-[10px] text-outline font-medium tracking-wider uppercase">Senior Structural Lead • AFK</p>
+</div>
+</div>
+<div class="flex items-center gap-4 text-outline">
+<button class="material-symbols-outlined hover:text-primary transition-colors">call</button>
+<button class="material-symbols-outlined hover:text-primary transition-colors">video_call</button>
+<button class="material-symbols-outlined hover:text-primary transition-colors">info</button>
+</div>
+</header>
+<!-- Message History -->
+<div class="flex-1 overflow-y-auto p-8 space-y-8">
+<!-- Date Divider -->
+<div class="flex items-center gap-4 opacity-40">
+<div class="h-px flex-1 bg-outline-variant"></div>
+<span class="text-[10px] font-bold uppercase tracking-widest text-outline">Wednesday, October 24</span>
+<div class="h-px flex-1 bg-outline-variant"></div>
+</div>
+<!-- Received Message Group -->
+<div class="flex items-start gap-4 max-w-2xl">
+<img class="w-8 h-8 rounded-full mt-1" data-alt="Julian Thorne avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBnUZcuWy6YgWtDRWJPrehrKYrFR3pws1-wZIGF4iiVs-B60zOtbjE12CM9fFJBk-bQaNl79WOSRKY-vVjI0-XGYWbJGWBHasy6ZWPfJBYgukRPmvoEkLIE765YiDXaNAPmCrmYbPrO5zO8v_XgVSFdYcS7XFIEL4ldYdEPwpCIsRL8wAgHJ8ABpH7npiqKnLF62GHY4eeLCa4Dh0e87rG0_nvvX-4EEvUrlMoA2k-hMleukNUy_ZWUTkgX64IRxaNKz6l3bBhI1ww"/>
+<div class="space-y-2">
+<div class="flex items-center gap-2">
+<span class="text-sm font-bold text-on-surface">Julian Thorne</span>
+<span class="text-[10px] text-outline font-medium tracking-tight">10:15 AM</span>
+</div>
+<div class="bg-surface-container-low p-4 rounded-lg rounded-tl-none">
+<p class="text-sm leading-relaxed text-on-surface">Good morning. I've reviewed the blueprints for the North Wing extension. The structural load calculations seem slightly optimistic regarding the central atrium supports.</p>
+</div>
+<div class="bg-surface-container-low p-4 rounded-lg">
+<p class="text-sm leading-relaxed text-on-surface">Can you verify the steel grade specified in Section 4.2? We might need to upgrade to Grade 50 if we stick with the slim profile columns.</p>
+</div>
+</div>
+</div>
+<!-- Sent Message Group -->
+<div class="flex items-start gap-4 max-w-2xl ml-auto flex-row-reverse">
+<img class="w-8 h-8 rounded-full mt-1" data-alt="User avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDX1T5_0MPa0LmcZwsvxf5k-Ogg_XRg8VBGD9OdhS8B-6-sB5RTOex7w8Fbc9UJsQ0uS8BvRtkbb5S2YygzpgpP4qDq1htcDOaIZ9epaupOKEOXm4DL8cKcppZW1oCZ3q8_7vE7PEiCFoDTItR149Ib6_5swtEL-rQpGkOTfC6M9uSHQE8mrwWsen3x_UABYxfEJa4pj5IWHcDHZhIBGKYlTyCpvVH9W86bNE_67PCFQD3HaF25nIRTzWRGNVlEuDYI06telxuoh7k"/>
+<div class="space-y-2 flex flex-col items-end">
+<div class="flex items-center gap-2">
+<span class="text-[10px] text-outline font-medium tracking-tight">10:42 AM</span>
+<span class="text-sm font-bold text-on-surface">You</span>
+</div>
+<div class="bg-primary text-on-primary p-4 rounded-lg rounded-tr-none shadow-md">
+<p class="text-sm leading-relaxed">I'll cross-check that immediately. I believe we were pushing for the Grade 50 but I need to confirm the supplier's lead time on those specific extrusions.</p>
+</div>
+</div>
+</div>
+<!-- Frozen Message History Example (For Marcus Reid - Conditional Visibility) -->
+<div class="hidden flex flex-col items-center py-12 px-8 bg-error-container/5 rounded-xl border border-dashed border-error/20">
+<span class="material-symbols-outlined text-error text-4xl mb-3">lock</span>
+<h4 class="text-sm font-bold text-on-error-container">Message History Frozen</h4>
+<p class="text-xs text-on-surface-variant text-center max-w-sm mt-2 leading-relaxed">This conversation is read-only. The user "Marcus Reid" has been banned from the Architectural Workspace for policy violations. Contact administration for data recovery.</p>
+</div>
+</div>
+<!-- Input Area -->
+<div class="p-6 bg-surface-container-lowest border-t border-surface-container-low">
+<div class="bg-surface-container-low rounded-xl p-2">
+<textarea class="w-full bg-transparent border-none focus:ring-0 text-sm p-3 resize-none h-24 placeholder:text-outline/60" placeholder="Type your message..."></textarea>
+<div class="flex items-center justify-between px-3 pb-2">
+<div class="flex items-center gap-3 text-outline">
+<button class="material-symbols-outlined hover:text-primary transition-colors text-xl">attach_file</button>
+<button class="material-symbols-outlined hover:text-primary transition-colors text-xl">image</button>
+<button class="material-symbols-outlined hover:text-primary transition-colors text-xl">mood</button>
+<div class="h-4 w-px bg-outline-variant mx-1"></div>
+<button class="material-symbols-outlined hover:text-primary transition-colors text-xl">format_bold</button>
+<button class="material-symbols-outlined hover:text-primary transition-colors text-xl">format_italic</button>
+</div>
+<button class="bg-primary text-on-primary px-6 py-2 rounded-lg font-bold text-xs uppercase tracking-widest hover:bg-primary-dim transition-all shadow-lg flex items-center gap-2">
+                                Send
+                                <span class="material-symbols-outlined text-sm">send</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Pane 3: Contact Details & Media -->
+<section class="w-72 bg-surface border-l border-surface-container">
+<div class="p-6 flex flex-col h-full">
+<div class="text-center mb-8">
+<div class="relative inline-block mx-auto">
+<img class="w-24 h-24 rounded-full border-4 border-surface-container-lowest shadow-xl" data-alt="Large profile picture of Julian Thorne" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCgrOExE1wa41W76JlETsm1eFTHkr1aVuGIBSNFUBsrMRqEIEy60N4z4rfST3gwYW84H0jkP2eVgnDGHEvW-SsByXREP8yUpFlu8CHRBMI-x4TeEcb5GuVkx6K8hXg7GFvAu6sJADJ4QU6EFnfbwBSUzLIOaFWc6ekJtV6F-Ag3lYWTiEb3xE0242r-ObzCRWbpz8xeSMV8M7ielKtPOUHBAo1K7JW71cb-Z4Cd_xHO3zZKMtLS8To059snW5J94TTQ678znKz2Zes"/>
+<span class="absolute bottom-2 right-2 w-5 h-5 rounded-full status-afk ring-4 ring-surface"></span>
+</div>
+<h4 class="text-lg font-bold text-on-surface mt-4">Julian Thorne</h4>
+<p class="text-xs text-outline font-medium">julian.thorne@arch-workspace.com</p>
+</div>
+<div class="space-y-6 flex-1">
+<div>
+<h5 class="text-[10px] font-bold text-outline uppercase tracking-widest mb-3">Professional Bio</h5>
+<p class="text-xs text-on-surface-variant leading-relaxed">
+                                Lead Structural Engineer with 15+ years experience in high-rise steel frame design. Oversaw the Jakarta Financial District redevelopment.
+                            </p>
+</div>
+<div>
+<div class="flex items-center justify-between mb-3">
+<h5 class="text-[10px] font-bold text-outline uppercase tracking-widest">Shared Assets</h5>
+<button class="text-[10px] font-bold text-primary hover:underline">View All</button>
+</div>
+<div class="grid grid-cols-2 gap-2">
+<div class="aspect-square bg-surface-container-high rounded overflow-hidden relative group cursor-pointer">
+<img class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all" data-alt="High-contrast architectural photograph of a modern skyscraper's glass facade" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAd7uQXmSpNzucbr3y6jW9pJqQgibq5hxX9bmCtias_gyM-piMyJYxz4EcYCOPqQ3GGsWI0-4PB5s_4gKj9QY4KXq-GBTVnlL3JgtqxZhTIPFrWiXouBkm_8RaxiKiPnmjfEn1DjXTTzVQqoztymAmKPPuRWiigwNbQoFIHNuGblDr2KPq98ESGYDMdRFQTFnhL-Wvil1ujoImj-F3S5tpgUP_D-sVyh7jXFSZWzPD1DC8-NCRvJt86XFqezF8gA3azq5XyfDOXems"/>
+<div class="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+</div>
+<div class="aspect-square bg-surface-container-high rounded overflow-hidden relative group cursor-pointer">
+<img class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all" data-alt="Wide shot of a minimalist interior office lobby with light coming through large windows" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDKSxD54DhKXMBgjftECkIQEJY6YSlRFoaq2wL_oaz93if1viS8alWw-lfqPRt_Ep5q_i3v-yhD76lxrgGhcw5_YADrsxU4PODBO4UJtq2GEwfBAiB4-RxA7UOfKOLVN1zdw6qhdQSnrb7lB-RyMEi9RJENU-yZS1bJL_bnidQJ1b7U-saQ4KXtiYBri9rg555xWib85sJ59mvYKalCUYk6aKzGCtDkhU3Jq6D1MsitokADCUmJP3GX-jIUl00Utivh86cCxkKfZNo"/>
+<div class="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+</div>
+<div class="aspect-square bg-surface-container-high rounded overflow-hidden relative group cursor-pointer">
+<img class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all" data-alt="Technical blueprint drawing of a floor plan with clean lines" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwrVk89SiSJ6WUGwL9YahmPAITQvoeTVsHPAnCZwTnuDzKLjaO03EX2ziDxktBdVHTvkUe_M1rCLbdBlvjJ4Q-GozZddWfZjkWvbYGYo-6jf6hyfJ3c7XvByEMWFUlqh8S6bx8KXZasWf74IsZ5DUsQ6rGlVS3RysD4zz9JbkNIW8br9Jn0945Ug92zCugG2SOVGrQuiVmSMVzYIfBTltMxmEYCoQgSmjerHgzcjp-z5lJrGBPGMzyaY6E8pN84EcDM86THS5UQqk"/>
+<div class="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+</div>
+<div class="aspect-square bg-surface-container-high rounded overflow-hidden relative group cursor-pointer flex items-center justify-center text-outline">
+<span class="text-xs font-bold">+12</span>
+</div>
+</div>
+</div>
+<div>
+<h5 class="text-[10px] font-bold text-outline uppercase tracking-widest mb-3">Links</h5>
+<ul class="space-y-2">
+<li class="flex items-center gap-2 text-xs text-on-surface-variant hover:text-primary cursor-pointer">
+<span class="material-symbols-outlined text-sm">link</span>
+<span class="truncate">project-atlas-v4.figma.com</span>
+</li>
+<li class="flex items-center gap-2 text-xs text-on-surface-variant hover:text-primary cursor-pointer">
+<span class="material-symbols-outlined text-sm">link</span>
+<span class="truncate">structural-audit-report-2023.pdf</span>
+</li>
+</ul>
+</div>
+</div>
+<div class="mt-auto space-y-2">
+<button class="w-full flex items-center justify-center gap-2 py-2 text-xs font-bold text-outline hover:text-on-surface-variant transition-colors border border-outline/20 rounded">
+<span class="material-symbols-outlined text-sm">block</span>
+                            Mute Julian
+                        </button>
+<button class="w-full flex items-center justify-center gap-2 py-2 text-xs font-bold text-error hover:bg-error/5 transition-colors border border-error/20 rounded">
+<span class="material-symbols-outlined text-sm">report</span>
+                            Report Contact
+                        </button>
+</div>
+</div>
+</section>
+</main>
+</div>
+<!-- Mobile BottomNavBar Suppression Logic: Only rendered if not focused on task -->
+<nav class="md:hidden bg-white border-t border-slate-100 h-16 flex items-center justify-around fixed bottom-0 w-full z-50 px-4">
+<button class="flex flex-col items-center gap-1 text-slate-400">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-[10px] font-bold uppercase tracking-widest">Dash</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-slate-900">
+<span class="material-symbols-outlined">forum</span>
+<span class="text-[10px] font-bold uppercase tracking-widest">Chat</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-slate-400">
+<span class="material-symbols-outlined">folder_open</span>
+<span class="text-[10px] font-bold uppercase tracking-widest">Files</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-slate-400">
+<span class="material-symbols-outlined">person</span>
+<span class="text-[10px] font-bold uppercase tracking-widest">Profile</span>
+</button>
+</nav>
+</body></html>

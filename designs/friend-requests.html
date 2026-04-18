@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Classic Pro Messenger | Friend Requests</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error-container": "#fe8983",
+                        "primary-dim": "#485367",
+                        "tertiary-container": "#dae2fd",
+                        "secondary-fixed": "#d5e3fc",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container": "#e8eff3",
+                        "tertiary-fixed-dim": "#ccd4ee",
+                        "on-secondary": "#f8f8ff",
+                        "error": "#9f403d",
+                        "tertiary": "#575f75",
+                        "secondary-dim": "#465468",
+                        "on-error": "#fff7f6",
+                        "on-background": "#2a3439",
+                        "on-tertiary-fixed-variant": "#535b71",
+                        "background": "#f7f9fb",
+                        "surface-container-highest": "#d9e4ea",
+                        "surface-tint": "#545f73",
+                        "on-primary": "#f6f7ff",
+                        "error-dim": "#4e0309",
+                        "on-surface": "#2a3439",
+                        "on-surface-variant": "#566166",
+                        "on-primary-fixed-variant": "#515c70",
+                        "on-primary-fixed": "#354053",
+                        "primary-fixed": "#d8e3fb",
+                        "on-error-container": "#752121",
+                        "on-secondary-container": "#455367",
+                        "surface-bright": "#f7f9fb",
+                        "on-tertiary": "#f9f8ff",
+                        "surface-container-low": "#f0f4f7",
+                        "surface-dim": "#cfdce3",
+                        "on-tertiary-container": "#4a5167",
+                        "inverse-primary": "#dae6fe",
+                        "secondary": "#526074",
+                        "surface-container-high": "#e1e9ee",
+                        "on-primary-container": "#475266",
+                        "primary-container": "#d8e3fb",
+                        "tertiary-fixed": "#dae2fd",
+                        "secondary-container": "#d5e3fc",
+                        "inverse-surface": "#0b0f10",
+                        "tertiary-dim": "#4b5369",
+                        "on-secondary-fixed-variant": "#4e5c71",
+                        "secondary-fixed-dim": "#c7d5ed",
+                        "primary-fixed-dim": "#cad5ed",
+                        "on-secondary-fixed": "#324053",
+                        "outline": "#717c82",
+                        "surface-variant": "#d9e4ea",
+                        "primary": "#545f73",
+                        "surface": "#f7f9fb",
+                        "on-tertiary-fixed": "#373f54",
+                        "outline-variant": "#a9b4b9",
+                        "inverse-on-surface": "#9a9d9f"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex overflow-hidden">
+<!-- SideNavBar (Authority Source: JSON) -->
+<aside class="h-screen w-72 flex-col hidden lg:flex fixed left-0 top-0 p-4 gap-2 bg-[#e8eff3] dark:bg-slate-900 bg-gradient-to-b from-slate-200 to-slate-300 dark:from-slate-800 dark:to-slate-900 transition-all duration-200 ease-in-out">
+<div class="flex items-center gap-3 px-3 py-6">
+<div class="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-white shadow-lg">
+<span class="material-symbols-outlined" data-icon="architecture">architecture</span>
+</div>
+<div>
+<h1 class="text-xl font-extrabold tracking-tighter text-slate-800 dark:text-white leading-tight">Architectural Workspace</h1>
+<p class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Executive Suite</p>
+</div>
+</div>
+<div class="mt-4 px-2">
+<button class="w-full py-3 px-4 bg-primary text-on-primary rounded-md font-semibold text-sm shadow-sm flex items-center justify-center gap-2 hover:opacity-90 transition-all">
+<span class="material-symbols-outlined text-sm" data-icon="add">add</span>
+                New Message
+            </button>
+</div>
+<nav class="mt-8 flex flex-col gap-1 px-2">
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 font-medium transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="dashboard">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 font-medium transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="chat">chat</span>
+<span>Messages</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 font-medium transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="group">group</span>
+<span>Contacts</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm font-semibold rounded-md transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="person_add">person_add</span>
+<span>Requests</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 font-medium transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="inventory_2">inventory_2</span>
+<span>Archive</span>
+</a>
+</nav>
+<div class="mt-auto px-2 border-t border-slate-300/30 pt-4 pb-4">
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 font-medium transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="help_outline">help_outline</span>
+<span>Help</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 font-medium transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="logout">logout</span>
+<span>Logout</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 lg:ml-72 flex flex-col h-screen">
+<!-- TopAppBar (Authority Source: JSON) -->
+<header class="bg-[#ffffff] dark:bg-slate-950 docked full-width top-0 z-50 shadow-[0_4px_24px_rgba(42,52,57,0.04)] flex justify-between items-center w-full px-6 h-16">
+<div class="flex items-center gap-8">
+<span class="text-lg font-bold text-slate-800 dark:text-slate-100 font-['Inter'] tracking-tight">Classic Pro Messenger</span>
+<div class="hidden md:flex items-center bg-surface-container-low px-4 py-2 rounded-lg gap-3 min-w-[320px]">
+<span class="material-symbols-outlined text-outline text-sm" data-icon="search">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm text-on-surface w-full" placeholder="Search requests or contacts..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors rounded-full relative">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<button class="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors rounded-full">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border-2 border-surface-container ml-2">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="professional portrait of a male executive in a studio setting with neutral background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAVWYA2vz_cVYnZdT0UzC9CpaedU6trA0uvBNU8K_GdTCckQvaMN_wjxzTqOatRmJ3ZSS5hQfsGK8rOI9kXWaAAXNz4lqmNQ_ijzZalEQX3Hsc8iIMv_ASJAUwIGce9F8Hm1H4M71jTSoE19LCokaVywCiFeBUtQck18GdZn-_4hwIuuDUMghIV4cwXP5Bfy5NqUylGPASCnpUD0NY3aDfeNhqNMYjqjtkHwtwQpLEE-F7lXQ_vWOK8mnOG6b8_mVid_G3PlRbVkHs"/>
+</div>
+</div>
+</header>
+<!-- Content Canvas -->
+<div class="flex-1 overflow-y-auto p-8 bg-background">
+<div class="max-w-6xl mx-auto">
+<div class="mb-10">
+<h2 class="text-3xl font-extrabold text-on-background tracking-tight">Friend Requests</h2>
+<p class="text-on-surface-variant mt-1 text-sm">Manage your professional network and pending connections.</p>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+<!-- Left Column: Incoming Requests (Architectural Card) -->
+<section class="lg:col-span-7 flex flex-col gap-6">
+<div class="flex items-center justify-between px-2">
+<h3 class="font-semibold text-lg flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="inbox">inbox</span>
+                                Incoming Requests
+                                <span class="bg-primary-container text-on-primary-container text-xs px-2 py-0.5 rounded-full ml-1">3</span>
+</h3>
+</div>
+<div class="flex flex-col gap-3">
+<!-- Elena Rodriguez -->
+<div class="bg-surface-container-lowest p-5 rounded-xl shadow-[0_4px_24px_rgba(42,52,57,0.02)] flex items-start gap-4 transition-all hover:shadow-[0_8px_32px_rgba(42,52,57,0.06)] group">
+<div class="relative">
+<img class="w-12 h-12 rounded-full object-cover" data-alt="portrait of a confident woman with professional appearance, soft studio lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCM7dGc7KxhhTlTtNGwJaa40hJIIY_qJIpXkZakHx8akeLXJTg3upFDAkCK1bGyaa4Z1KmJDp5YI8Haino57CICzqVCcDTdNLz3XB0E-xxZo2WYUuNE3hbw6sIoMvPRj3cW04kbWQLEDXfXlKzOoskCswHtTI4YLtZy2UIUxZw1F_A5y3SG2pEcGbMNBzUB0HkwPJuSNTezsdoZ5rAlVOYcd6m3b0VZbI-uwEuBwkcHb4JuTpNzefa-qgPePf8PxNnzsYqwr7NMBs0"/>
+<span class="absolute bottom-0 right-0 w-3 h-3 bg-[#4caf50] rounded-full border-2 border-surface-container-lowest"></span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<div>
+<h4 class="font-bold text-on-surface">Elena Rodriguez</h4>
+<p class="text-xs text-outline mb-2">Senior Architect at UrbanFlow</p>
+</div>
+<span class="text-[10px] font-medium text-outline uppercase tracking-wider">2h ago</span>
+</div>
+<p class="text-sm italic text-on-surface-variant mb-4">*Hey, worked with you on the API project last quarter. Would love to stay in touch!*</p>
+<div class="flex gap-3">
+<button class="bg-primary text-on-primary px-5 py-2 rounded-md text-xs font-bold hover:opacity-90 transition-all flex items-center gap-2">
+                                            Accept
+                                        </button>
+<button class="text-primary px-5 py-2 rounded-md text-xs font-bold hover:bg-surface-container transition-all">
+                                            Decline
+                                        </button>
+</div>
+</div>
+</div>
+<!-- Marcus Chen -->
+<div class="bg-surface-container-lowest p-5 rounded-xl shadow-[0_4px_24px_rgba(42,52,57,0.02)] flex items-start gap-4 transition-all hover:shadow-[0_8px_32px_rgba(42,52,57,0.06)] group">
+<div class="relative">
+<img class="w-12 h-12 rounded-full object-cover" data-alt="headshot of a smiling asian man in business casual attire with natural office lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAaUK2-Y3YoCfu_onVfCzaqmriyuBQ0mC6LyH-KEisUGcsNlBX3mEESoume_Q8o3WbQInpC7XxGKcR3mgvL_6OyGzwCtT27sGITXqLUsxdXte1KKu3TQ7X5pB5VFP54mPe-TtbfRU8J0fhW9Zkue7HfuPI9OFJp6TjFFLtKNV2XYTa4vrXT0GVLU1Thm-_LhKq3Hk1-Is6563Uqu9gSteQZCE5ELus8LfR6qtlYk5Y0bBIXaTzIMkfc7rm2DxJSY9q6Y8ozg_k6mPk"/>
+<span class="absolute bottom-0 right-0 w-3 h-3 bg-outline rounded-full border-2 border-surface-container-lowest"></span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<div>
+<h4 class="font-bold text-on-surface">Marcus Chen</h4>
+<p class="text-xs text-outline mb-2">Lead Developer at Nexus</p>
+</div>
+<span class="text-[10px] font-medium text-outline uppercase tracking-wider">Yesterday</span>
+</div>
+<p class="text-sm italic text-on-surface-variant mb-4">*Interested in discussing the upcoming structural integration specs.*</p>
+<div class="flex gap-3">
+<button class="bg-primary text-on-primary px-5 py-2 rounded-md text-xs font-bold hover:opacity-90 transition-all">
+                                            Accept
+                                        </button>
+<button class="text-primary px-5 py-2 rounded-md text-xs font-bold hover:bg-surface-container transition-all">
+                                            Decline
+                                        </button>
+</div>
+</div>
+</div>
+<!-- Sarah Drasner -->
+<div class="bg-surface-container-lowest p-5 rounded-xl shadow-[0_4px_24px_rgba(42,52,57,0.02)] flex items-start gap-4 transition-all hover:shadow-[0_8px_32px_rgba(42,52,57,0.06)] group">
+<div class="relative">
+<img class="w-12 h-12 rounded-full object-cover" data-alt="professional headshot of a woman with short dark hair, wearing a navy blazer against a light gray background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAY-SjsD4EvmmzBfseHx-iAWOG1g0r1T4Tk_Xh8Uc0YIOKA1pApq7u6WLd_dTfKaiCEJoJ9ppnRdtcFQTj7z4FfFhSP0mXwaCO_UsLqodE1gkIOMyl2xh2HwaFAbSMUeE2bHt6KYB0JRTthlpFOcM1lEKIixkX-sUNa9M7o_Nut8Ck2-wiXyaqjHb-rbKvM924i22H2dEPGLYmnLnYpdJp-mxbJi7ELzuTVYv-zRtIKG2n0uE009B5Ag-mDLTUoNkhWGqdCOjBM2ME"/>
+<span class="absolute bottom-0 right-0 w-3 h-3 bg-[#ffb300] rounded-full border-2 border-surface-container-lowest"></span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<div>
+<h4 class="font-bold text-on-surface">Sarah Drasner</h4>
+<p class="text-xs text-outline mb-2">Technical Director</p>
+</div>
+<span class="text-[10px] font-medium text-outline uppercase tracking-wider">3 days ago</span>
+</div>
+<p class="text-sm italic text-on-surface-variant mb-4">*Saw your presentation at the summit. Brilliant insights!*</p>
+<div class="flex gap-3">
+<button class="bg-primary text-on-primary px-5 py-2 rounded-md text-xs font-bold hover:opacity-90 transition-all">
+                                            Accept
+                                        </button>
+<button class="text-primary px-5 py-2 rounded-md text-xs font-bold hover:bg-surface-container transition-all">
+                                            Decline
+                                        </button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Right Column: Sent Requests & Stats -->
+<aside class="lg:col-span-5 flex flex-col gap-6">
+<div class="flex items-center justify-between px-2">
+<h3 class="font-semibold text-lg flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="send">send</span>
+                                Sent Requests
+                            </h3>
+</div>
+<div class="bg-surface-container p-6 rounded-xl space-y-4">
+<!-- Sent: Jordan Whitmore -->
+<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-lowest shadow-sm">
+<div class="flex items-center gap-3">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="professional male headshot, smiling, business casual, neutral lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuChskIclIApvQKzLchkrF0iVT4c-Rvo2RmNzobBpJKIBvUWMUsZE-lOcm4mDWrr1-mHjJ7oGUzspO_63eTnvel6Cq8ZXxAWjv3ywNPc2wQbWgeyGWdC7GhcHyqnXLmIt4cPDMfEQaLr9LqUd-wA0Eoinvp05jaJ3YeydT9_gjAnkMjbtLYtXOH9XA60Ku5yBH2kUq1P3bfUfc6_hL1ANp8SWbHEo8560__EvAZGZjEaiV-XxGjl3k5Vk_-B3FES40ZfOe0OEVuxBAE"/>
+<div>
+<p class="text-sm font-bold text-on-surface">Jordan Whitmore</p>
+<div class="flex items-center gap-1.5 mt-0.5">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-dim"></span>
+<span class="text-[10px] text-primary-dim font-bold uppercase tracking-tighter">Pending</span>
+</div>
+</div>
+</div>
+<button class="text-[11px] font-bold text-error bg-error-container/10 px-3 py-1.5 rounded hover:bg-error-container/20 transition-colors">
+                                    Cancel
+                                </button>
+</div>
+<!-- Sent: Aria Stark -->
+<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-lowest shadow-sm opacity-80">
+<div class="flex items-center gap-3">
+<img class="w-10 h-10 rounded-full object-cover grayscale" data-alt="portrait of a professional woman with creative aesthetic, soft daylight" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAa_iK09DI1F50NA8V554xVJAoxyURcpC3ERBpzwp1VdBTCAY1sR4yGWTfEtj4P0-i5M0vge4ptCUr4MeNazimOJpFbwsz6VPc8rKahIEsq7Q6G5NjwYzkL4GVW_rqxXOiVsxyLbLd-1K0cI5dW2CGAn3qq7u1aBQyLICIJFUc1U9gjwxxyQkGkExo7J7SSinsY7a72MYeTtMFC_wmP7gSyOy0XYCbJCaECK_5pdRQ4vDXa9Go-kwy-okPwBpVlnC8vbZ4WOYfEZcA"/>
+<div>
+<p class="text-sm font-bold text-on-surface">Aria Stark</p>
+<div class="flex items-center gap-1.5 mt-0.5">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+<span class="text-[10px] text-error font-bold uppercase tracking-tighter">Declined</span>
+</div>
+</div>
+</div>
+<button class="text-[11px] font-bold text-on-surface-variant px-3 py-1.5 rounded hover:bg-surface-container-high transition-colors">
+                                    Remove
+                                </button>
+</div>
+</div>
+<!-- Growth Card (Bento Style) -->
+<div class="bg-inverse-surface text-inverse-on-surface p-6 rounded-xl relative overflow-hidden">
+<div class="relative z-10">
+<h4 class="text-xs font-bold uppercase tracking-widest text-outline-variant mb-2">Network Insights</h4>
+<p class="text-2xl font-bold mb-1">12% Growth</p>
+<p class="text-xs text-inverse-on-surface/60">Your professional network grew by 4 active connections this week.</p>
+<div class="mt-6 flex items-center gap-2">
+<div class="flex -space-x-3">
+<img alt="" class="w-7 h-7 rounded-full border-2 border-inverse-surface" data-alt="avatar of a team member in studio light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBZUbKmpxdfqU5oPAY9ihOU7MpszwMN4QyuVWkQ1cEOl0gCROgU0cCVth1Q7T6WafeDd0QNLcMMSwQ79o21I38UkbJBEcDk7MVGmh6n4WR6yyS-KHrmCQTNZQfdVXDTF6iea2NwRGXIseTW54-XwOupKxnkFv6AL-iFGK1s23ZLN6fXDnUNZ7oZE4k-zgePx2TVhhuPaGxOZxlDg4skf-RIMLH_xyB5zUbgUVCAsBH-xOp5sU5udbf2jO28PRH6-oX_CH9ZG-3pzL0"/>
+<img alt="" class="w-7 h-7 rounded-full border-2 border-inverse-surface" data-alt="avatar of a manager in studio light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAU7WKmHnTbrVsoh3DkbI1erME2gb6LWUDx6Z5kyjnqIFrmcjZlhIKCAjCtnNrNDxdTZAJByC7zcKLCd_icticAcUHCvVeahvKBZtLDjgM_7G8us9kKcZ3oJomUQiC-mrEBAfYyOddVJanlCGsEaVPtLe1ihEp5GtBHpWFR4jVn5cMz-u9y_C6oieParVAocGmNIeHYh-z345835muj_VXkR5L0vxcI8jNbJRmoLsZ8H5XrM31XwyPwkdkwwUyR7r6cC_Ok8l5GEU0"/>
+<img alt="" class="w-7 h-7 rounded-full border-2 border-inverse-surface" data-alt="avatar of a developer in studio light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-RvdmVlMHssSDfJ1PmG0P8J9oUK1EHGC5S92ty9iH9ZfgehwYT4N-1jf5Fw2HHb37jJONpswOzvWpWFxu5qpR7RCbDGTg5K1A6U7WI3Oc4vaHbgphLlgQh3Nh1p6RVGlRjzVzqEY2pFHOQs8MWogqRIDa17niuSbVBUtOoT2lSTczQWdB5e5tnqmSOt9vvZbTGZ5B8URAYPovsWN8gUbPXS3GqOXbDNjEaXKPvQZC-jBUd-d9KKhRtsgloIf4E5SMOeATIRvSYPc"/>
+</div>
+<span class="text-[10px] font-bold">+28 mutuals</span>
+</div>
+</div>
+<div class="absolute -right-4 -bottom-4 opacity-10">
+<span class="material-symbols-outlined text-[120px]" data-icon="hub">hub</span>
+</div>
+</div>
+<!-- Suggestions (Minimalist Row) -->
+<div class="p-2">
+<h4 class="text-xs font-bold uppercase tracking-widest text-outline mb-4">Suggested for you</h4>
+<div class="space-y-4">
+<div class="flex items-center gap-3">
+<img class="w-8 h-8 rounded-full" data-alt="close-up of a businessman in a suit, professional profile" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCGXrW34UPSMhSy38-xXhsgP1gbcJXfKYlGNNLtpSR_TmdqcbsIEB6q53eJK-0C8o8OD3LXsPEbAhTmxuDbGIlJivwbP2grwNhmPpa-UtqsK_tITFE-2cyo_wd96s9yL8NKRG-kOMB5-OG1ovZ8wlDZoefNNLgNqqYFFzYAC5BrKn8vm9_le_gT7oJVi7JDOaX968N6z4fGu5jHxZKLmrSn4nvoirKVj15FynZrSlw-FFaPvuBForikzZPifneYWYC255XC2iywoHc"/>
+<div class="flex-1">
+<p class="text-xs font-bold">David Kessler</p>
+<p class="text-[10px] text-outline">Partner at Global Firm</p>
+</div>
+<button class="material-symbols-outlined text-primary text-xl hover:scale-110 transition-transform" data-icon="person_add">person_add</button>
+</div>
+<div class="flex items-center gap-3">
+<img class="w-8 h-8 rounded-full" data-alt="professional headshot of a woman, warm indoor lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCO8cUuzddVHBfUWEDyjOLnd91OQCyUrzMqvNu2m7lnO2omhP2EBWvnJRE-K3SDxuTt-JNijAB58x4hX3xbjAIWqjGZ6RsqaYMClQrZCt0Ea-VMVT5QAu4rZTMKk92SeVezqITOp5qgrlKGgJtkAjlJjGN2AWMH358i__vkNpLEIGnbCL-jWez6Ut_Eesr4KmcTUzlOHDGnsrr2BkE9yAdnYkCEyYv2iujLblh5xekyjFx29Mt2nCAE9wxXFqNjYFjUc2ZkNKPFSaw"/>
+<div class="flex-1">
+<p class="text-xs font-bold">Leah Thompson</p>
+<p class="text-[10px] text-outline">UX Specialist</p>
+</div>
+<button class="material-symbols-outlined text-primary text-xl hover:scale-110 transition-transform" data-icon="person_add">person_add</button>
+</div>
+</div>
+</div>
+</aside>
+</div>
+</div>
+</div>
+</main>
+<!-- Mobile Bottom Navigation (Responsive Pivot) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full bg-surface-container-lowest h-16 flex items-center justify-around z-50 shadow-[0_-4px_12px_rgba(42,52,57,0.08)]">
+<button class="flex flex-col items-center gap-1 text-outline">
+<span class="material-symbols-outlined" data-icon="chat">chat</span>
+<span class="text-[10px] font-bold">Chats</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-primary">
+<span class="material-symbols-outlined" data-icon="person_add" data-weight="fill" style="font-variation-settings: 'FILL' 1;">person_add</span>
+<span class="text-[10px] font-bold">Requests</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-outline">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="text-[10px] font-bold">People</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-outline">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="text-[10px] font-bold">Account</span>
+</button>
+</nav>
+</body></html>

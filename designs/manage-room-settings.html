@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Manage Room - #engineering-room</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-dim": "#cfdce3",
+                    "on-primary": "#f6f7ff",
+                    "tertiary": "#575f75",
+                    "surface": "#f7f9fb",
+                    "outline-variant": "#a9b4b9",
+                    "secondary-fixed-dim": "#c7d5ed",
+                    "surface-bright": "#f7f9fb",
+                    "secondary": "#526074",
+                    "on-tertiary-fixed-variant": "#535b71",
+                    "on-secondary-fixed-variant": "#4e5c71",
+                    "primary-fixed-dim": "#cad5ed",
+                    "surface-container": "#e8eff3",
+                    "inverse-on-surface": "#9a9d9f",
+                    "on-error-container": "#752121",
+                    "surface-tint": "#545f73",
+                    "primary-fixed": "#d8e3fb",
+                    "on-surface": "#2a3439",
+                    "on-primary-container": "#475266",
+                    "secondary-dim": "#465468",
+                    "secondary-fixed": "#d5e3fc",
+                    "primary": "#545f73",
+                    "primary-dim": "#485367",
+                    "on-error": "#fff7f6",
+                    "tertiary-dim": "#4b5369",
+                    "secondary-container": "#d5e3fc",
+                    "on-tertiary-container": "#4a5167",
+                    "on-background": "#2a3439",
+                    "outline": "#717c82",
+                    "error": "#9f403d",
+                    "surface-variant": "#d9e4ea",
+                    "on-secondary": "#f8f8ff",
+                    "surface-container-highest": "#d9e4ea",
+                    "surface-container-lowest": "#ffffff",
+                    "error-container": "#fe8983",
+                    "on-tertiary-fixed": "#373f54",
+                    "background": "#f7f9fb",
+                    "error-dim": "#4e0309",
+                    "on-surface-variant": "#566166",
+                    "inverse-surface": "#0b0f10",
+                    "tertiary-container": "#dae2fd",
+                    "tertiary-fixed": "#dae2fd",
+                    "on-primary-fixed": "#354053",
+                    "inverse-primary": "#dae6fe",
+                    "on-primary-fixed-variant": "#515c70",
+                    "surface-container-low": "#f0f4f7",
+                    "on-secondary-container": "#455367",
+                    "primary-container": "#d8e3fb",
+                    "surface-container-high": "#e1e9ee",
+                    "on-secondary-fixed": "#324053",
+                    "on-tertiary": "#f9f8ff",
+                    "tertiary-fixed-dim": "#ccd4ee"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {},
+            "fontFamily": {
+                    "headline": ["Inter"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .glass-overlay {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface flex items-center justify-center min-h-screen p-4 md:p-8">
+<!-- Blurred Background Mockup of Workspace -->
+<div class="fixed inset-0 z-0 flex">
+<!-- Sidebar Shell -->
+<aside class="hidden md:flex flex-col h-screen overflow-y-auto p-4 bg-slate-100 dark:bg-slate-800 h-full w-72 left-0 border-r-0 flat no shadows">
+<div class="flex items-center gap-3 mb-8">
+<div class="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-white font-bold text-xl">W</div>
+<div>
+<h2 class="text-xl font-bold text-slate-800 dark:text-white leading-tight">Workspace</h2>
+<p class="font-sans text-xs font-medium uppercase tracking-widest text-slate-700 dark:text-slate-200">Active Session</p>
+</div>
+</div>
+<nav class="space-y-1">
+<div class="flex items-center gap-3 p-3 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold rounded-md cursor-pointer">
+<span class="material-symbols-outlined">forum</span>
+<span class="font-sans text-xs font-medium uppercase tracking-widest">Rooms</span>
+</div>
+<div class="flex items-center gap-3 p-3 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-transform hover:translate-x-1 cursor-pointer">
+<span class="material-symbols-outlined">person</span>
+<span class="font-sans text-xs font-medium uppercase tracking-widest">Contacts</span>
+</div>
+</nav>
+</aside>
+<!-- Main Content Area Mock -->
+<main class="flex-1 bg-surface-container-lowest overflow-hidden flex flex-col">
+<header class="bg-slate-700 dark:bg-slate-900 text-slate-200 dark:text-slate-100 font-sans text-sm tracking-tight flex items-center justify-between px-6 h-16 w-full shadow-sm z-50">
+<div class="flex items-center gap-8">
+<span class="text-lg font-semibold tracking-tighter text-white">Architectural Workspace</span>
+<div class="hidden md:flex gap-6">
+<span class="text-slate-400 hover:text-slate-200 transition-colors cursor-pointer">Public Rooms</span>
+<span class="text-white border-b-2 border-white pb-1 cursor-pointer">Private Rooms</span>
+<span class="text-slate-400 hover:text-slate-200 transition-colors cursor-pointer">Contacts</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined hover:bg-slate-600 transition-colors p-1 rounded cursor-pointer">settings</span>
+<img alt="User profile" class="w-8 h-8 rounded-full border border-slate-500" data-alt="professional portrait of a male architect in a bright office setting with soft natural light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC6dcw27u-R_vj4-cBWSilaIsma5joeiafM_aGlgbT32-BpdjzZVcZHdo2zeqRdUs8F8jv32mg-Hd9loGp39agHJiH-RtOL4tkraX4bHiE9vAp-quUM_P46cR5rD6X2Ur0QYdPtxKwk-iBy4Wbiq1Knzd4JrZS_NLXv26cpf0bxZU51xt_PEdeZCo0xPg6ennQ1auhm9mAyP5cd6PCMd9kmHpknFV9LXPg2wzT0BvB40Es1pUi3yuwpZDql-jR-HRUfClTYwJ-tuF0"/>
+</div>
+</header>
+<div class="flex-1 p-8 opacity-20 pointer-events-none">
+<h1 class="text-3xl font-bold mb-6">#engineering-room</h1>
+<div class="grid grid-cols-3 gap-6">
+<div class="col-span-2 space-y-4">
+<div class="h-32 bg-surface-variant rounded-xl"></div>
+<div class="h-64 bg-surface-variant rounded-xl"></div>
+</div>
+<div class="h-full bg-surface-container rounded-xl"></div>
+</div>
+</div>
+</main>
+</div>
+<!-- Modal Backdrop -->
+<div class="fixed inset-0 bg-on-surface/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+<!-- Manage Room Modal -->
+<div class="bg-surface-container-lowest w-full max-w-4xl h-[819px] max-h-[700px] shadow-2xl rounded-xl overflow-hidden flex flex-col md:flex-row relative">
+<!-- Side Navigation (Anchored from JSON SideNavBar logic) -->
+<aside class="bg-slate-50 dark:bg-slate-950 flex flex-col h-full w-full md:w-64 border-r border-slate-100 dark:border-slate-800 shrink-0">
+<div class="p-6">
+<h3 class="text-md font-bold text-slate-700 mb-1">Room Details</h3>
+<p class="font-sans text-sm text-slate-400">Admin Managed</p>
+</div>
+<nav class="flex-1 px-3 space-y-1">
+<div class="flex items-center gap-3 py-2 text-slate-900 dark:text-white border-l-4 border-slate-500 pl-2 cursor-pointer transition-all duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">group</span>
+<span class="font-sans text-sm font-medium">Members</span>
+</div>
+<div class="flex items-center gap-3 py-2 text-slate-400 pl-3 hover:text-slate-700 dark:hover:text-slate-100 cursor-pointer transition-all duration-200">
+<span class="material-symbols-outlined">shield_person</span>
+<span class="font-sans text-sm font-medium">Admins</span>
+</div>
+<div class="flex items-center gap-3 py-2 text-slate-400 pl-3 hover:text-slate-700 dark:hover:text-slate-100 cursor-pointer transition-all duration-200">
+<span class="material-symbols-outlined">block</span>
+<span class="font-sans text-sm font-medium">Banned users</span>
+</div>
+<div class="flex items-center gap-3 py-2 text-slate-400 pl-3 hover:text-slate-700 dark:hover:text-slate-100 cursor-pointer transition-all duration-200">
+<span class="material-symbols-outlined">mail</span>
+<span class="font-sans text-sm font-medium">Invitations</span>
+</div>
+<div class="flex items-center gap-3 py-2 text-slate-400 pl-3 hover:text-slate-700 dark:hover:text-slate-100 cursor-pointer transition-all duration-200">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-sans text-sm font-medium">Settings</span>
+</div>
+</nav>
+<div class="p-6 border-t border-slate-100 dark:border-slate-900">
+<button class="w-full text-left flex items-center gap-2 text-error hover:bg-error/5 p-2 rounded-lg transition-colors">
+<span class="material-symbols-outlined text-sm">delete</span>
+<span class="font-sans text-sm font-semibold">Delete room</span>
+</button>
+</div>
+</aside>
+<!-- Main Content Area -->
+<section class="flex-1 flex flex-col min-w-0 bg-surface-container-lowest">
+<!-- Header -->
+<header class="px-8 pt-8 pb-4 flex items-center justify-between">
+<div>
+<h2 class="text-xl font-bold text-on-surface tracking-tight">#engineering-room</h2>
+<p class="text-sm text-outline font-medium">Manage members and permissions</p>
+</div>
+<button class="p-2 hover:bg-surface-container rounded-full transition-colors text-outline">
+<span class="material-symbols-outlined">close</span>
+</button>
+</header>
+<!-- Search & Filters -->
+<div class="px-8 py-4">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-lg">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-1 focus:ring-primary/30 transition-all outline-none" placeholder="Search members..." type="text"/>
+</div>
+</div>
+<!-- Members List (Active Tab) -->
+<div class="flex-1 overflow-y-auto px-8 no-scrollbar">
+<div class="space-y-2 pb-8">
+<!-- Member Row 1 -->
+<div class="flex items-center justify-between p-4 bg-surface-container-low/50 hover:bg-surface-container-low rounded-xl transition-colors group">
+<div class="flex items-center gap-3">
+<div class="relative">
+<img alt="Member avatar" class="w-10 h-10 rounded-full object-cover" data-alt="portrait of a young male software engineer with glasses in a minimalist modern office environment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCZxRgw05Zvn_rZXkx8ypS6nB8_fnCcLyeXJrWzAFEPO6RC8KX8hVy_tyL3pbk2OSK16IX46oOG0Jrnh06pxdbUzFGDVQQOacu3zJKSrScOLpPW-Tp5Zggm690zKXu9LPNIj8S9vymfkWJ9hhU60wRMWt0DgkdwCF2GhrvRlUjHa-VJDY0B0vXec3h7hJ_pUxC6knR4ClyCvZk4X_urETMAivwWwDmjpIHH8OdKjyE6as_FAOXnSGd_P1wa6sUS139McBhVZ2JcavQ"/>
+<span class="absolute bottom-0 right-0 w-3 h-3 bg-[#4caf50] border-2 border-surface-container-lowest rounded-full"></span>
+</div>
+<div>
+<h4 class="text-sm font-semibold text-on-surface">Alex Rivera</h4>
+<p class="text-xs text-outline">alex.r@workspace.com</p>
+</div>
+</div>
+<div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/5 rounded-md transition-colors">Make admin</button>
+<button class="px-3 py-1.5 text-xs font-semibold text-outline hover:bg-surface-variant rounded-md transition-colors">Ban</button>
+<button class="px-3 py-1.5 text-xs font-semibold text-error hover:bg-error/5 rounded-md transition-colors">Remove</button>
+</div>
+</div>
+<!-- Member Row 2 -->
+<div class="flex items-center justify-between p-4 bg-surface-container-low/50 hover:bg-surface-container-low rounded-xl transition-colors group">
+<div class="flex items-center gap-3">
+<div class="relative">
+<img alt="Member avatar" class="w-10 h-10 rounded-full object-cover" data-alt="headshot of a smiling female creative professional with studio lighting and neutral background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCYLvekKKK4CRjv4EmCf7HsuVKshQKj9dKGIrFo5na6gQjfa26GUjjTFPXgn1vHRztJWAVOYNED60PGDDteMoNQP7ldb1B4c9xB0oTvSGKi60rnmzcT4pNEMSvl2xHOQ-FIoi6jCB0wyZmCiFbILyT0fsJ5-xUNQLvAFu8BDXTstsAp-bhWe2jc8kb5hB1CGle2IAUJ8jx-4aHCbkqGJK53RGkNVE4U8svku7-uVIoxqrIzs8UyeB6yhsgA45ioo-m1U2cGA-y94lk"/>
+<span class="absolute bottom-0 right-0 w-3 h-3 bg-[#ffb300] border-2 border-surface-container-lowest rounded-full"></span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h4 class="text-sm font-semibold text-on-surface">Sarah Chen</h4>
+<span class="px-1.5 py-0.5 bg-primary-fixed text-on-primary-fixed text-[10px] font-bold rounded uppercase tracking-wider">Admin</span>
+</div>
+<p class="text-xs text-outline">sarah.c@workspace.com</p>
+</div>
+</div>
+<div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="px-3 py-1.5 text-xs font-semibold text-outline hover:bg-surface-variant rounded-md transition-colors">Demote</button>
+<button class="px-3 py-1.5 text-xs font-semibold text-outline hover:bg-surface-variant rounded-md transition-colors">Ban</button>
+<button class="px-3 py-1.5 text-xs font-semibold text-error hover:bg-error/5 rounded-md transition-colors">Remove</button>
+</div>
+</div>
+<!-- Member Row 3 -->
+<div class="flex items-center justify-between p-4 bg-surface-container-low/50 hover:bg-surface-container-low rounded-xl transition-colors group">
+<div class="flex items-center gap-3">
+<div class="relative">
+<img alt="Member avatar" class="w-10 h-10 rounded-full object-cover" data-alt="professional male profile photo with warm lighting and a soft architectural background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC7HDxcmI8VV1q-SP3wCD34f-wCReDZfB2nymw0bBup9-TnBVf_IHM8XUGWCN6uZgXGObMKd33G44i8TehIn8mgSQPbU7wWIod0kT-F5tC4X9SP0BV3KuSWA4ENOYQuP9RmoEVAF2NBMqnS-vGP-hoKvXywkUSACOEaalL-rB8pi_HT1PGW-XV6naqoRcyhy38G6unICS66zZQxQCbN1K5oV_JRIL77pFnbiK03v7LYwy5-3bON9lsohQzASobZxo2zqGOxVRUr00Y"/>
+<span class="absolute bottom-0 right-0 w-3 h-3 bg-[#717c82] border-2 border-surface-container-lowest rounded-full"></span>
+</div>
+<div>
+<h4 class="text-sm font-semibold text-on-surface">Jordan Smyth</h4>
+<p class="text-xs text-outline">j.smyth@workspace.com</p>
+</div>
+</div>
+<div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/5 rounded-md transition-colors">Make admin</button>
+<button class="px-3 py-1.5 text-xs font-semibold text-outline hover:bg-surface-variant rounded-md transition-colors">Ban</button>
+<button class="px-3 py-1.5 text-xs font-semibold text-error hover:bg-error/5 rounded-md transition-colors">Remove</button>
+</div>
+</div>
+<!-- Member Row 4 -->
+<div class="flex items-center justify-between p-4 bg-surface-container-low/50 hover:bg-surface-container-low rounded-xl transition-colors group">
+<div class="flex items-center gap-3">
+<div class="relative">
+<img alt="Member avatar" class="w-10 h-10 rounded-full object-cover" data-alt="businesswoman in a smart casual outfit in a bright modern workspace" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBE8pMsjRnDw2UItmfZO7gW4pJBmSTCQ_V5CBKbt_acsgXFp1fABpWWMZ11cn1_Y6PVnLfVk4q0NfmfGbIUDZKgZAzJcSIKDwAzzuEsJ9d_-zOmK8euJWrYbiXl-yYXrchbIcIwM4NSWx9Chu5Y9tDQ_SPL61P7-snFHnBmyemURYpKLVu33ULZ8e-u2LQ8x3hDg4tcSLs7E6SP8CmTlyogylGuA6hrqqUC3AyVmqcOBfY-LBKoTkpHzjMrCSB8nwxP4gEPMeabwZ4"/>
+<span class="absolute bottom-0 right-0 w-3 h-3 bg-[#4caf50] border-2 border-surface-container-lowest rounded-full"></span>
+</div>
+<div>
+<h4 class="text-sm font-semibold text-on-surface">Elena Rodriguez</h4>
+<p class="text-xs text-outline">elena.rod@workspace.com</p>
+</div>
+</div>
+<div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/5 rounded-md transition-colors">Make admin</button>
+<button class="px-3 py-1.5 text-xs font-semibold text-outline hover:bg-surface-variant rounded-md transition-colors">Ban</button>
+<button class="px-3 py-1.5 text-xs font-semibold text-error hover:bg-error/5 rounded-md transition-colors">Remove</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer -->
+<footer class="p-6 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-3">
+<button class="px-6 py-2 text-sm font-bold text-on-surface hover:bg-surface-container rounded-lg transition-colors">Cancel</button>
+<button class="px-6 py-2 text-sm font-bold bg-primary text-on-primary rounded-lg shadow-sm hover:opacity-90 transition-opacity">Save changes</button>
+</footer>
+</section>
+</div>
+</div>
+<!-- Hidden Settings State Visualization (As requested in task - can be toggled in real app) -->
+<!-- This is a secondary hidden view just to demonstrate the Settings content requested -->
+<div class="hidden">
+<div class="space-y-6">
+<div class="space-y-1.5">
+<label class="text-xs font-bold uppercase tracking-widest text-outline">Room name</label>
+<input class="w-full bg-surface-container-low border-none rounded-lg px-4 py-2.5 text-sm" type="text" value="#engineering-room"/>
+</div>
+<div class="space-y-1.5">
+<label class="text-xs font-bold uppercase tracking-widest text-outline">Description</label>
+<textarea class="w-full bg-surface-container-low border-none rounded-lg px-4 py-2.5 text-sm" rows="3">Core engineering discussions and architectural decision records for the primary workspace infrastructure.</textarea>
+</div>
+<div class="flex items-center justify-between p-4 bg-surface-container rounded-lg">
+<div>
+<h5 class="text-sm font-bold">Visibility</h5>
+<p class="text-xs text-outline">Public rooms can be found by anyone in the workspace.</p>
+</div>
+<div class="flex bg-surface-container-lowest p-1 rounded-md">
+<button class="px-3 py-1 text-xs font-bold bg-primary text-on-primary rounded">Public</button>
+<button class="px-3 py-1 text-xs font-bold text-outline">Private</button>
+</div>
+</div>
+</div>
+</div>
+</body></html>

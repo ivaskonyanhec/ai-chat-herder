@@ -1,0 +1,36 @@
+# ─── Stage 1: Build ───────────────────────────────────────────────────────────
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /app
+
+# Copy solution + project manifests first — these change rarely, so dotnet
+# restore runs from cache on most rebuilds (only re-runs when .csproj changes).
+COPY ChatHerder.sln ./
+COPY src/ChatHerder.Domain/ChatHerder.Domain.csproj                 src/ChatHerder.Domain/
+COPY src/ChatHerder.Application/ChatHerder.Application.csproj       src/ChatHerder.Application/
+COPY src/ChatHerder.Infrastructure/ChatHerder.Infrastructure.csproj src/ChatHerder.Infrastructure/
+COPY src/ChatHerder.API/ChatHerder.API.csproj                       src/ChatHerder.API/
+
+RUN dotnet restore
+
+# Copy full source and publish the API project
+COPY src/ src/
+RUN dotnet publish src/ChatHerder.API/ChatHerder.API.csproj \
+    -c Release \
+    -o /app/publish \
+    --no-restore
+
+# ─── Stage 2: Runtime ─────────────────────────────────────────────────────────
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+WORKDIR /app
+
+# Run as non-root for container security
+RUN adduser --disabled-password --gecos "" appuser \
+    && chown -R appuser /app
+USER appuser
+
+COPY --from=build /app/publish .
+
+# ASP.NET Core images expose 8080 by default since .NET 8+
+EXPOSE 8080
+
+ENTRYPOINT ["dotnet", "ChatHerder.API.dll"]

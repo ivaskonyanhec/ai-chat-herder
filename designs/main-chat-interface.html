@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Architectural Workspace - #engineering-room</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-dim": "#cfdce3",
+                        "on-primary": "#f6f7ff",
+                        "tertiary": "#575f75",
+                        "surface": "#f7f9fb",
+                        "outline-variant": "#a9b4b9",
+                        "secondary-fixed-dim": "#c7d5ed",
+                        "surface-bright": "#f7f9fb",
+                        "secondary": "#526074",
+                        "on-tertiary-fixed-variant": "#535b71",
+                        "on-secondary-fixed-variant": "#4e5c71",
+                        "primary-fixed-dim": "#cad5ed",
+                        "surface-container": "#e8eff3",
+                        "inverse-on-surface": "#9a9d9f",
+                        "on-error-container": "#752121",
+                        "surface-tint": "#545f73",
+                        "primary-fixed": "#d8e3fb",
+                        "on-surface": "#2a3439",
+                        "on-primary-container": "#475266",
+                        "secondary-dim": "#465468",
+                        "secondary-fixed": "#d5e3fc",
+                        "primary": "#545f73",
+                        "primary-dim": "#485367",
+                        "on-error": "#fff7f6",
+                        "tertiary-dim": "#4b5369",
+                        "secondary-container": "#d5e3fc",
+                        "on-tertiary-container": "#4a5167",
+                        "on-background": "#2a3439",
+                        "outline": "#717c82",
+                        "error": "#9f403d",
+                        "surface-variant": "#d9e4ea",
+                        "on-secondary": "#f8f8ff",
+                        "surface-container-highest": "#d9e4ea",
+                        "surface-container-lowest": "#ffffff",
+                        "error-container": "#fe8983",
+                        "on-tertiary-fixed": "#373f54",
+                        "background": "#f7f9fb",
+                        "error-dim": "#4e0309",
+                        "on-surface-variant": "#566166",
+                        "inverse-surface": "#0b0f10",
+                        "tertiary-container": "#dae2fd",
+                        "tertiary-fixed": "#dae2fd",
+                        "on-primary-fixed": "#354053",
+                        "inverse-primary": "#dae6fe",
+                        "on-primary-fixed-variant": "#515c70",
+                        "surface-container-low": "#f0f4f7",
+                        "on-secondary-container": "#455367",
+                        "primary-container": "#d8e3fb",
+                        "surface-container-high": "#e1e9ee",
+                        "on-secondary-fixed": "#324053",
+                        "on-tertiary": "#f9f8ff",
+                        "tertiary-fixed-dim": "#ccd4ee"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Inter", "sans-serif"],
+                        "body": ["Inter", "sans-serif"],
+                        "label": ["Inter", "sans-serif"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface h-screen flex flex-col overflow-hidden">
+<!-- TopNavBar -->
+<header class="bg-slate-700 dark:bg-slate-900 text-slate-200 dark:text-slate-100 font-sans text-sm tracking-tight docked full-width top-0 z-50 shadow-sm flex items-center justify-between px-6 h-16 w-full">
+<div class="flex items-center gap-8">
+<span class="text-lg font-semibold tracking-tighter text-white">Architectural Workspace</span>
+<nav class="hidden md:flex gap-6">
+<a class="text-white border-b-2 border-white pb-1" href="#">Public Rooms</a>
+<a class="text-slate-400 hover:text-slate-200 transition-colors" href="#">Private Rooms</a>
+<a class="text-slate-400 hover:text-slate-200 transition-colors" href="#">Contacts</a>
+<a class="text-slate-400 hover:text-slate-200 transition-colors" href="#">Sessions</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative group">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-white cursor-pointer transition-colors" data-icon="settings">settings</span>
+</div>
+<div class="relative group">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-white cursor-pointer transition-colors" data-icon="help">help</span>
+</div>
+<img alt="User profile" class="h-8 w-8 rounded-full border border-slate-600 object-cover" data-alt="close up headshot of a professional man in a dark blazer against a neutral grey wall with natural window lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBoE1AAIFrnyj9F8mxOop8uxCsIRdOxzhWtnxjn7NugcZYLy5I0Dpd7Xa9meXu5UDQAGvY5xt3Hb0oHZJ-RtruBAq2ha-SdwkN6yVjMRlK6os9_26BZMepR6qZxG_G6zRuAyXw4qT1BseTQJxDpjswRqkQCvFbbaVFsomxcZ6ubiGBy4IaGBVjd0ikVTb_cBNYZO7nZkxH8LEctIAAHPuiio0Qfy3pKTJkOdZSHFJE_AxtUk0itobW_nenKACmDvvyl5JeG7Of_yMQ"/>
+</div>
+</header>
+<main class="flex-1 flex overflow-hidden">
+<!-- Left Sidebar: SideNavBar (Primary) -->
+<aside class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-sans text-xs font-medium uppercase tracking-widest h-full w-72 left-0 border-r-0 flex flex-col h-screen overflow-y-auto p-4 transition-all">
+<div class="flex items-center gap-3 mb-8">
+<div class="w-10 h-10 bg-slate-800 dark:bg-white rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-white dark:text-slate-800" data-icon="corporate_fare">corporate_fare</span>
+</div>
+<div>
+<h2 class="text-xl font-bold text-slate-800 dark:text-white tracking-normal normal-case">Workspace</h2>
+<p class="text-[10px] text-slate-500 tracking-wider">Active Session</p>
+</div>
+</div>
+<div class="mb-6">
+<div class="bg-slate-200 dark:bg-slate-700 p-2 rounded-md mb-6 flex items-center gap-2 normal-case font-normal text-sm text-slate-600 dark:text-slate-300">
+<span class="material-symbols-outlined text-sm" data-icon="search">search</span>
+<input class="bg-transparent border-none focus:ring-0 p-0 text-sm w-full" placeholder="Search workspace..." type="text"/>
+</div>
+<div class="space-y-1">
+<div class="flex items-center justify-between p-2 cursor-pointer text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md transition-transform hover:translate-x-1 group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined" data-icon="forum">forum</span>
+<span class="text-slate-900 dark:text-white font-bold">Rooms</span>
+</div>
+<span class="material-symbols-outlined text-sm" data-icon="keyboard_arrow_down">keyboard_arrow_down</span>
+</div>
+<div class="pl-9 space-y-1">
+<div class="p-2 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold rounded-md cursor-pointer normal-case text-sm">#engineering-room</div>
+<div class="p-2 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 cursor-pointer normal-case text-sm transition-transform hover:translate-x-1">#design-ops</div>
+<div class="p-2 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 cursor-pointer normal-case text-sm transition-transform hover:translate-x-1">#product-roadmap</div>
+</div>
+</div>
+<div class="mt-4 space-y-1">
+<div class="flex items-center justify-between p-2 cursor-pointer text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md transition-transform hover:translate-x-1">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span>Contacts</span>
+</div>
+</div>
+</div>
+</div>
+<button class="mt-auto bg-slate-800 dark:bg-white text-white dark:text-slate-800 py-3 rounded-md font-bold text-sm tracking-normal normal-case active:opacity-80 transition-opacity">
+                Create Room
+            </button>
+</aside>
+<!-- Center: Active Chat Canvas -->
+<section class="flex-1 flex flex-col bg-surface-container-lowest min-w-0">
+<!-- Chat Header -->
+<div class="h-16 px-6 flex items-center justify-between bg-surface-container-lowest shadow-sm z-10">
+<div class="flex items-center gap-3">
+<h1 class="text-lg font-bold text-on-surface">#engineering-room</h1>
+<span class="px-2 py-0.5 bg-surface-container text-on-surface-variant text-[10px] rounded uppercase font-bold tracking-widest">Public</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-primary text-sm font-semibold px-4 py-2 hover:bg-surface-container transition-colors rounded-lg">Manage room</button>
+<span class="material-symbols-outlined text-outline cursor-pointer hover:text-primary" data-icon="star">star</span>
+</div>
+</div>
+<!-- Messages Area -->
+<div class="flex-1 overflow-y-auto p-6 space-y-8 hide-scrollbar">
+<!-- System Divider -->
+<div class="flex items-center gap-4 py-4">
+<div class="flex-1 h-px bg-surface-variant"></div>
+<span class="text-[10px] font-bold text-outline-variant uppercase tracking-widest">Monday, May 22</span>
+<div class="flex-1 h-px bg-surface-variant"></div>
+</div>
+<!-- Message Group 1 -->
+<div class="flex gap-4 group">
+<img alt="Alice Profile" class="w-10 h-10 rounded-lg object-cover flex-shrink-0" data-alt="lifestyle headshot of a woman with curly hair smiling in a bright architectural setting with soft natural light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDgR0cakxo5MGQ3h4wC7R4Nh-6T8WZ_Har8cvDtMUEdzU0z5V5PQEhW0GOxdIJlY0AKAzBHjdEH9DncP3m9DsBQRbmxC8SyAPhWAXXwIoDpNvmFk13ns_SD0AKRvS_lNEDDof2OjI_Cccui5hDXJ4O8mujgbrEcfTVzJ8Zhmd0FNwZiLwpbgoKQDisPqQHLbMU6ecAXG3sDXoMqIJLpWhJnonJKFgFjZzBeWRhDumBOFyvXnvcgn5nWegZWXxet6btgWVGGbU-IXyQ"/>
+<div class="flex-1 min-w-0">
+<div class="flex items-baseline gap-2 mb-1">
+<span class="text-sm font-bold text-on-surface">Alice Chen</span>
+<span class="text-[10px] text-outline tracking-wider">10:24 AM</span>
+</div>
+<div class="text-sm text-on-surface leading-relaxed max-w-2xl">
+                            Hey team, has anyone had a chance to review the new CI/CD pipeline architectural diagrams for the workspace migration?
+                        </div>
+</div>
+</div>
+<!-- Message Group 2 (Reply) -->
+<div class="flex gap-4 group">
+<img alt="Bob Profile" class="w-10 h-10 rounded-lg object-cover flex-shrink-0" data-alt="close up professional headshot of a man with short hair and glasses in a corporate environment with soft cool lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD1lUUBRJVeIGrgAGC6RcwMKnOmCiDUumR9P_O_oAGK8_8tNp2xAJkqP5a1Phxs23VBZji4ha8vGb34hpFpKdtxhOO1CmU7EhxAywz6cDkAQuNReLG0cG5W_GGFIYJxdx-4lSIs0lanSbAjuEY7gHNXDGzO21jll-jdG5Ovc182sFeFmwuNG1f3jjzpeP0iWO6V91EKyTHikT7eT1SsfCPVfNnqoj_GLlFXbp3dw4Zmz0qsBhgIYmWC5RulGng4Ct0VFfiFMcnAYJs"/>
+<div class="flex-1 min-w-0">
+<div class="flex items-baseline gap-2 mb-1">
+<span class="text-sm font-bold text-on-surface">Bob Miller</span>
+<span class="text-[10px] text-outline tracking-wider">10:28 AM</span>
+</div>
+<!-- Reply Quote -->
+<div class="border-l-4 border-surface-variant pl-3 mb-2 py-1 bg-surface-container-low rounded-r-lg max-w-xl">
+<p class="text-xs text-on-surface-variant line-clamp-1 italic">"Hey team, has anyone had a chance to review the new CI/CD pipeline..."</p>
+</div>
+<div class="text-sm text-on-surface leading-relaxed max-w-2xl">
+                            Just finished looking at them. The logic for the staging deployment looks solid, but we might need to increase the timeout for the integration tests.
+                            <span class="text-[10px] text-outline ml-1 italic">(edited)</span>
+</div>
+</div>
+</div>
+<!-- File Attachment Example -->
+<div class="flex gap-4 group">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-outline" data-icon="person_outline">person_outline</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-baseline gap-2 mb-1">
+<span class="text-sm font-bold text-on-surface">Carol Vance</span>
+<span class="text-[10px] text-outline tracking-wider">10:45 AM</span>
+</div>
+<div class="text-sm text-on-surface leading-relaxed mb-3">
+                            Here is the updated documentation for the containerization strategy.
+                        </div>
+<!-- File Card -->
+<div class="flex items-center gap-4 p-4 bg-surface-container-low rounded-xl border border-outline-variant/15 w-fit">
+<div class="w-10 h-12 bg-primary/10 rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="description">description</span>
+</div>
+<div class="pr-8">
+<p class="text-sm font-bold text-on-surface">Container_Strategy_V2.pdf</p>
+<p class="text-[10px] text-outline">12.4 MB • PDF Document</p>
+</div>
+<button class="material-symbols-outlined text-outline hover:text-primary transition-colors" data-icon="download">download</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Input Area -->
+<div class="p-6 bg-surface-container-lowest">
+<div class="bg-surface-container-low rounded-xl p-3 border border-outline-variant/15 focus-within:border-primary/50 transition-all">
+<textarea class="w-full bg-transparent border-none focus:ring-0 text-sm p-2 h-24 resize-none placeholder-outline" placeholder="Message #engineering-room..." rows="3"></textarea>
+<div class="flex items-center justify-between mt-2 pt-2 border-t border-outline-variant/10">
+<div class="flex items-center gap-1">
+<button class="p-2 hover:bg-surface-container rounded transition-colors text-outline">
+<span class="material-symbols-outlined text-xl" data-icon="add_circle">add_circle</span>
+</button>
+<button class="p-2 hover:bg-surface-container rounded transition-colors text-outline">
+<span class="material-symbols-outlined text-xl" data-icon="mood">mood</span>
+</button>
+<button class="p-2 hover:bg-surface-container rounded transition-colors text-outline">
+<span class="material-symbols-outlined text-xl" data-icon="format_bold">format_bold</span>
+</button>
+<button class="p-2 hover:bg-surface-container rounded transition-colors text-outline">
+<span class="material-symbols-outlined text-xl" data-icon="alternate_email">alternate_email</span>
+</button>
+</div>
+<button class="bg-primary hover:bg-primary-dim text-white px-6 py-2 rounded-lg text-sm font-bold transition-all active:scale-95">
+                            Send
+                        </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Right Sidebar: SideNavBar (Secondary) -->
+<aside class="bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-300 font-sans text-sm h-full w-64 right-0 border-l-0 flex flex-col h-screen overflow-y-auto border-l border-slate-200 dark:border-slate-800 transition-all">
+<!-- Room Info Header -->
+<div class="p-6 border-b border-slate-200 dark:border-slate-800">
+<h3 class="text-md font-bold text-slate-700 dark:text-white mb-1">Room Details</h3>
+<p class="text-xs text-slate-400 mb-6 uppercase tracking-widest">Admin Managed</p>
+<div class="space-y-4">
+<div>
+<span class="text-[10px] text-slate-400 uppercase font-bold tracking-widest block mb-1">Room Owner</span>
+<div class="flex items-center gap-2">
+<img alt="Owner" class="w-6 h-6 rounded-full object-cover" data-alt="professional portrait of a woman with long dark hair and a confident expression in high-key studio lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBaw27m6aY1fDnaMf8NXEeVW1PfVLzsIZCx8HM2iL0ZFccTu_8q5yTZs8gHWYU0DCIvfdXAYYRbfhX1vX8pTgeoJ1471jrq2vOygNK7v3PfTlPk5-TPWSS6Kgly8Fc3GnjAAMiBO0Fpuzb76r6WzfpObqk73o24zfqfyztebcrxeRkRK-K_VAJDCKzMCn4u_0ixuzS0iZfUjs0wRsbSXYUuogj5FvUbfRLNxWfsqXfDLPhW_qB-txkopLrlBKwTw03jDF8bhluY-zI"/>
+<span class="text-sm font-medium text-slate-800 dark:text-slate-200">Sarah Jenkins</span>
+</div>
+</div>
+<div>
+<span class="text-[10px] text-slate-400 uppercase font-bold tracking-widest block mb-1">Created</span>
+<span class="text-sm text-slate-800 dark:text-slate-200">Jan 14, 2023</span>
+</div>
+</div>
+</div>
+<!-- Secondary Tabs -->
+<nav class="flex px-4 py-2 bg-slate-100 dark:bg-slate-900 gap-4">
+<div class="text-slate-900 dark:text-white border-l-4 border-slate-500 pl-2 py-2 flex items-center gap-2 cursor-pointer">
+<span class="material-symbols-outlined text-sm" data-icon="info">info</span>
+<span class="font-bold">Info</span>
+</div>
+<div class="text-slate-400 pl-3 py-2 flex items-center gap-2 hover:text-slate-700 dark:hover:text-slate-100 transition-all cursor-pointer">
+<span class="material-symbols-outlined text-sm" data-icon="group">group</span>
+<span>Members</span>
+</div>
+<div class="text-slate-400 pl-3 py-2 flex items-center gap-2 hover:text-slate-700 dark:hover:text-slate-100 transition-all cursor-pointer">
+<span class="material-symbols-outlined text-sm" data-icon="description">description</span>
+<span>Files</span>
+</div>
+</nav>
+<!-- Members List -->
+<div class="flex-1 overflow-y-auto p-4 space-y-4">
+<div class="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-4">Members — 24</div>
+<!-- Alice (Online) -->
+<div class="flex items-center justify-between group cursor-pointer transition-all">
+<div class="flex items-center gap-3">
+<div class="relative">
+<img class="w-8 h-8 rounded-full border-2 border-slate-50 dark:border-slate-950 object-cover" data-alt="lifestyle headshot of a woman with curly hair smiling in a bright architectural setting with soft natural light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuChXa2Pev6zaTOaHNbkZaoYhqKjX0M4-6_a6u-ErpEbaurYY-5N5TW9QnGfEXW0HXx7JJ5_TqW7rkirmZ2L4O7mYmzq91zW4sBIAMz_MS6VmpIaWJMzp7Wre8wS1hwDnGtYSsZnMRzwcpZmfFzwpnniSAXtFMMP1l7szuKYhrD6tzbiKzbCbcazmMeaXClJDoPVwXNL0LtxFGGPhFIcy4L8JVftu4_CeBXQHVFM59ckmkEBkEUFEACnWM3gBspPMnH91F-F3vdRNUE"/>
+<div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-[#4caf50] rounded-full border-2 border-slate-50 dark:border-slate-950 shadow-sm"></div>
+</div>
+<span class="text-sm font-medium text-slate-800 dark:text-slate-200 group-hover:text-primary transition-colors">Alice Chen</span>
+</div>
+<span class="px-1.5 py-0.5 bg-slate-200 dark:bg-slate-800 text-[9px] rounded font-bold text-slate-500 uppercase tracking-tighter">Admin</span>
+</div>
+<!-- Bob (AFK) -->
+<div class="flex items-center group cursor-pointer transition-all">
+<div class="flex items-center gap-3">
+<div class="relative">
+<img class="w-8 h-8 rounded-full border-2 border-slate-50 dark:border-slate-950 object-cover" data-alt="close up professional headshot of a man with short hair and glasses in a corporate environment with soft cool lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCgkf-nk8-fdI9wzQnuz9kQaZDIZhlcUi7TykF59XcWwXRvgbiiSJBV8cuBRA-RzWkzenyZYQ9-cq5tpA9gOqV9Rgozc_vbdxrk1Gye9f8_3Q3kxAr8A8sWpe2GRbf3MESbnXlfXDf67DJ69_ZI53nQaIpjdm7YE-ogRHxyD-A2wR1WXkPx7JqmqJsUBgK3Zu2NfizB1MMDGoolpwLh_70tWPPOOxZaWcTGk7qsTKlMklcvM_IDE_5d7PRbBJqxwroo-4GF2gTxiek"/>
+<div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-[#ffb300] rounded-full border-2 border-slate-50 dark:border-slate-950 shadow-sm"></div>
+</div>
+<span class="text-sm font-medium text-slate-800 dark:text-slate-200 group-hover:text-primary transition-colors">Bob Miller</span>
+</div>
+</div>
+<!-- Carol (Offline) -->
+<div class="flex items-center group cursor-pointer transition-all">
+<div class="flex items-center gap-3">
+<div class="relative">
+<div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center border-2 border-slate-50 dark:border-slate-950">
+<span class="material-symbols-outlined text-sm text-slate-400" data-icon="person">person</span>
+</div>
+<div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-outline rounded-full border-2 border-slate-50 dark:border-slate-950 shadow-sm"></div>
+</div>
+<span class="text-sm font-medium text-slate-400 group-hover:text-primary transition-colors">Carol Vance</span>
+</div>
+</div>
+<!-- Others... -->
+<div class="flex items-center group cursor-pointer transition-all">
+<div class="flex items-center gap-3">
+<div class="relative">
+<img class="w-8 h-8 rounded-full border-2 border-slate-50 dark:border-slate-950 object-cover" data-alt="medium shot of a man in a business casual shirt with a neutral wall in the background and natural sunlight" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDmQNbquDubu-qbo5Dj9NlTn2E_4sQV8OcrV_VuCX3zMejVlczhSl8aQD0NdbYbWPpGlTyA_xNnC3CcnbuyBg5mCbp6wBbTXRUMXFYnCwhY848fchVAzmCirArrqeH8nZ7P6BI3dVP_mv_qxxD7lW70m6kMjrYhz8EyYlw-63PDqXcZDLJNRkLf9aSxGNvB7RVIfPFgMh71VIDnD1aS2o2h8B-Y-4WRsABGFAlTDpJl2xG9L1WzACFsDb0yM_bgssUQUPGo-vqzt2Q"/>
+<div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-outline rounded-full border-2 border-slate-50 dark:border-slate-950 shadow-sm"></div>
+</div>
+<span class="text-sm font-medium text-slate-400">David G.</span>
+</div>
+</div>
+<div class="flex items-center group cursor-pointer transition-all">
+<div class="flex items-center gap-3">
+<div class="relative">
+<img class="w-8 h-8 rounded-full border-2 border-slate-50 dark:border-slate-950 object-cover" data-alt="portrait of a woman with glasses and a blazer in a modern office with glass windows and urban view" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBmJAqu39Ay0vuVuRYnlVWQr6ZFuMYW_rwjk10dJ-DlA40f9b83OLgFkt0m8_S8PZn9izZ7P47J5XovTiRTauuZ8ISYcsSjb1uLIOd1ZTzAaNvYXi1dKQd02lUFr6h_smSpFhdcn1G2lQbdBsYxGEP7SdpjDfvH4d-qG4NV-Nr65ZVcRKKlKxz_tzDRNYRWE58U3EReBGWRVkdwIpM0LW54rYP_2MmcctfdrcgAqOutZyBgY6uwdOCwNVe6tfOUcLzYq2RJT7XybmA"/>
+<div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-[#4caf50] rounded-full border-2 border-slate-50 dark:border-slate-950 shadow-sm"></div>
+</div>
+<span class="text-sm font-medium text-slate-800 dark:text-slate-200">Elena Ruiz</span>
+</div>
+</div>
+</div>
+</aside>
+</main>
+</body></html>

@@ -5,9 +5,10 @@
 
 ---
 
-## Sync Rule
+## Sync Rules
 
-`AGENT.md` and `CLAUDE.md` must be kept in sync. Whenever `AGENT.md` is updated, update `CLAUDE.md` to reflect the same changes (or explicitly note any Claude-specific divergence here).
+- `AGENT.md` and `CLAUDE.md` must be kept in sync. Whenever `AGENT.md` is updated, update `CLAUDE.md` to reflect the same changes (or explicitly note Claude-specific divergence here).
+- `DESIGN.md` and `designs/tokens.css` must be kept in sync with the Stitch project. Whenever the design system changes, re-export and update both files, then update the Design Reference in `AGENT.md` §19.
 
 ---
 
@@ -70,3 +71,11 @@ See `AGENT.md` §11.
 ## UI Structure
 
 See `AGENT.md` §15.
+
+## Design Reference
+
+See `AGENT.md` §19 and `DESIGN.md`.
+
+- Pixel-accurate HTML mockups: `designs/*.html` (open in browser before implementing any screen)
+- CSS custom properties: `designs/tokens.css` (import globally — no hardcoded hex values in components)
+- Design rules (No-Line, Glass & Gradient, roundness limits, component specs): `DESIGN.md`

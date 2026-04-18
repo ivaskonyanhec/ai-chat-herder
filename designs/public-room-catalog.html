@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Architectural Workspace - Public Rooms</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-dim": "#cfdce3",
+                        "on-primary": "#f6f7ff",
+                        "tertiary": "#575f75",
+                        "surface": "#f7f9fb",
+                        "outline-variant": "#a9b4b9",
+                        "secondary-fixed-dim": "#c7d5ed",
+                        "surface-bright": "#f7f9fb",
+                        "secondary": "#526074",
+                        "on-tertiary-fixed-variant": "#535b71",
+                        "on-secondary-fixed-variant": "#4e5c71",
+                        "primary-fixed-dim": "#cad5ed",
+                        "surface-container": "#e8eff3",
+                        "inverse-on-surface": "#9a9d9f",
+                        "on-error-container": "#752121",
+                        "surface-tint": "#545f73",
+                        "primary-fixed": "#d8e3fb",
+                        "on-surface": "#2a3439",
+                        "on-primary-container": "#475266",
+                        "secondary-dim": "#465468",
+                        "secondary-fixed": "#d5e3fc",
+                        "primary": "#545f73",
+                        "primary-dim": "#485367",
+                        "on-error": "#fff7f6",
+                        "tertiary-dim": "#4b5369",
+                        "secondary-container": "#d5e3fc",
+                        "on-tertiary-container": "#4a5167",
+                        "on-background": "#2a3439",
+                        "outline": "#717c82",
+                        "error": "#9f403d",
+                        "surface-variant": "#d9e4ea",
+                        "on-secondary": "#f8f8ff",
+                        "surface-container-highest": "#d9e4ea",
+                        "surface-container-lowest": "#ffffff",
+                        "error-container": "#fe8983",
+                        "on-tertiary-fixed": "#373f54",
+                        "background": "#f7f9fb",
+                        "error-dim": "#4e0309",
+                        "on-surface-variant": "#566166",
+                        "inverse-surface": "#0b0f10",
+                        "tertiary-container": "#dae2fd",
+                        "tertiary-fixed": "#dae2fd",
+                        "on-primary-fixed": "#354053",
+                        "inverse-primary": "#dae6fe",
+                        "on-primary-fixed-variant": "#515c70",
+                        "surface-container-low": "#f0f4f7",
+                        "on-secondary-container": "#455367",
+                        "primary-container": "#d8e3fb",
+                        "surface-container-high": "#e1e9ee",
+                        "on-secondary-fixed": "#324053",
+                        "on-tertiary": "#f9f8ff",
+                        "tertiary-fixed-dim": "#ccd4ee"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface flex h-screen overflow-hidden">
+<!-- Left Sidebar (SideNavBar Anchor) -->
+<aside class="hidden md:flex flex-col h-screen overflow-y-auto p-4 bg-slate-100 dark:bg-slate-800 h-full w-72 left-0 border-r-0 font-sans text-xs font-medium uppercase tracking-widest text-slate-700 dark:text-slate-200">
+<div class="flex items-center gap-3 mb-8 px-2">
+<div class="w-10 h-10 bg-slate-800 dark:bg-white rounded-md flex items-center justify-center text-white dark:text-slate-800">
+<span class="material-symbols-outlined" data-icon="architecture">architecture</span>
+</div>
+<div>
+<h2 class="text-xl font-bold text-slate-800 dark:text-white normal-case tracking-normal">Workspace</h2>
+<p class="text-[10px] text-slate-500 normal-case tracking-normal">Active Session</p>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold rounded-md cursor-pointer active:opacity-80 transition-transform hover:translate-x-1" href="#">
+<span class="material-symbols-outlined" data-icon="forum">forum</span>
+<span>Rooms</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer active:opacity-80 transition-transform hover:translate-x-1" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span>Contacts</span>
+</a>
+</nav>
+<div class="mt-auto">
+<button class="w-full py-4 bg-primary text-on-primary font-bold rounded-md flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+                Create Room
+            </button>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col min-w-0 bg-surface">
+<!-- Top Navigation Bar -->
+<header class="flex items-center justify-between px-6 h-16 w-full bg-slate-700 dark:bg-slate-900 docked full-width top-0 z-50 shadow-sm transition-colors font-sans text-sm tracking-tight text-slate-200 dark:text-slate-100">
+<div class="flex items-center gap-8">
+<span class="text-lg font-semibold tracking-tighter text-white">Architectural Workspace</span>
+<nav class="hidden lg:flex items-center gap-6">
+<a class="text-white border-b-2 border-white pb-1" href="#">Public Rooms</a>
+<a class="text-slate-400 hover:text-slate-200 transition-colors" href="#">Private Rooms</a>
+<a class="text-slate-400 hover:text-slate-200 transition-colors" href="#">Contacts</a>
+<a class="text-slate-400 hover:text-slate-200 transition-colors" href="#">Sessions</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative group">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 material-symbols-outlined text-lg" data-icon="search">search</span>
+<input class="bg-slate-600 border-none rounded-md pl-10 pr-4 py-1.5 text-xs w-64 focus:ring-1 focus:ring-white/30 text-white placeholder-slate-400" placeholder="Global search..." type="text"/>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 text-slate-400 hover:text-white transition-colors hover:bg-slate-600 rounded-full">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<button class="p-2 text-slate-400 hover:text-white transition-colors hover:bg-slate-600 rounded-full">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+</button>
+<img alt="User profile" class="w-8 h-8 rounded-full border border-slate-500 object-cover" data-alt="Professional portrait of a male architect in a clean studio setting with soft natural light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBPQaabFOsKbJCOh8NTNV2abhOCbAobak8KS5teDAycmSK2rSjH4ut9Iw9SytintsibW_NWUone01eXiM3rv5qJ7ckGKDGnWOY4McCIVDaMo5sjAmIsauLlDATanDu0sWjn_mZXv4Ele6wgcjrkOscAhb2yaqW6RdnbyA1iFn3WAj0zSWrOliJS7fl3CSujLrVhxleVvNQrpTpjV-yAWvHi4XdLOfiRWfXuZ_Z56UVZhoP7zvD46LxABRsyqruymwb0iT46RB2hRjQ"/>
+</div>
+</div>
+</header>
+<!-- Content Canvas -->
+<section class="flex-1 overflow-y-auto p-8">
+<div class="max-w-7xl mx-auto">
+<div class="mb-10">
+<h1 class="text-3xl font-extrabold tracking-tight text-on-surface mb-2">Public Rooms Catalog</h1>
+<p class="text-on-surface-variant max-w-2xl">Explore open architectural workshops and collaborative design spaces within the global workspace ecosystem.</p>
+</div>
+<!-- Featured / Bento Grid Layout -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6 mb-12">
+<!-- Featured Room -->
+<div class="md:col-span-8 group relative overflow-hidden bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/10 p-1 flex flex-col">
+<div class="relative h-64 overflow-hidden rounded-lg">
+<img alt="Main Lobby" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="modern brutalist concrete office interior with large windows and minimalist furniture at dusk with warm interior lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBcomcDp_iJ6kFEVaBJ686noj6WNvqg61bWKfsVKTKRlugge0jUtUc4MZ3fKX-gGZxDmoPC7YRLkWddt-8xPeW2XP_NPinPNu-JWO5UD8gHQ3AvNkKMnkV1QUjs3S29pjc2PMR5HIgLAMoG27qyFVh98f7wAf6u5zWNxmkEWokuEJrs3ePnMy14fNZfI0ariC9UGPF6BwskytWdZmm5W8JJHjsJVxNXf_-sXjczjQ0umesjBv7RezoGoDdIC4a4hW0p8x1IvCBDu_U"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+<div class="absolute bottom-6 left-6 text-white">
+<span class="bg-primary px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-full mb-3 inline-block">Featured Workspace</span>
+<h2 class="text-2xl font-bold">Urban Planning Collective</h2>
+<p class="text-slate-200 text-sm opacity-90">Central hub for metropolitan infrastructure and civic design discussions.</p>
+</div>
+</div>
+<div class="p-6 flex items-center justify-between">
+<div class="flex items-center gap-6">
+<div class="flex -space-x-2">
+<img alt="User" class="w-8 h-8 rounded-full border-2 border-white object-cover" data-alt="professional woman portrait" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCnBCzLLhVy6CfGGQ1pdz2dzfoEpPMYY4tEKhBcPZuRf6NlGCtQ4ITc91IYOUh19qPk1XPiH4O_2vCjJXe3uxtzruIshxK0zKJyDpXv5EOZGrXmWa7HUNBGizsUEILMl0Dt07JXs0RUW-AKol7eA7f42qyqO0fVICMCFVcto1bW8dfBIe_q5ZFoUYHF1mAyF8MC5TRElc6luw6YgpzYv2sypC0Bds12fn93_t0EVgFyjWqzC_7KKlkvEk5SA4o7l-hLpSEsYJPv7IM"/>
+<img alt="User" class="w-8 h-8 rounded-full border-2 border-white object-cover" data-alt="professional man portrait" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBUS6UeGG1v1lTJaQkEhBTZDAKppf0z4VwMHPZs7jNt3kdh7-pZdkm016U9_8fmeEdl6PQ54heXbxdLklvyIbbr2G6Ky2tEF3I9XErR2HBY7IFwVXcHHOuLmZDg63J4YLexU3qBjZtceZX9oB26K6zLsCkgJCz_t8wy6lqiC3XbrpJGSbAnSKk79v4AVHm3O09Yxb0vWtpYHdcmcIkPEGW5omVKvjJTr8v4ktOtGgpzM9p21Rga-iVD0WpbVQgOVZu5NH4beP4Xbtw"/>
+<img alt="User" class="w-8 h-8 rounded-full border-2 border-white object-cover" data-alt="professional woman portrait" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBuU3Amz8nUS8p9IdU2AcAmozV2hIeu9gfXrEmzQwl-_6aLJfGkKxXgxZRDqAf8iC1ZxL8uEwb7IV03HD8kVYUa5nk1GFh7_nPurk-iMdKFnxbQyPzwbi2j8U_k3LU6f3IRMOqU4q5KRLsPxclIY1csBNnJ8fKUpEvBiH2fup_12sIB0_ZeuyhQzkzGzuKbGCeEfG_t7tdJWJfZkRHpvBb_sHcGkcIAcroOMVPTX1QUHPFCXjzj39B42i1xe2wasWqo8nh0cgh45tE"/>
+<div class="w-8 h-8 rounded-full border-2 border-white bg-surface-container-high flex items-center justify-center text-[10px] font-bold text-on-surface">+142</div>
+</div>
+<div class="flex items-center gap-2 text-on-surface-variant text-xs">
+<span class="material-symbols-outlined text-sm" data-icon="groups">groups</span>
+<span>2.4k Active Members</span>
+</div>
+</div>
+<button class="bg-primary text-on-primary px-6 py-2.5 rounded-lg font-bold text-sm hover:bg-primary-dim transition-colors shadow-sm">Join Room</button>
+</div>
+</div>
+<!-- Statistics / Utility Cards -->
+<div class="md:col-span-4 grid grid-cols-1 gap-6">
+<div class="bg-primary-container p-6 rounded-xl flex flex-col justify-between">
+<div>
+<span class="material-symbols-outlined text-primary mb-4" data-icon="insights">insights</span>
+<h3 class="text-lg font-bold text-on-primary-container leading-tight">Trending Discussions</h3>
+<p class="text-on-primary-container/70 text-xs mt-2">Highly active architectural sessions currently in progress.</p>
+</div>
+<div class="space-y-3 mt-6">
+<div class="flex items-center justify-between text-xs font-semibold text-on-primary-container bg-white/40 p-2 rounded-md">
+<span>#SustainableTimber</span>
+<span class="text-primary">Live</span>
+</div>
+<div class="flex items-center justify-between text-xs font-semibold text-on-primary-container bg-white/40 p-2 rounded-md">
+<span>#ParametricFaçades</span>
+<span class="text-primary">12 New</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-highest p-6 rounded-xl">
+<h3 class="text-sm font-bold text-on-surface mb-4">Discovery Metrics</h3>
+<div class="space-y-4">
+<div>
+<div class="flex justify-between text-[10px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">
+<span>Workspace Density</span>
+<span>88%</span>
+</div>
+<div class="h-1 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[88%]"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-[10px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">
+<span>New Rooms (24h)</span>
+<span>12</span>
+</div>
+<div class="h-1 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[40%]"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Catalog Grid -->
+<div class="flex items-center justify-between mb-8">
+<h3 class="text-lg font-bold tracking-tight text-on-surface">Available Rooms</h3>
+<div class="flex items-center gap-2">
+<button class="p-2 bg-surface-container-lowest border border-outline-variant/20 rounded-md shadow-sm">
+<span class="material-symbols-outlined text-lg" data-icon="grid_view">grid_view</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-md">
+<span class="material-symbols-outlined text-lg" data-icon="list">list</span>
+</button>
+</div>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- Room Card 1 -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant/10 p-6 flex flex-col justify-between hover:shadow-md transition-shadow">
+<div>
+<div class="flex items-center justify-between mb-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="apartment">apartment</span>
+</div>
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Public</span>
+</div>
+<h4 class="text-base font-bold text-on-surface mb-2">Sustainable Materials Lab</h4>
+<p class="text-on-surface-variant text-sm line-clamp-2 leading-relaxed">Discussing the implementation of carbon-negative materials in commercial residential projects.</p>
+</div>
+<div class="mt-6 pt-6 border-t border-surface-container flex items-center justify-between">
+<div class="flex items-center gap-1.5 text-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-sm" data-icon="person">person</span>
+<span class="font-medium">852 Members</span>
+</div>
+<button class="text-primary font-bold text-sm hover:underline">Join</button>
+</div>
+</div>
+<!-- Room Card 2 -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant/10 p-6 flex flex-col justify-between hover:shadow-md transition-shadow">
+<div>
+<div class="flex items-center justify-between mb-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="landscape">landscape</span>
+</div>
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Public</span>
+</div>
+<h4 class="text-base font-bold text-on-surface mb-2">Biophilic Design Group</h4>
+<p class="text-on-surface-variant text-sm line-clamp-2 leading-relaxed">Integrating nature into interior architectures to enhance occupant well-being and productivity.</p>
+</div>
+<div class="mt-6 pt-6 border-t border-surface-container flex items-center justify-between">
+<div class="flex items-center gap-1.5 text-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-sm" data-icon="person">person</span>
+<span class="font-medium">1.2k Members</span>
+</div>
+<button class="text-primary font-bold text-sm hover:underline">Join</button>
+</div>
+</div>
+<!-- Room Card 3 -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant/10 p-6 flex flex-col justify-between hover:shadow-md transition-shadow">
+<div>
+<div class="flex items-center justify-between mb-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="foundation">foundation</span>
+</div>
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Public</span>
+</div>
+<h4 class="text-base font-bold text-on-surface mb-2">Heritage Preservation</h4>
+<p class="text-on-surface-variant text-sm line-clamp-2 leading-relaxed">Methods and strategies for restoring historical landmarks while meeting modern safety codes.</p>
+</div>
+<div class="mt-6 pt-6 border-t border-surface-container flex items-center justify-between">
+<div class="flex items-center gap-1.5 text-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-sm" data-icon="person">person</span>
+<span class="font-medium">431 Members</span>
+</div>
+<button class="text-primary font-bold text-sm hover:underline">Join</button>
+</div>
+</div>
+<!-- Room Card 4 -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant/10 p-6 flex flex-col justify-between hover:shadow-md transition-shadow">
+<div>
+<div class="flex items-center justify-between mb-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="token">token</span>
+</div>
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Public</span>
+</div>
+<h4 class="text-base font-bold text-on-surface mb-2">BIM Automation Hub</h4>
+<p class="text-on-surface-variant text-sm line-clamp-2 leading-relaxed">Sharing scripts and plugins for Revit and ArchiCAD to streamline documentation workflows.</p>
+</div>
+<div class="mt-6 pt-6 border-t border-surface-container flex items-center justify-between">
+<div class="flex items-center gap-1.5 text-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-sm" data-icon="person">person</span>
+<span class="font-medium">3.1k Members</span>
+</div>
+<button class="text-primary font-bold text-sm hover:underline">Join</button>
+</div>
+</div>
+<!-- Room Card 5 -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant/10 p-6 flex flex-col justify-between hover:shadow-md transition-shadow">
+<div>
+<div class="flex items-center justify-between mb-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="brush">brush</span>
+</div>
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Public</span>
+</div>
+<h4 class="text-base font-bold text-on-surface mb-2">Concept Visualization</h4>
+<p class="text-on-surface-variant text-sm line-clamp-2 leading-relaxed">Showcasing high-end architectural renders and discussing lighting and material setups.</p>
+</div>
+<div class="mt-6 pt-6 border-t border-surface-container flex items-center justify-between">
+<div class="flex items-center gap-1.5 text-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-sm" data-icon="person">person</span>
+<span class="font-medium">928 Members</span>
+</div>
+<button class="text-primary font-bold text-sm hover:underline">Join</button>
+</div>
+</div>
+<!-- Room Card 6 -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant/10 p-6 flex flex-col justify-between hover:shadow-md transition-shadow">
+<div>
+<div class="flex items-center justify-between mb-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="bolt">bolt</span>
+</div>
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Public</span>
+</div>
+<h4 class="text-base font-bold text-on-surface mb-2">Fast-Track Permitting</h4>
+<p class="text-on-surface-variant text-sm line-clamp-2 leading-relaxed">Collaborative strategy for navigating complex zoning laws and urban regulations.</p>
+</div>
+<div class="mt-6 pt-6 border-t border-surface-container flex items-center justify-between">
+<div class="flex items-center gap-1.5 text-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-sm" data-icon="person">person</span>
+<span class="font-medium">215 Members</span>
+</div>
+<button class="text-primary font-bold text-sm hover:underline">Join</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Right Sidebar (Room Details Anchor) -->
+<aside class="hidden xl:flex flex-col h-screen overflow-y-auto border-l border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 h-full w-64 right-0 border-l-0 font-sans text-sm text-slate-600 dark:text-slate-300">
+<div class="p-6 border-b border-slate-100 dark:border-slate-900 bg-slate-100 dark:bg-slate-900">
+<h2 class="text-md font-bold text-slate-700 dark:text-white mb-0.5">Room Details</h2>
+<p class="text-[10px] text-slate-500 font-medium uppercase tracking-wider">Admin Managed</p>
+</div>
+<nav class="p-4 space-y-1">
+<a class="flex items-center gap-3 py-2 text-slate-900 dark:text-white border-l-4 border-slate-500 pl-2 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="info">info</span>
+<span>Info</span>
+</a>
+<a class="flex items-center gap-3 py-2 text-slate-400 pl-3 hover:text-slate-700 dark:hover:text-slate-100 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span>Members</span>
+</a>
+<a class="flex items-center gap-3 py-2 text-slate-400 pl-3 hover:text-slate-700 dark:hover:text-slate-100 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+<span>Files</span>
+</a>
+</nav>
+<div class="mt-8 px-6">
+<h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Active Admins</h3>
+<div class="space-y-4">
+<div class="flex items-center gap-3">
+<img alt="Admin" class="w-8 h-8 rounded-full object-cover" data-alt="close-up of a smiling professional man" src="https://lh3.googleusercontent.com/aida-public/AB6AXuByzOX4WrBuv1g_yaKlSgXcyIQ5mslWouTxFcwGGf9JU-5LNs486sHiQdEMk4qSmd0jd8eiBo5s8JcscPZHQ8PP8PHtRcrOokPyk5ktgLZnG37MjOTuLETNSFoD_a8aSIMeN0wtilKOIsF9e1YgI4xCYEgcJMUajZDNCdMuVehwlGarvbEx9-Rz0BVykRCi7ZRbBlh60MSM0_51WcQ82i_JM8LOqnSQCMN8b-7_79Dy3or6fcKW9sAyTJeY9NXZKUCIdhIZAgM77Cw"/>
+<div class="text-[11px]">
+<p class="font-bold text-slate-700 dark:text-slate-200">Marcus Thorne</p>
+<p class="text-slate-400">Principal Architect</p>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<img alt="Admin" class="w-8 h-8 rounded-full object-cover" data-alt="professional woman in glasses" src="https://lh3.googleusercontent.com/aida-public/AB6AXuALnwUz7gNvv1OI7ERwlt-W3SMCQH72sZlju4esOVssKs0YyLRPMoJyQVm5uElRQHszoDBtFQ-3dAO0YLznnzGr-nPU8ru0uGlH6IxmagNe0A3a34lyHbNN2gcz_5VRgMKTb-ya-g3SWilT9UDPSuRIhr9Ir-1qPN80wg8ZOmnKN3M8od4lcmsgNFbea0NgHhon4AhHd4mV3zcLgqLpuyA0U8bNgWs0wWI6uCPbitXTFIIGQ5YpMvJ6Zw0X9AnTPhIWG1McRAH2LYI"/>
+<div class="text-[11px]">
+<p class="font-bold text-slate-700 dark:text-slate-200">Elena Vance</p>
+<p class="text-slate-400">Studio Manager</p>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-auto p-6">
+<div class="p-4 bg-primary/5 rounded-lg border border-primary/10">
+<p class="text-[10px] font-bold text-primary uppercase mb-2">Resource Update</p>
+<p class="text-xs text-slate-500 leading-relaxed">New sustainability guidelines have been added to the shared file vault.</p>
+</div>
+</div>
+</aside>
+</body></html>

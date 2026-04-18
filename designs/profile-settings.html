@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Architectural Workspace - User Profile</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-fixed": "#373f54",
+                        "surface-container-high": "#e1e9ee",
+                        "on-secondary": "#f8f8ff",
+                        "error-container": "#fe8983",
+                        "surface-container-highest": "#d9e4ea",
+                        "outline-variant": "#a9b4b9",
+                        "surface-bright": "#f7f9fb",
+                        "surface-container": "#e8eff3",
+                        "on-primary-fixed": "#354053",
+                        "secondary-fixed": "#d5e3fc",
+                        "primary-dim": "#485367",
+                        "on-secondary-container": "#455367",
+                        "error": "#9f403d",
+                        "inverse-surface": "#0b0f10",
+                        "tertiary-fixed-dim": "#ccd4ee",
+                        "primary-fixed-dim": "#cad5ed",
+                        "on-secondary-fixed-variant": "#4e5c71",
+                        "primary-container": "#d8e3fb",
+                        "secondary-fixed-dim": "#c7d5ed",
+                        "surface-container-low": "#f0f4f7",
+                        "secondary-dim": "#465468",
+                        "secondary": "#526074",
+                        "on-primary-container": "#475266",
+                        "surface-container-lowest": "#ffffff",
+                        "primary": "#545f73",
+                        "on-tertiary-fixed-variant": "#535b71",
+                        "on-error-container": "#752121",
+                        "background": "#f7f9fb",
+                        "on-tertiary-container": "#4a5167",
+                        "surface": "#f7f9fb",
+                        "on-secondary-fixed": "#324053",
+                        "surface-tint": "#545f73",
+                        "on-surface-variant": "#566166",
+                        "on-error": "#fff7f6",
+                        "primary-fixed": "#d8e3fb",
+                        "on-tertiary": "#f9f8ff",
+                        "surface-dim": "#cfdce3",
+                        "on-surface": "#2a3439",
+                        "tertiary-container": "#dae2fd",
+                        "on-background": "#2a3439",
+                        "surface-variant": "#d9e4ea",
+                        "inverse-on-surface": "#9a9d9f",
+                        "on-primary-fixed-variant": "#515c70",
+                        "tertiary": "#575f75",
+                        "tertiary-dim": "#4b5369",
+                        "error-dim": "#4e0309",
+                        "outline": "#717c82",
+                        "secondary-container": "#d5e3fc",
+                        "on-primary": "#f6f7ff",
+                        "tertiary-fixed": "#dae2fd",
+                        "inverse-primary": "#dae6fe"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface flex min-h-screen">
+<!-- Sidebar Shell (SideNavBar) -->
+<aside class="hidden md:flex bg-slate-800 dark:bg-black text-slate-100 docked left-0 h-full w-64 flex-col flex flex-col h-screen p-4 space-y-4">
+<div class="flex items-center gap-3 px-2 mb-6">
+<div class="w-8 h-8 rounded bg-primary flex items-center justify-center text-white font-black">
+<span class="material-symbols-outlined" data-icon="architecture">architecture</span>
+</div>
+<div>
+<h2 class="text-white font-black text-xs uppercase tracking-widest leading-none">Main Office</h2>
+<p class="text-[10px] text-slate-400 uppercase tracking-tighter">Global Communications</p>
+</div>
+</div>
+<button class="w-full py-2.5 px-4 bg-primary hover:bg-primary-dim transition-colors text-white text-xs font-bold uppercase tracking-widest rounded-md mb-4 flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="add">add</span>
+            New Thread
+        </button>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 text-slate-400 hover:text-slate-200 px-3 py-2 text-xs font-semibold uppercase tracking-widest duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="chat_bubble">chat_bubble</span>
+                Channels
+            </a>
+<a class="flex items-center gap-3 text-slate-400 hover:text-slate-200 px-3 py-2 text-xs font-semibold uppercase tracking-widest duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="forum">forum</span>
+                Messages
+            </a>
+<a class="flex items-center gap-3 text-slate-400 hover:text-slate-200 px-3 py-2 text-xs font-semibold uppercase tracking-widest duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="drafts">drafts</span>
+                Drafts
+            </a>
+<a class="flex items-center gap-3 text-slate-400 hover:text-slate-200 px-3 py-2 text-xs font-semibold uppercase tracking-widest duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="push_pin">push_pin</span>
+                Pinned
+            </a>
+<a class="flex items-center gap-3 text-slate-400 hover:text-slate-200 px-3 py-2 text-xs font-semibold uppercase tracking-widest duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="inventory_2">inventory_2</span>
+                Archive
+            </a>
+</nav>
+<div class="pt-4 mt-auto">
+<div class="bg-slate-700 dark:bg-slate-800 text-white rounded-md px-3 py-3 flex items-center gap-3">
+<div class="relative">
+<img alt="Executive User Profile" class="w-8 h-8 rounded-full object-cover" data-alt="professional portrait of a confident executive in a clean-cut suit with a blurred modern office background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB4BQF6R94p2c-RGScZkvhvtRCAwLkFZavcdhUaO_d33ro5mtIlXhx_w96jAw7gxTD7ZwQuvD8N22XqKRbYS8L1Ck1O6AG9kCH3V1XZT8fO7CEy6CDxtxCgOOsX6MashMBXeJhcwCpNTMOUIpGIn5Sgmb5tqFuTokhuKNryqP78rIuft1-mluiuQl0LLqS9VwGb_rjSEUYSUgMhC93CXM4pUnwRZT4EQDUEB69YWK3GND-FYiChdZq8HDBqI1oHlPCAF9Q6gE7P4zM"/>
+<span class="absolute bottom-0 right-0 w-2 h-2 bg-[#4caf50] rounded-full border border-slate-700"></span>
+</div>
+<div class="overflow-hidden">
+<p class="text-[11px] font-bold truncate">Executive User</p>
+<p class="text-[9px] text-slate-400 truncate uppercase tracking-tighter">Settings Active</p>
+</div>
+</div>
+</div>
+</aside>
+<main class="flex-1 flex flex-col h-screen overflow-hidden">
+<!-- Top Navigation (TopNavBar) -->
+<header class="bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 font-sans text-sm font-medium tracking-tight docked full-width top-0 h-16 flex justify-between items-center px-6 w-full border-b border-slate-100 dark:border-slate-800 shrink-0">
+<div class="flex items-center gap-8">
+<h1 class="text-lg font-bold tracking-tighter text-slate-900 dark:text-white">Architectural Workspace</h1>
+<nav class="hidden lg:flex items-center gap-6">
+<a class="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors" href="#">Dashboard</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors" href="#">Files</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors" href="#">Directory</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative w-64 hidden sm:block">
+<input class="w-full bg-surface-container-low border-none rounded-lg text-xs py-2 pl-9 pr-4 focus:ring-1 focus:ring-primary" placeholder="Search workspace..." type="text"/>
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm" data-icon="search">search</span>
+</div>
+<button class="p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 bg-slate-50 dark:bg-slate-800 rounded transition-colors text-slate-900 dark:text-white">
+<span class="material-symbols-outlined" data-icon="settings" style="font-variation-settings: 'FILL' 1;">settings</span>
+</button>
+</div>
+</header>
+<!-- Scrollable Content Canvas -->
+<div class="flex-1 overflow-y-auto bg-surface-container-low p-6 md:p-10">
+<div class="max-w-5xl mx-auto space-y-8">
+<!-- Page Title & Editorial Header -->
+<div class="space-y-1">
+<h2 class="text-3xl font-extrabold tracking-tighter text-on-surface">Account Settings</h2>
+<p class="text-sm text-on-surface-variant font-medium">Manage your professional presence and workspace preferences.</p>
+</div>
+<!-- Bento Grid Layout for Profile -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+<!-- Profile Identity Card -->
+<section class="lg:col-span-4 space-y-6">
+<div class="bg-surface-container-lowest rounded-xl p-8 shadow-sm border-none relative overflow-hidden group">
+<div class="relative z-10 space-y-6 flex flex-col items-center">
+<div class="relative">
+<div class="w-32 h-32 rounded-full ring-4 ring-surface-container-high overflow-hidden">
+<img alt="Current Avatar" class="w-full h-full object-cover" data-alt="close up headshot of a professional in a bright studio setting with minimalist neutral background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCgGi3u7A4jWvGpoaIkAZyivRumpfXQwMMKZIUYskB1T0Yk9KOpVSrjhu81l9zZ1Al8YCdSGOymTRe2L3S8fTH9EWM6leAo-emLESN__-VRKfCH0_pspogMdwettonp2UCfV9zephHDgdGaa1wezsqnzuUrQl8u7ihKmR3yvVD4qEarfXVpmOhiPFWoROjAx2T_p7kTc60_YdYtu8y19-S_3Dyftzdp85JglbFwoPo5hhGkztJ4of7lnrStAYYF8V3H9lJgPfzsJWs"/>
+</div>
+<button class="absolute bottom-1 right-1 bg-primary text-white p-2 rounded-full shadow-lg hover:bg-primary-dim transition-transform active:scale-95">
+<span class="material-symbols-outlined text-sm" data-icon="photo_camera">photo_camera</span>
+</button>
+</div>
+<div class="text-center">
+<h3 class="text-lg font-bold text-on-surface tracking-tight">Executive User</h3>
+<p class="text-xs text-on-surface-variant uppercase tracking-widest font-semibold mt-1">Lead Architect</p>
+</div>
+<div class="w-full pt-4 border-t border-surface-container flex justify-between items-center text-[11px] font-bold text-on-surface-variant uppercase tracking-tighter">
+<span>Workspace ID: AW-9021</span>
+<span class="text-primary">Verify Identity</span>
+</div>
+</div>
+</div>
+<!-- System Theme Settings Card -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm">
+<h4 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-4">Workspace Environment</h4>
+<div class="space-y-4">
+<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low border border-surface-container-high">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="light_mode">light_mode</span>
+<span class="text-sm font-semibold">Light View</span>
+</div>
+<div class="w-10 h-5 bg-primary rounded-full relative cursor-pointer">
+<div class="absolute left-1 top-1 w-3 h-3 bg-white rounded-full"></div>
+</div>
+</div>
+<div class="flex items-center justify-between p-3 rounded-lg hover:bg-surface-container transition-colors cursor-pointer">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="dark_mode">dark_mode</span>
+<span class="text-sm font-medium text-on-surface-variant">Deep Contrast</span>
+</div>
+<div class="w-10 h-5 bg-surface-container-highest rounded-full relative">
+<div class="absolute right-1 top-1 w-3 h-3 bg-white rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Main Form Area -->
+<section class="lg:col-span-8 space-y-6">
+<div class="bg-surface-container-lowest rounded-xl p-8 shadow-sm">
+<form class="space-y-8">
+<!-- Personal Info Section -->
+<div class="space-y-6">
+<div class="flex items-center gap-2 border-b border-surface-container pb-4">
+<span class="material-symbols-outlined text-primary" data-icon="person">person</span>
+<h3 class="text-sm font-bold uppercase tracking-widest text-on-surface">Identity Details</h3>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="space-y-2">
+<label class="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">Display Name</label>
+<input class="w-full bg-surface-container-low border-none rounded-lg text-sm py-3 px-4 focus:ring-1 focus:ring-primary text-on-surface font-medium" type="text" value="Executive User"/>
+</div>
+<div class="space-y-2">
+<label class="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">Professional Role</label>
+<input class="w-full bg-surface-container-low border-none rounded-lg text-sm py-3 px-4 focus:ring-1 focus:ring-primary text-on-surface font-medium" placeholder="e.g. Lead Developer" type="text"/>
+</div>
+</div>
+<div class="space-y-2">
+<label class="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">Email Address</label>
+<input class="w-full bg-surface-container-low border-none rounded-lg text-sm py-3 px-4 focus:ring-1 focus:ring-primary text-on-surface font-medium" disabled="" type="email" value="executive@workspace.arch"/>
+<p class="text-[10px] text-on-surface-variant italic">Contact administrator to modify workspace credentials.</p>
+</div>
+</div>
+<!-- Security Section -->
+<div class="space-y-6 pt-4">
+<div class="flex items-center gap-2 border-b border-surface-container pb-4">
+<span class="material-symbols-outlined text-primary" data-icon="lock">lock</span>
+<h3 class="text-sm font-bold uppercase tracking-widest text-on-surface">Access Security</h3>
+</div>
+<div class="space-y-6">
+<div class="space-y-2">
+<label class="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">Current Password</label>
+<input class="w-full bg-surface-container-low border-none rounded-lg text-sm py-3 px-4 focus:ring-1 focus:ring-primary text-on-surface font-medium" placeholder="••••••••••••" type="password"/>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="space-y-2">
+<label class="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">New Password</label>
+<input class="w-full bg-surface-container-low border-none rounded-lg text-sm py-3 px-4 focus:ring-1 focus:ring-primary text-on-surface font-medium" type="password"/>
+</div>
+<div class="space-y-2">
+<label class="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">Confirm Password</label>
+<input class="w-full bg-surface-container-low border-none rounded-lg text-sm py-3 px-4 focus:ring-1 focus:ring-primary text-on-surface font-medium" type="password"/>
+</div>
+</div>
+</div>
+</div>
+<div class="flex justify-end gap-4 pt-6">
+<button class="px-6 py-2.5 text-xs font-bold uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors" type="button">Discard Changes</button>
+<button class="px-10 py-2.5 bg-primary text-white text-xs font-bold uppercase tracking-widest rounded-lg hover:bg-primary-dim transition-all shadow-sm active:scale-98" type="submit">Save Profile</button>
+</div>
+</form>
+</div>
+<!-- Danger Zone -->
+<div class="bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-sm border border-error/20">
+<div class="p-6 bg-error/5 flex items-start gap-4">
+<div class="p-2 bg-error-container text-on-error-container rounded-lg">
+<span class="material-symbols-outlined" data-icon="warning">warning</span>
+</div>
+<div class="space-y-2 flex-1">
+<h4 class="text-sm font-bold text-error tracking-tight">Critical Actions: Account Deletion</h4>
+<p class="text-xs text-on-surface-variant leading-relaxed">
+                                        Deleting your workspace account is an irreversible action. This will permanently remove your messages, files, and architectural contributions from the Main Office directory.
+                                    </p>
+<div class="pt-4">
+<button class="px-6 py-2.5 border border-error text-error text-[10px] font-black uppercase tracking-widest rounded-md hover:bg-error hover:text-white transition-all duration-200">
+                                            Initiate Permanent Deletion
+                                        </button>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+</div>
+</div>
+<!-- Notification Bar (Editorial Style Footer) -->
+<footer class="h-10 bg-surface-container-highest flex items-center px-6 justify-between shrink-0">
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 bg-[#4caf50] rounded-full"></span>
+<span class="text-[9px] font-bold uppercase tracking-tighter text-on-surface-variant">System Latency: 14ms</span>
+</div>
+<div class="w-px h-3 bg-outline-variant/30"></div>
+<span class="text-[9px] font-bold uppercase tracking-tighter text-on-surface-variant">Archived Threads: 1,204</span>
+</div>
+<div class="text-[9px] font-bold uppercase tracking-tighter text-on-surface-variant">
+                © 2024 Architectural Workspace Inc.
+            </div>
+</footer>
+</main>
+</body></html>

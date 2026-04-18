@@ -46,7 +46,7 @@ Format:
 - **Components:** Standalone components only. No NgModules.
 - **Control flow:** `@if`, `@for`, `@switch` only. No `*ngIf` / `*ngFor` directives.
 - **Typing:** `strict: true` in `tsconfig.json`. No `any`. No `as` type assertions without a `// justification` comment.
-- **CSS/SCSS:** Follow the **Classic Web Chat** wireframes in `requirements.md` § Appendix A exactly. The layout is: fixed top nav → left sidebar (rooms + contacts, collapsible to accordion) → center chat area → right members panel.
+- **CSS/SCSS:** Consume `designs/tokens.css` CSS custom properties exclusively — no hardcoded hex values. Follow `DESIGN.md` for all visual rules (surface hierarchy, No-Line rule, roundness limits, typography scale). Pixel-accurate mockups are in `designs/*.html` — open in browser before implementing any screen.
 - **HTTP:** `HttpClient` with `AuthInterceptor` that injects `Authorization: Bearer {token}` on all requests.
 
 ### 3.3 Docker First
@@ -408,11 +408,14 @@ unread:{userId}:dialog:{id}     String     integer count
 
 ### AFK Logic
 
-- Client tracks DOM events (mousemove, keydown, click, scroll, touchstart) per tab.
-- After 60s of no events: client calls `SetAfk()`.
-- On any event while AFK: client calls `SetActive()`.
+- Client tracks DOM events (mousemove, keydown, click, scroll, touchstart) **throttled to 1 per second** (raw mousemove at 60fps × 300 users = 18,000 callbacks/s — must be throttled).
+- `document.visibilitychange` → `visible` resets the inactivity timer and calls `SetActive()` if AFK (handles tab resume after browser hibernation).
+- `setInterval` every 5s: if `(now − lastActivityAt) >= 60s` → call `SetAfk()`.
+- On any throttled event while AFK: client calls `SetActive()`.
 - Server: `SADD afk_tabs:{userId} {connId}`. If `SCARD afk_tabs == ZCARD presence:tabs` → broadcast `"afk"`.
-- `PresenceMonitorService` (20s poll) is a ghost-cleanup safety net only — not the AFK detection mechanism.
+- `PresenceMonitorService` (20s poll) is a ghost-cleanup safety net — designed specifically for tab hibernation (JS suspended, heartbeat stops, SetAfk never fires). Not the primary AFK detection path.
+- SignalR client **must** use `.withAutomaticReconnect()`. `onreconnected` callback must re-invoke `JoinRoom` for all open rooms.
+- **Transport invariant:** WebSocket for server-push events only; REST for all client-initiated queries and mutations. Never poll REST endpoints for real-time data.
 
 ---
 
@@ -526,6 +529,46 @@ unreadCounts = signal<Map<string, number>>(new Map());
 | Access token TTL | 15 minutes |
 | Refresh token TTL | 7 days (keepSignedIn) / 24 hours |
 | AFK threshold | 60 seconds client-side inactivity |
+
+---
+
+## 19. Design Reference — Slate Protocol
+
+**Before implementing any UI component or screen, read the corresponding mockup and `DESIGN.md`.**
+
+### Design System
+- **Name:** Slate Protocol
+- **Philosophy:** "Architectural Workspace / Structured Clarity"
+- **Full rules:** `DESIGN.md` (colors, typography, roundness, elevation, component specs, Do's and Don'ts)
+- **CSS tokens:** `designs/tokens.css` — import globally in `frontend/src/styles.scss`
+
+### Pixel-Accurate Mockups (`designs/`)
+
+| File | Screen | Key elements |
+|------|--------|-------------|
+| `authentication.html` | Sign In / Register / Forgot Password | Login form, Register form, password-reset link |
+| `main-chat-interface.html` | Main Chat (room view) | Top nav, left sidebar (accordion), center message area, right members panel |
+| `private-messaging.html` | DM / Personal Dialog | 2-person chat, frozen-dialog banner on block |
+| `contacts-management.html` | Contacts / Friends list | Friend list with presence dots, pending requests |
+| `public-room-catalog.html` | Public Room Catalog | Search bar, room cards with member count |
+| `manage-room-settings.html` | Admin Modal | 5-tab modal: Members / Admins / Banned / Invitations / Settings |
+| `profile-settings.html` | User Profile & Settings | Avatar, username display, account actions |
+| `security-sessions.html` | Active Sessions | Session list with browser/IP/location, revoke button |
+| `friend-requests.html` | Friend Requests | Incoming requests (Accept/Decline) + sent requests (Pending/Declined status) |
+| `room-invitations.html` | Room Invitations | Pending private room invite cards with Accept/Decline per card |
+| `platform-ban-admin.html` | Platform Ban Admin | Issue ban form, active bans table, revoked bans collapsed section |
+
+### Critical Visual Rules (from DESIGN.md)
+- **No 1px solid borders** for sectioning — use tonal background shifts only
+- **No hardcoded hex values** — always use `var(--color-*)` tokens
+- **`border-radius` max:** `var(--radius-lg)` (0.5rem) for structural elements
+- **Sidebar background:** `var(--nav-gradient)` for nav drawer; `var(--color-surface-container)` for panels
+- **Message area background:** `var(--color-surface-container-lowest)` (#ffffff)
+- **Input background:** `var(--color-surface-container-low)` (#f0f4f7)
+- **Status dots:** 8px, "porthole" cutout border, colors: online=#4caf50, afk=#ffb300, offline=#717c82
+
+### Sync Rule
+Whenever the Stitch design is updated, re-export and update both `designs/tokens.css` and `DESIGN.md`. Log the change in `DEVELOPMENT_LOG.md`.
 
 ---
 

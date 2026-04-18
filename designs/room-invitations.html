@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Room Invitations - Architectural Workspace</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed-dim": "#ccd4ee",
+                        "on-primary-fixed-variant": "#515c70",
+                        "error-container": "#fe8983",
+                        "surface-container-high": "#e1e9ee",
+                        "on-primary": "#f6f7ff",
+                        "on-tertiary": "#f9f8ff",
+                        "inverse-primary": "#dae6fe",
+                        "secondary-fixed": "#d5e3fc",
+                        "on-secondary-fixed-variant": "#4e5c71",
+                        "primary-container": "#d8e3fb",
+                        "on-tertiary-container": "#4a5167",
+                        "on-tertiary-fixed-variant": "#535b71",
+                        "tertiary-dim": "#4b5369",
+                        "tertiary": "#575f75",
+                        "surface": "#f7f9fb",
+                        "inverse-surface": "#0b0f10",
+                        "surface-tint": "#545f73",
+                        "primary-fixed": "#d8e3fb",
+                        "tertiary-container": "#dae2fd",
+                        "secondary": "#526074",
+                        "background": "#f7f9fb",
+                        "on-background": "#2a3439",
+                        "on-error-container": "#752121",
+                        "surface-container": "#e8eff3",
+                        "tertiary-fixed": "#dae2fd",
+                        "on-surface-variant": "#566166",
+                        "primary-fixed-dim": "#cad5ed",
+                        "on-primary-fixed": "#354053",
+                        "secondary-container": "#d5e3fc",
+                        "on-surface": "#2a3439",
+                        "on-primary-container": "#475266",
+                        "error-dim": "#4e0309",
+                        "on-secondary-fixed": "#324053",
+                        "surface-bright": "#f7f9fb",
+                        "surface-dim": "#cfdce3",
+                        "surface-container-highest": "#d9e4ea",
+                        "on-secondary-container": "#455367",
+                        "on-secondary": "#f8f8ff",
+                        "secondary-fixed-dim": "#c7d5ed",
+                        "secondary-dim": "#465468",
+                        "primary-dim": "#485367",
+                        "surface-variant": "#d9e4ea",
+                        "outline-variant": "#a9b4b9",
+                        "primary": "#545f73",
+                        "on-tertiary-fixed": "#373f54",
+                        "surface-container-lowest": "#ffffff",
+                        "error": "#9f403d",
+                        "outline": "#717c82",
+                        "inverse-on-surface": "#9a9d9f",
+                        "surface-container-low": "#f0f4f7",
+                        "on-error": "#fff7f6"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface flex h-screen overflow-hidden">
+<!-- SideNavBar (from Shared Components JSON) -->
+<aside class="hidden md:flex flex-col h-full w-64 bg-slate-800 dark:bg-slate-950 bg-gradient-to-b from-slate-700 to-slate-800 z-50">
+<div class="flex flex-col h-full py-8 px-4 space-y-6">
+<div class="px-4">
+<div class="flex items-center space-x-3 mb-2">
+<img alt="Organization Logo" class="w-8 h-8 rounded-lg bg-white/10 p-1" data-alt="Minimalist architectural logo with geometric lines in white on a dark slate background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDhWbf5_h9IUHa5b896YBveCKwVOdnBDZzZV_rgTZLhWLQVpS1nvtMCpaoUj3OZE5xICDzl3d7hH-77O8mfaGtpd0WPLphb722nTpXr5w5fQfmcEHR_8_kv2fHIDe32VQwNeHTWXVvxLPAtZuu38OFTwBprnW8SsUsmMRxsK9kcN7fT9fam0y3P4dJl83EOLb6U8nJ8X7JfpsTie4J779kV_GWt8i3p_xn8ThJpBb3FfnGOQvUTzp7_JRj-1cYvVQOOcm1FqludEIE"/>
+<div>
+<h2 class="text-white font-black tracking-widest text-sm">Project Alpha</h2>
+<p class="text-slate-400 font-inter text-[10px] uppercase tracking-widest font-semibold">Design Division</p>
+</div>
+</div>
+</div>
+<nav class="flex-grow">
+<ul class="space-y-1">
+<li>
+<a class="text-slate-400 hover:text-slate-100 px-4 py-3 mb-1 flex items-center space-x-3 font-inter text-xs uppercase tracking-widest font-semibold transition-all duration-300 hover:bg-white/5" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="grid_view">grid_view</span>
+<span>Overview</span>
+</a>
+</li>
+<li>
+<a class="text-slate-400 hover:text-slate-100 px-4 py-3 mb-1 flex items-center space-x-3 font-inter text-xs uppercase tracking-widest font-semibold transition-all duration-300 hover:bg-white/5" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="chat_bubble">chat_bubble</span>
+<span>Messages</span>
+</a>
+</li>
+<li>
+<a class="bg-white/10 text-white backdrop-blur-sm rounded-md px-4 py-3 mb-1 flex items-center space-x-3 font-inter text-xs uppercase tracking-widest font-semibold transition-all duration-300" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="mail">mail</span>
+<span>Invitations</span>
+</a>
+</li>
+<li>
+<a class="text-slate-400 hover:text-slate-100 px-4 py-3 mb-1 flex items-center space-x-3 font-inter text-xs uppercase tracking-widest font-semibold transition-all duration-300 hover:bg-white/5" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="folder_open">folder_open</span>
+<span>Library</span>
+</a>
+</li>
+<li>
+<a class="text-slate-400 hover:text-slate-100 px-4 py-3 mb-1 flex items-center space-x-3 font-inter text-xs uppercase tracking-widest font-semibold transition-all duration-300 hover:bg-white/5" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="settings">settings</span>
+<span>Settings</span>
+</a>
+</li>
+</ul>
+</nav>
+<div class="px-4 mt-auto">
+<button class="w-full bg-white/10 hover:bg-white/20 text-white font-inter text-xs uppercase tracking-widest font-bold py-3 rounded-md transition-all duration-300 focus:ring-1 focus:ring-slate-400">
+                    New Room
+                </button>
+</div>
+</div>
+</aside>
+<div class="flex-grow flex flex-col min-w-0">
+<!-- TopAppBar (from Shared Components JSON) -->
+<header class="bg-white/85 dark:bg-slate-900/85 backdrop-blur-md z-40 border-none shadow-sm shadow-slate-200/50 dark:shadow-slate-900/50 flex justify-between items-center w-full px-6 py-3">
+<div class="flex items-center space-x-8">
+<h1 class="text-lg font-bold text-slate-800 dark:text-slate-100 tracking-tighter">Architectural Workspace</h1>
+<nav class="hidden lg:flex items-center space-x-6">
+<a class="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-inter text-sm tracking-tight font-medium transition-colors duration-200" href="#">Invitations</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-inter text-sm tracking-tight font-medium transition-colors duration-200" href="#">Active Rooms</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-inter text-sm tracking-tight font-medium transition-colors duration-200" href="#">Directory</a>
+</nav>
+</div>
+<div class="flex items-center space-x-4">
+<div class="relative group">
+<span class="material-symbols-outlined text-slate-600 dark:text-slate-300 cursor-pointer p-2 rounded-full hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors duration-200" data-icon="notifications">notifications</span>
+</div>
+<div class="relative group">
+<span class="material-symbols-outlined text-slate-600 dark:text-slate-300 cursor-pointer p-2 rounded-full hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors duration-200" data-icon="help_outline">help_outline</span>
+</div>
+<div class="h-8 w-8 rounded-full overflow-hidden bg-slate-200">
+<img alt="Executive Profile" class="w-full h-full object-cover" data-alt="Close-up professional headshot of an executive with soft cinematic lighting and a neutral grey background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBQq9c8k-8-QOz69q2T5JwjeHVJzHUYcJf8qB2-uw7ce3ZJ-krkC_o3TI96hKYKHoDjP0Ph0Rh-A9KpV9n29y0JcAonJ-qeoLcdRxFbEIx4Lqpc_4294lVaR8LIteJobghApuyytbtucHU1ejPC2ruqulLPZVrRjzJ8SSZZcSWXjT_0ddp0Uwj9hXHBbL36_DBW2MA_h5eToto_6gFULDkYi0Jqi9qzh51Leq2d1eVdSie2GRizpc066f_xuU2jjlot4iq2OIr2MoE"/>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="flex-grow overflow-y-auto bg-surface p-8">
+<div class="max-w-5xl mx-auto">
+<div class="mb-10 flex items-end justify-between">
+<div>
+<h2 class="text-3xl font-bold tracking-tight text-on-surface mb-2">Room Invitations</h2>
+<p class="text-on-surface-variant text-sm font-medium">Manage pending requests to join specialized architectural workgroups.</p>
+</div>
+<div class="flex items-center space-x-3 text-on-surface-variant bg-surface-container-low px-4 py-2 rounded-lg">
+<span class="material-symbols-outlined text-lg" data-icon="filter_list">filter_list</span>
+<span class="text-xs font-semibold uppercase tracking-wider">Sort by Recent</span>
+</div>
+</div>
+<!-- Invitation Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Invitation Card 1 -->
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm transition-all duration-300 hover:translate-y-[-2px]">
+<div class="flex items-start justify-between mb-4">
+<div class="flex items-center space-x-4">
+<div class="w-12 h-12 flex items-center justify-center bg-primary-container text-on-primary-container rounded-lg font-bold text-xl">
+                                    M
+                                </div>
+<div>
+<h3 class="text-base font-semibold text-on-surface leading-none">Modernist Loft Project</h3>
+<p class="text-xs text-on-surface-variant mt-1">Interior Design &amp; Structural Planning</p>
+</div>
+</div>
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">2 hours ago</span>
+</div>
+<p class="text-sm text-on-surface-variant leading-relaxed mb-6">
+                            Discussion channel for the new West End residential project. Reviewing material palettes and spatial zoning.
+                        </p>
+<div class="flex items-center justify-between">
+<div class="flex items-center space-x-2">
+<img alt="Inviter Avatar" class="w-6 h-6 rounded-full border-2 border-surface-container-lowest ring-1 ring-outline-variant/15" data-alt="Professional avatar of a woman architect in a creative office setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtrLXwoBY6IbSRkbd0DGOiqACa0LmvwvAUPXdzY7ApMMMFQcixLRD6U_zxT82Zsy7CKR65oF0swXQY1c5M_BY8JscWHwzvCYn9Mnzxpg2I996lY5jnt0RMqulhWvNhy-vN1BP5C5FVoxwSpbU-GeEKwhdaeXbyAo2GELeFRm_PPZ46nKAoc2ZOSLa_gBkoPs5sBacWYDD1dIwjMdbfut60hwuWagvdZDs-KHa1FtCLdnBuow99XqE5WtTIh3QNNpODPtULgdvFfP4"/>
+<span class="text-xs font-medium text-on-surface">Invited by <span class="text-primary font-semibold">@alandon</span></span>
+</div>
+</div>
+<div class="mt-6 flex space-x-3">
+<button class="flex-grow bg-primary text-on-primary text-xs font-bold py-2.5 rounded-md hover:opacity-90 active:scale-[0.99] transition-all">Accept Invitation</button>
+<button class="px-4 text-on-surface-variant text-xs font-bold hover:bg-surface-container-low py-2.5 rounded-md transition-all">Decline</button>
+</div>
+</div>
+<!-- Invitation Card 2 -->
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm transition-all duration-300 hover:translate-y-[-2px]">
+<div class="flex items-start justify-between mb-4">
+<div class="flex items-center space-x-4">
+<div class="w-12 h-12 flex items-center justify-center bg-tertiary-container text-on-tertiary-container rounded-lg font-bold text-xl">
+<span class="material-symbols-outlined" data-icon="architecture">architecture</span>
+</div>
+<div>
+<h3 class="text-base font-semibold text-on-surface leading-none">Sustainability Audit</h3>
+<p class="text-xs text-on-surface-variant mt-1">Green Building Certification</p>
+</div>
+</div>
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Yesterday</span>
+</div>
+<p class="text-sm text-on-surface-variant leading-relaxed mb-6">
+                            Reviewing LEED certification requirements for the Project Alpha skyscraper. Data analysis and compliance tracking.
+                        </p>
+<div class="flex items-center justify-between">
+<div class="flex items-center space-x-2">
+<img alt="Inviter Avatar" class="w-6 h-6 rounded-full border-2 border-surface-container-lowest ring-1 ring-outline-variant/15" data-alt="Close up of a senior architect with glasses in a professional studio" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDyfCr0QbTz2598uj_YCkAifojMrChv3Y3eIciVwiRLYb_g3YCuDq1u-tuBR9ZHiti-1BXCc6lxPQLQCcFQ6CWPi8dyHGR3fltfkP9nRonbXWZfJbhTIvDw4fPXhauHh9FYH98xBC8i5-iRHBZKN1gff2l5XVJakqZ6hxQjDzQSaK8VIhUU4UKPyJGC2uYZRGshQ-wc2vZShGiEDINY2qVAZy6gAZ0KYwjPPTforiUrsCwRVpZYAz7Da8t5M5rNOYQ_gySoad8Vq3c"/>
+<span class="text-xs font-medium text-on-surface">Invited by <span class="text-primary font-semibold">@mrossi</span></span>
+</div>
+</div>
+<div class="mt-6 flex space-x-3">
+<button class="flex-grow bg-primary text-on-primary text-xs font-bold py-2.5 rounded-md hover:opacity-90 active:scale-[0.99] transition-all">Accept Invitation</button>
+<button class="px-4 text-on-surface-variant text-xs font-bold hover:bg-surface-container-low py-2.5 rounded-md transition-all">Decline</button>
+</div>
+</div>
+<!-- Invitation Card 3 -->
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm transition-all duration-300 hover:translate-y-[-2px]">
+<div class="flex items-start justify-between mb-4">
+<div class="flex items-center space-x-4">
+<div class="w-12 h-12 flex items-center justify-center bg-secondary-container text-on-secondary-container rounded-lg font-bold text-xl">
+                                    Z
+                                </div>
+<div>
+<h3 class="text-base font-semibold text-on-surface leading-none">Zoning Strategy</h3>
+<p class="text-xs text-on-surface-variant mt-1">Urban Development Division</p>
+</div>
+</div>
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Yesterday</span>
+</div>
+<p class="text-sm text-on-surface-variant leading-relaxed mb-6">
+                            Urban planning room for municipal approval cycles. Coordination with city officials and legal teams.
+                        </p>
+<div class="flex items-center justify-between">
+<div class="flex items-center space-x-2">
+<img alt="Inviter Avatar" class="w-6 h-6 rounded-full border-2 border-surface-container-lowest ring-1 ring-outline-variant/15" data-alt="Portrait of a young woman professional in a modern white office" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCoyYEhKCQofqkDV2dAS7CWLir714KODnmETXktZhoOFuaCK2BLIZRrYtKR6dqzVjF813GxBuxrNUmsI_qhQ9Pl42udexEeNUyXw05o9_FPyBguTpi1aegpDMZs1ehU3sr-7LX0S_sBGRCJZyXcpXlC3NX9uVrZ2efrOqFjT43aK8xs5RyakwZptAUCQWWH9dTZAlHnlgdfrwrBD6yLqSjm5sJmZZQP9rGsiag8mHEeNvmBgBNgtKSGbfHWr3RVgkg0WlQOZ7oFdu4"/>
+<span class="text-xs font-medium text-on-surface">Invited by <span class="text-primary font-semibold">@skeller</span></span>
+</div>
+</div>
+<div class="mt-6 flex space-x-3">
+<button class="flex-grow bg-primary text-on-primary text-xs font-bold py-2.5 rounded-md hover:opacity-90 active:scale-[0.99] transition-all">Accept Invitation</button>
+<button class="px-4 text-on-surface-variant text-xs font-bold hover:bg-surface-container-low py-2.5 rounded-md transition-all">Decline</button>
+</div>
+</div>
+<!-- Invitation Card 4 -->
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm transition-all duration-300 hover:translate-y-[-2px]">
+<div class="flex items-start justify-between mb-4">
+<div class="flex items-center space-x-4">
+<div class="w-12 h-12 flex items-center justify-center bg-surface-container-high text-primary rounded-lg font-bold text-xl">
+<span class="material-symbols-outlined" data-icon="corporate_fare">corporate_fare</span>
+</div>
+<div>
+<h3 class="text-base font-semibold text-on-surface leading-none">HQ Lobby Redesign</h3>
+<p class="text-xs text-on-surface-variant mt-1">Hospitality &amp; Corporate</p>
+</div>
+</div>
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">3 days ago</span>
+</div>
+<p class="text-sm text-on-surface-variant leading-relaxed mb-6">
+                            Internal workspace for the lobby facelift. Focusing on grand entrance lighting and marble finishes.
+                        </p>
+<div class="flex items-center justify-between">
+<div class="flex items-center space-x-2">
+<img alt="Inviter Avatar" class="w-6 h-6 rounded-full border-2 border-surface-container-lowest ring-1 ring-outline-variant/15" data-alt="Corporate professional man with a friendly expression in a blurred modern setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDYUpmYp5wnAtPvzduFzR6DNXJKJ6YCTBilfgs_GufhOw1lzFdCWORsju9cXpT2YKM2SMEwg4JwmyBAheqzaRVRXHGZy-4Tq8UvyQe7G8slv6U_HeyDOvOjC8SEdM1abIA0EFSGkv21nHJzXt2yz92p_Z37Cdzv5sP6IkL0Ham7KiA8GyFI-XTjYiisxLgs8LMx92sjAOo2m2-oE5vvLHUumYCVdvUrnQvwSxgCPCHuYGDCbvtQE85cnwrajfNbL0dyL6m0ia65pzA"/>
+<span class="text-xs font-medium text-on-surface">Invited by <span class="text-primary font-semibold">@jdoe_hq</span></span>
+</div>
+</div>
+<div class="mt-6 flex space-x-3">
+<button class="flex-grow bg-primary text-on-primary text-xs font-bold py-2.5 rounded-md hover:opacity-90 active:scale-[0.99] transition-all">Accept Invitation</button>
+<button class="px-4 text-on-surface-variant text-xs font-bold hover:bg-surface-container-low py-2.5 rounded-md transition-all">Decline</button>
+</div>
+</div>
+</div>
+<!-- Empty State (Hidden) -->
+<div class="hidden flex-col items-center justify-center py-20 text-center">
+<span class="material-symbols-outlined text-6xl text-surface-container-highest mb-4" data-icon="mail_outline">mail_outline</span>
+<h3 class="text-lg font-semibold text-on-surface">All caught up</h3>
+<p class="text-on-surface-variant text-sm mt-1">You have no pending room invitations at this time.</p>
+</div>
+</div>
+</main>
+</div>
+</body></html>

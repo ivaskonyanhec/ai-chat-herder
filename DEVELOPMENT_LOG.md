@@ -217,3 +217,39 @@ Format: `[Timestamp] | Task | Reasoning | Changes`
 ---
 
 `[2026-04-18 T49]` | **Create AGENT.md and CLAUDE.md** | A machine-readable system instruction file is required for AI agents (Codex, Claude, etc.) to operate consistently in this hackathon project without re-deriving architecture decisions from scratch each session. `CLAUDE.md` provides Claude Code–specific extensions and keeps in sync with `AGENT.md` as the single source of truth | Created: `AGENT.md` (18 sections: identity, transparency protocol, coding standards, tech stack, clean architecture, domain model, security model, DB schema invariants, full API endpoint reference, SignalR hub contracts, presence engine Redis keys, messaging rules, attachments, room permission matrix, UI structure, non-functional constraints, Jabber gate, key decisions); Created: `CLAUDE.md` (extends AGENT.md with Claude Code skill invocation rules, memory file policy, tool preferences, and sync rule)
+
+---
+
+## 2026-04-18 — Stitch Design Export
+
+---
+
+`[2026-04-18 T50]` | **Export Stitch mockups and design tokens** | Stitch project 8437817411820068917 "Classic Pro Messenger" contains the HTML mockups and "Slate Protocol" design system for the frontend. Exporting all 8 screen mockups as HTML+CSS to `./designs/` and extracting design tokens to `./designs/tokens.css` so the Angular frontend can be built against the approved visual spec | Created: `designs/authentication.html`, `designs/main-chat-interface.html`, `designs/private-messaging.html`, `designs/contacts-management.html`, `designs/public-room-catalog.html`, `designs/manage-room-settings.html`, `designs/profile-settings.html`, `designs/security-sessions.html` (8 HTML mockups); `designs/tokens.css` (full color/typography/spacing/elevation token set); `DESIGN.md` (design system rules — No-Line rule, Glass & Gradient, surface hierarchy, component specs, Angular integration guide)
+
+---
+
+`[2026-04-18 T52]` | **Generate missing Stitch mockups for Friend Requests, Room Invitations, and Platform Ban Admin** | Three screens specified in ARCHITECTURE.md had no pixel-accurate mockup: (1) incoming friend requests with accept/reject; (2) pending room invitations with accept/reject; (3) admin platform ban management. Generated via Stitch web UI (MCP generation timed out; screens completed server-side and pulled via list_screens API) | Created: `designs/friend-requests.html` (23 KB — "Friend Requests - Classic Pro Messenger"), `designs/room-invitations.html` (19 KB — "Room Invitations - Classic Pro Messenger"), `designs/platform-ban-admin.html` (17 KB — "Platform Ban Management - Admin Console"); updated `AGENT.md` §19 and `DESIGN.md` §10 with new mockup entries
+
+---
+
+`[2026-04-18 T51]` | **Reference designs and mockups in AGENT.md, CLAUDE.md, ARCHITECTURE.md** | Agent files must point to the design artifacts so any future implementation session starts with the correct visual spec without re-deriving it | Updated: `AGENT.md` §3.2 (Frontend standards) + new §19 (Design Reference); `CLAUDE.md` (added DESIGN.md sync rule and design reference pointer); `ARCHITECTURE.md` §15 UI Mapping (added design file references)
+
+---
+
+`[2026-04-18 T53]` | **Create Docker setup: Dockerfiles, docker-compose.yml, .env.template, DOCKER_SETUP.md** | Project requires a complete container environment before any backend or frontend code can be written; Docker-first rule in AGENT.md §3.3 requires no hardcoded connection strings and env-var-driven config | Files to create: `Dockerfile.backend`, `frontend/Dockerfile`, `frontend/nginx.conf`, `docker-compose.yml`, `.env.template`, `DOCKER_SETUP.md`
+
+---
+
+`[2026-04-18 T54]` | **Document REST/WebSocket transport boundary explicitly** | Architecture uses both transports correctly but never states the invariant — implementors may drift towards polling or hub-based CRUD if the rule isn't explicit; 100+ users in a room make the wrong choice catastrophic | ARCHITECTURE.md §9: add "Transport Responsibility Boundary" subsection defining REST = pull queries, WebSocket = server-initiated push events
+
+---
+
+`[2026-04-18 T55]` | **Refine AFK detection: 1s mousemove throttle + visibilitychange hook** | Current spec says "debounced" without specifying rate (raw mousemove at 60fps on 300 clients = 18,000 events/s client-side); also missing `visibilitychange` as an activity signal, which is the correct API for detecting tab becoming visible after background | ARCHITECTURE.md §12: update AFK client pseudocode with explicit 1s throttle; add visibilitychange → SetActive() on tab resume
+
+---
+
+`[2026-04-18 T56]` | **Document tab hibernation as primary PresenceMonitorService motivation + SignalR reconnect behavior** | Browser tab hibernation (Chrome/Firefox suspend JS after ~5min background) stops all timers and SignalR heartbeats — SetAfk() is never called, but the heartbeat TTL cleanup handles it; this reason was never stated, so implementors won't configure withAutomaticReconnect() or write the re-JoinRoom reconnect callback | ARCHITECTURE.md §12: add "Tab Hibernation" note to PresenceMonitorService section; add "SignalR Reconnect Behavior" subsection
+
+---
+
+`[2026-04-18 T57]` | **Scale message history to 100K, add DOM sliding window, add performance test spec** | 3-year-old active room can accumulate 100K+ messages; architecture says "10,000+" which understates the real requirement; keyset pagination handles DB scale but DOM accumulation is unaddressed (100K DOM nodes degrades rendering); no performance test spec exists | ARCHITECTURE.md §9: update scale, add DOM sliding window strategy (max 200 messages in DOM, prune on paginate); §16: update history metric, add O(log N) query benchmark spec

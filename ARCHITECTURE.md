@@ -802,9 +802,50 @@ ORDER BY SentAt DESC, Id DESC
 LIMIT 50
 ```
 
-Returns newest-first; Angular reverses the list before rendering, producing strictly chronological display (oldest at top, newest at bottom). First load omits `before`. Supports 10,000+ message rooms with O(log N) index scan. Same pattern applies to dialog messages.
+Returns newest-first; Angular reverses the list before rendering, producing strictly chronological display (oldest at top, newest at bottom). First load omits `before`. Supports **100,000+ message rooms** (3+ years of active history) with O(log N) index scan via the composite index on `(RoomId, SentAt DESC, Id DESC)`. Same pattern applies to dialog messages.
+
+### DOM Sliding Window
+
+Loading 50 messages on every upward scroll without pruning accumulates thousands of DOM nodes, degrading rendering and consuming unbounded memory. Angular `ChatComponent` maintains a sliding window:
+
+```
+MAX_DOM_MESSAGES = 200   // keep at most 200 rendered message elements
+
+On new page loaded (50 messages prepended at top):
+  if renderedMessages.length > MAX_DOM_MESSAGES:
+    // Drop the oldest rendered messages from the bottom of the visible list.
+    // Do NOT drop if the user is within 300px of bottom (they may be reading there).
+    renderedMessages.splice(MAX_DOM_MESSAGES)
+    bottomCursorId = renderedMessages[MAX_DOM_MESSAGES - 1].id
+    // If user later scrolls back to bottom, re-fetch via normal pagination.
+
+On new message received via WebSocket (appended at bottom):
+  if renderedMessages.length > MAX_DOM_MESSAGES:
+    renderedMessages.shift()   // remove oldest from top
+    topCursorId = renderedMessages[0].id
+    // IntersectionObserver re-anchors automatically.
+```
+
+Scroll position is preserved using the standard "anchor-scroll" technique: record `scrollHeight − scrollTop` before prepending, restore after.
+
+**Performance test requirement:** With a PostgreSQL table containing 100,000 messages for a single room, the keyset query at mid-history (`before` cursor pointing to message at sequence 50,000) must complete in **< 10ms** measured via `EXPLAIN ANALYZE`. This must be verified as part of integration test setup (seed 100K messages, run query, assert execution time). Failure indicates a missing or misconfigured index.
 
 **Message ordering contract:** The backend always returns messages in descending `(SentAt, Id)` order for cursor efficiency. The Angular `ChatComponent` always reverses this before inserting into the view. Invariant: the UI displays messages in strictly ascending chronological order.
+
+### Transport Responsibility Boundary
+
+At 100+ active participants in a room, the choice of transport for each type of data is a correctness constraint, not a style preference.
+
+| Transport | Responsibility | Reason |
+|-----------|---------------|--------|
+| **REST (client pull)** | Initial page loads, message history, member lists, room catalog, auth, file upload/download, admin actions, settings | Client asks; server responds. No server-side state accumulation per client. |
+| **WebSocket (server push)** | New message delivery, message edits/deletes, typing indicators, presence updates, unread count changes, invitations, bans, `ForceDisconnect` | Server knows something the client doesn't yet; pushing is the only low-latency mechanism. |
+
+**Why polling is not an alternative for messages:** 100 clients polling `GET /rooms/{id}/messages` every second = 100 req/s against the DB for a single room. At 20 rooms with active users, that is 2,000 req/s doing identical queries. SignalR group broadcast delivers the same event to all 100 clients with one DB write and O(connections) fan-out via the Redis backplane — the correct asymptotic shape.
+
+**Why WebSocket is not used for CRUD:** Hub methods have no standardised error model (REST status codes, content negotiation, auth middleware chain). History pagination, room settings, and file access all need HTTP semantics (caching, range requests, `413`, `403`). Mixing these into a hub creates an undocumented ad-hoc protocol.
+
+**Invariant:** Every client→server interaction that mutates state or fetches data on demand uses REST. Every server→client event that the client did not explicitly request uses WebSocket.
 
 ### Sequence Numbers and Gap Detection
 
@@ -983,11 +1024,25 @@ AFK state is signalled directly by the browser — the only component with direc
 
 **Client-side (Angular `PresenceService`):**
 ```
-Track DOM events: mousemove, keydown, click, scroll, touchstart (debounced, per-tab)
-After 60 s of no events on this tab:
-  → call PresenceHub.SetAfk()
-On any event while status == "afk" on this tab:
-  → call PresenceHub.SetActive()
+DOM events tracked: mousemove, keydown, click, scroll, touchstart
+Throttle: leading-edge, max once per 1 second per event type.
+  Rationale: raw mousemove fires at 60fps. 300 users × 60fps = 18,000 listener
+  invocations/s client-side. A 1s throttle reduces this to 300/s with no loss
+  of AFK detection fidelity (threshold is 60s, not 1s).
+
+On any throttled event:
+  lastActivityAt = Date.now()
+  if tab is currently in AFK state:
+    → call PresenceHub.SetActive()
+
+setInterval every 5 seconds:
+  if (Date.now() − lastActivityAt) >= 60_000 AND tab is not in AFK state:
+    → call PresenceHub.SetAfk()
+
+document.addEventListener('visibilitychange'):
+  if document.visibilityState === 'visible':
+    → lastActivityAt = Date.now()          // tab resumed — treat as activity
+    → if tab was in AFK state: call PresenceHub.SetActive()
 ```
 
 **Server-side `SetAfk(connId)` handler:**
@@ -1020,7 +1075,11 @@ If previous status == "afk":
 
 ### AFK Safety Net — `PresenceMonitorService`
 
-`IHostedService` polling every **20 seconds**. This is now a **ghost-cleanup mechanism only** — it handles tabs that stopped heartbeating without calling `SetAfk()` or triggering `OnDisconnectedAsync` (browser crash, OS kill, network partition):
+`IHostedService` polling every **20 seconds**. This is a **ghost-cleanup mechanism only** — it handles tabs that stopped heartbeating without calling `SetAfk()` or triggering `OnDisconnectedAsync`. The primary real-world causes:
+
+- **Browser tab hibernation** (Chrome, Firefox, Safari): the browser suspends all JavaScript in background tabs that have been inactive for ~5 minutes. The SignalR heartbeat stops, `SetAfk()` is never called, and `OnDisconnectedAsync` may or may not fire depending on whether the OS drops the TCP socket. The 70s heartbeat TTL on `presence:conn:{connId}` is the intended cleanup mechanism for this case.
+- **Browser crash / OS kill** — process dies without a clean disconnect.
+- **Network partition** — TCP session appears open on both sides but packets are dropped.
 
 ```
 stale_threshold = now − 70s  (TTL of presence:conn:*)
@@ -1042,6 +1101,36 @@ for each userId in SMEMBERS active:users:
 ```
 
 Under normal operation, `PresenceMonitorService` finds nothing to do. All AFK/online transitions are handled synchronously via `SetAfk` / `SetActive` / `Heartbeat`. The monitor is a correctness guarantee, not a latency-sensitive path.
+
+### SignalR Reconnect Behavior
+
+The Angular SignalR client **must** be configured with automatic reconnect:
+
+```typescript
+this.hubConnection = new HubConnectionBuilder()
+  .withUrl('/hubs/presence', { accessTokenFactory: () => this.authService.accessToken() })
+  .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])  // backoff intervals in ms
+  .build();
+```
+
+On reconnect, the client must re-establish all server-side state it registered during `OnConnectedAsync` (which ran on the previous connection and is gone):
+
+```
+hubConnection.onreconnected(async () => {
+  // Re-join all rooms the user currently has open
+  for (const roomId of openRoomIds) {
+    await hubConnection.invoke('JoinRoom', roomId);
+  }
+  // Re-establish lastActivityAt so the AFK timer doesn't immediately fire
+  lastActivityAt = Date.now();
+  // If the tab is now visible, signal active in case we were hibernated
+  if (document.visibilityState === 'visible') {
+    await presenceHub.invoke('SetActive');
+  }
+});
+```
+
+**Why this is required after tab hibernation:** When the browser resumes a hibernated tab, `visibilitychange` fires. If the SignalR connection dropped during hibernation (common — mobile OS aggressive memory management), `withAutomaticReconnect` triggers a reconnect. Without the `onreconnected` callback, the user's presence is live again but they are no longer in any SignalR room groups — incoming messages for rooms they had open are silently dropped until the next full page load.
 
 ### Friend Presence Subscription
 
@@ -1173,6 +1262,10 @@ Returns only public, non-deleted rooms. Each entry includes `memberCount` (COUNT
 
 ## 15. UI Mapping
 
+> **Design artifacts:** Pixel-accurate HTML mockups are in `designs/` (8 screens). CSS tokens are in `designs/tokens.css`. Full design rules are in `DESIGN.md`. Open the relevant `.html` file in a browser before implementing any screen — the mockups are the authoritative visual reference.
+>
+> Design system: **Slate Protocol** — "Architectural Workspace / Structured Clarity". Key rules: no 1px borders, no hardcoded hex values, border-radius max 0.5rem for structural elements, Inter font throughout.
+
 ### Navigation Bar
 
 ```
@@ -1303,8 +1396,10 @@ All three transitions satisfy the < 2s SLA. The `PresenceMonitorService` (20s po
 
 ### Message History
 
-**Requirement:** rooms with 10,000+ messages must remain usable.
-Cursor-based (keyset) pagination is O(log N) regardless of history depth. Angular `IntersectionObserver` triggers page loads before the user reaches the top, making scroll feel continuous.
+**Requirement:** rooms with 100,000+ messages (3+ years of active history) must remain usable with continuous upward scroll.
+- DB query: O(log N) keyset pagination via composite index regardless of depth.
+- DOM: sliding window of max 200 rendered messages; older nodes pruned as new pages load upward.
+- **Performance test:** seed 100,000 messages for a single room, execute keyset query at the 50,000-message cursor, assert `EXPLAIN ANALYZE` actual time < 10ms.
 
 ### Persistence
 

@@ -1,0 +1,138 @@
+# docker-compose.yml — AI Chat Herder
+# Copy .env.template → .env and fill in every <CHANGE_ME> value before running.
+
+services:
+
+  # ── PostgreSQL 17 ────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       ${POSTGRES_DB}
+      POSTGRES_USER:     ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - chatnet
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ── Redis 7 ──────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    networks:
+      - chatnet
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── RabbitMQ 3.13 (activity logging + async events) ─────────────────────────
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER:  ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS:  ${RABBITMQ_PASSWORD}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - chatnet
+    ports:
+      - "15672:15672"   # Management UI — dev convenience; remove for production
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # ── Backend (.NET 10 — Minimal API + SignalR) ─────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+      ASPNETCORE_URLS: http://+:8080
+
+      # Connection strings use container-name DNS — never "localhost" (AGENT.md §3.3)
+      ConnectionStrings__DefaultConnection: >-
+        Host=postgres;Port=5432;Database=${POSTGRES_DB};
+        Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};
+        Include Error Detail=true
+      ConnectionStrings__Redis: >-
+        redis,password=${REDIS_PASSWORD},abortConnect=false
+
+      # RabbitMQ — topic exchange for activity events (AGENT.md §4)
+      RabbitMQ__Uri: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672/${RABBITMQ_VHOST}
+
+      # JWT — access token 15 min, refresh token 7 days (AGENT.md §7)
+      Jwt__SecretKey:  ${JWT_SECRET_KEY}
+      Jwt__Issuer:     ${JWT_ISSUER}
+      Jwt__Audience:   ${JWT_AUDIENCE}
+
+      # File storage — IFileStorage → LocalFileStorage (AGENT.md §3.3 / §13)
+      Storage__BasePath: /app/uploads
+
+      # SMTP — password reset flow (AGENT.md §7)
+      Smtp__Host:        ${SMTP_HOST}
+      Smtp__Port:        ${SMTP_PORT}
+      Smtp__Username:    ${SMTP_USERNAME}
+      Smtp__Password:    ${SMTP_PASSWORD}
+      Smtp__FromAddress: ${SMTP_FROM_ADDRESS}
+    volumes:
+      - uploads:/app/uploads   # Persistent file uploads (message attachments)
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - chatnet
+    expose:
+      - "8080"   # Reachable on chatnet only — frontend Nginx is the public entry point
+
+  # ── Frontend (Angular 21 + Nginx) ─────────────────────────────────────────────
+  frontend:
+    build:
+      context: frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "80:80"     # Primary production port
+      - "4200:80"   # Also mapped to Angular's conventional dev port
+    depends_on:
+      - backend
+    networks:
+      - chatnet
+
+# ── Named Volumes ─────────────────────────────────────────────────────────────
+volumes:
+  postgres_data:
+    driver: local   # Message history, memberships, sessions — all durable state
+  redis_data:
+    driver: local   # AOF persistence for presence/unread counters across restarts
+  rabbitmq_data:
+    driver: local
+  uploads:
+    driver: local   # Attachment files served via GET /api/files/{attachmentId}
+
+# ── Network ───────────────────────────────────────────────────────────────────
+networks:
+  chatnet:
+    driver: bridge

@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Active Sessions | Architectural Workspace</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-fixed": "#373f54",
+                        "surface-container-high": "#e1e9ee",
+                        "on-secondary": "#f8f8ff",
+                        "error-container": "#fe8983",
+                        "surface-container-highest": "#d9e4ea",
+                        "outline-variant": "#a9b4b9",
+                        "surface-bright": "#f7f9fb",
+                        "surface-container": "#e8eff3",
+                        "on-primary-fixed": "#354053",
+                        "secondary-fixed": "#d5e3fc",
+                        "primary-dim": "#485367",
+                        "on-secondary-container": "#455367",
+                        "error": "#9f403d",
+                        "inverse-surface": "#0b0f10",
+                        "tertiary-fixed-dim": "#ccd4ee",
+                        "primary-fixed-dim": "#cad5ed",
+                        "on-secondary-fixed-variant": "#4e5c71",
+                        "primary-container": "#d8e3fb",
+                        "secondary-fixed-dim": "#c7d5ed",
+                        "surface-container-low": "#f0f4f7",
+                        "secondary-dim": "#465468",
+                        "secondary": "#526074",
+                        "on-primary-container": "#475266",
+                        "surface-container-lowest": "#ffffff",
+                        "primary": "#545f73",
+                        "on-tertiary-fixed-variant": "#535b71",
+                        "on-error-container": "#752121",
+                        "background": "#f7f9fb",
+                        "on-tertiary-container": "#4a5167",
+                        "surface": "#f7f9fb",
+                        "on-secondary-fixed": "#324053",
+                        "surface-tint": "#545f73",
+                        "on-surface-variant": "#566166",
+                        "on-error": "#fff7f6",
+                        "primary-fixed": "#d8e3fb",
+                        "on-tertiary": "#f9f8ff",
+                        "surface-dim": "#cfdce3",
+                        "on-surface": "#2a3439",
+                        "tertiary-container": "#dae2fd",
+                        "on-background": "#2a3439",
+                        "surface-variant": "#d9e4ea",
+                        "inverse-on-surface": "#9a9d9f",
+                        "on-primary-fixed-variant": "#515c70",
+                        "tertiary": "#575f75",
+                        "tertiary-dim": "#4b5369",
+                        "error-dim": "#4e0309",
+                        "outline": "#717c82",
+                        "secondary-container": "#d5e3fc",
+                        "on-primary": "#f6f7ff",
+                        "tertiary-fixed": "#dae2fd",
+                        "inverse-primary": "#dae6fe"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface flex min-h-screen">
+<!-- SideNavBar Component -->
+<aside class="bg-slate-800 dark:bg-black docked left-0 h-full w-64 flex flex-col flex flex-col h-screen p-4 space-y-4">
+<div class="flex items-center space-x-3 px-2 mb-6">
+<div class="w-10 h-10 rounded-lg bg-primary-dim flex items-center justify-center">
+<span class="material-symbols-outlined text-white" data-icon="architecture">architecture</span>
+</div>
+<div>
+<h2 class="text-white font-black text-sm uppercase tracking-tighter">Main Office</h2>
+<p class="text-slate-400 text-[10px] uppercase tracking-widest font-bold">Global Communications</p>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="text-slate-400 hover:text-slate-200 px-3 py-2 flex items-center space-x-3 font-sans text-xs font-semibold uppercase tracking-widest duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="chat_bubble">chat_bubble</span>
+<span>Channels</span>
+</a>
+<a class="text-slate-400 hover:text-slate-200 px-3 py-2 flex items-center space-x-3 font-sans text-xs font-semibold uppercase tracking-widest duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="forum">forum</span>
+<span>Messages</span>
+</a>
+<a class="text-slate-400 hover:text-slate-200 px-3 py-2 flex items-center space-x-3 font-sans text-xs font-semibold uppercase tracking-widest duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="drafts">drafts</span>
+<span>Drafts</span>
+</a>
+<a class="text-slate-400 hover:text-slate-200 px-3 py-2 flex items-center space-x-3 font-sans text-xs font-semibold uppercase tracking-widest duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="push_pin">push_pin</span>
+<span>Pinned</span>
+</a>
+<a class="text-slate-400 hover:text-slate-200 px-3 py-2 flex items-center space-x-3 font-sans text-xs font-semibold uppercase tracking-widest duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+<span>Archive</span>
+</a>
+</nav>
+<div class="pt-4 border-t border-slate-700">
+<button class="w-full bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-md text-xs font-bold uppercase tracking-widest transition-colors flex items-center justify-center space-x-2">
+<span class="material-symbols-outlined text-sm" data-icon="add">add</span>
+<span>New Thread</span>
+</button>
+</div>
+</aside>
+<div class="flex-1 flex flex-col overflow-hidden">
+<!-- TopNavBar Component -->
+<header class="bg-white dark:bg-slate-900 docked full-width top-0 h-16 flex justify-between items-center px-6 w-full border-b border-slate-100 dark:border-slate-800">
+<div class="flex items-center space-x-8">
+<h1 class="text-lg font-bold tracking-tighter text-slate-900 dark:text-white">Architectural Workspace</h1>
+<nav class="hidden md:flex space-x-6">
+<a class="text-slate-500 dark:text-slate-400 font-sans text-sm font-medium tracking-tight hover:text-slate-900 dark:hover:text-white transition-colors" href="#">Dashboard</a>
+<a class="text-slate-500 dark:text-slate-400 font-sans text-sm font-medium tracking-tight hover:text-slate-900 dark:hover:text-white transition-colors" href="#">Files</a>
+<a class="text-slate-500 dark:text-slate-400 font-sans text-sm font-medium tracking-tight hover:text-slate-900 dark:hover:text-white transition-colors" href="#">Directory</a>
+<a class="text-slate-900 dark:text-white border-b-2 border-slate-900 dark:border-white pb-1 font-sans text-sm font-medium tracking-tight" href="#">Security</a>
+</nav>
+</div>
+<div class="flex items-center space-x-4">
+<div class="bg-slate-50 dark:bg-slate-800 rounded px-3 py-1.5 flex items-center space-x-2 w-64">
+<span class="material-symbols-outlined text-slate-400 text-sm" data-icon="search">search</span>
+<span class="text-slate-400 text-sm font-medium">Search workspace...</span>
+</div>
+<button class="p-2 text-slate-500 hover:text-slate-900 transition-all scale-98 active:opacity-80">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 text-slate-500 hover:text-slate-900 transition-all scale-98 active:opacity-80">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-slate-200 border-2 border-white overflow-hidden">
+<img alt="Executive User Profile" class="w-full h-full object-cover" data-alt="Close-up portrait of a professional male executive in a well-tailored navy suit, looking directly at camera, soft studio lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCLDfBIv8MdzJqYAslge6GMBJKddsSu2-aGDmx_yHd6NW_ufj9LEyFYfJJZe5R5pI8CMdFka1iRadwggFPa0lv6aO8RCpMQgPYni_mgQKEv32FcRuY_uOkhkw3ygjuaKdsqAqx2rn0YktwX9Id6HgEAHvYhqbDuA2J_DWUnQxhVMu1ve1bSrYtu1qLBZa_9WbtK_XP74LxSax4-bDC6mk0O7maqU4xOCRGuR-0MYlhMwyD7e4rBhVu9PQX102P8M9k7bzMzZjdZ50k"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 overflow-y-auto bg-surface p-8 lg:p-12">
+<div class="max-w-5xl mx-auto">
+<div class="flex items-end justify-between mb-12">
+<div>
+<h2 class="text-3xl font-bold tracking-tight text-on-surface mb-2">Active Sessions</h2>
+<p class="text-on-surface-variant font-medium text-sm">Manage and secure your account by monitoring current active connections.</p>
+</div>
+<button class="bg-error text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-red-700 transition-colors shadow-sm">
+                        Log out other sessions
+                    </button>
+</div>
+<div class="grid grid-cols-1 gap-6">
+<!-- Current Session Bento Card (Highlight) -->
+<div class="bg-surface-container-lowest p-8 rounded-xl flex items-start justify-between relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4">
+<span class="bg-green-100 text-green-700 text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded">Current Session</span>
+</div>
+<div class="flex items-start space-x-6">
+<div class="w-16 h-16 rounded-xl bg-surface-container flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="laptop_mac">laptop_mac</span>
+</div>
+<div>
+<h3 class="text-xl font-bold text-on-surface leading-tight mb-1">Google Chrome on MacOS</h3>
+<p class="text-on-surface-variant text-sm font-medium mb-4">Last active: 2 minutes ago</p>
+<div class="grid grid-cols-2 gap-x-8 gap-y-2">
+<div>
+<p class="text-[10px] font-bold uppercase tracking-widest text-outline mb-1">IP Address</p>
+<p class="text-sm font-mono text-on-surface">192.168.1.142</p>
+</div>
+<div>
+<p class="text-[10px] font-bold uppercase tracking-widest text-outline mb-1">Location</p>
+<p class="text-sm font-medium text-on-surface">San Francisco, USA</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Other Sessions List -->
+<div class="space-y-4">
+<h4 class="text-[11px] font-black uppercase tracking-[0.2em] text-outline mb-4 px-2">Other Active Connections</h4>
+<!-- Session Row 1 -->
+<div class="bg-surface-container-low hover:bg-surface-container transition-colors p-6 rounded-lg flex items-center justify-between group">
+<div class="flex items-center space-x-5">
+<div class="w-12 h-12 rounded bg-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary" data-icon="smartphone">smartphone</span>
+</div>
+<div>
+<h4 class="font-bold text-on-surface text-md">Safari on iPhone 15 Pro</h4>
+<div class="flex items-center space-x-4 mt-1">
+<span class="text-xs text-on-surface-variant">IP: 72.14.213.98</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="text-xs text-on-surface-variant">London, UK</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="text-xs text-on-surface-variant">Active 4h ago</span>
+</div>
+</div>
+</div>
+<button class="bg-surface-container-highest hover:bg-error-container hover:text-on-error-container text-on-surface font-semibold text-xs px-4 py-2 rounded transition-all">
+                                Revoke
+                            </button>
+</div>
+<!-- Session Row 2 -->
+<div class="bg-surface-container-low hover:bg-surface-container transition-colors p-6 rounded-lg flex items-center justify-between group">
+<div class="flex items-center space-x-5">
+<div class="w-12 h-12 rounded bg-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary" data-icon="tablet_mac">tablet_mac</span>
+</div>
+<div>
+<h4 class="font-bold text-on-surface text-md">Mobile App on iPad Air</h4>
+<div class="flex items-center space-x-4 mt-1">
+<span class="text-xs text-on-surface-variant">IP: 84.22.103.11</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="text-xs text-on-surface-variant">Berlin, DE</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="text-xs text-on-surface-variant">Active 2 days ago</span>
+</div>
+</div>
+</div>
+<button class="bg-surface-container-highest hover:bg-error-container hover:text-on-error-container text-on-surface font-semibold text-xs px-4 py-2 rounded transition-all">
+                                Revoke
+                            </button>
+</div>
+<!-- Session Row 3 (Unrecognized Alert) -->
+<div class="bg-error-container/10 border border-error-container/20 p-6 rounded-lg flex items-center justify-between group">
+<div class="flex items-center space-x-5">
+<div class="w-12 h-12 rounded bg-error-container/30 flex items-center justify-center">
+<span class="material-symbols-outlined text-error" data-icon="warning" style="font-variation-settings: 'FILL' 1;">warning</span>
+</div>
+<div>
+<div class="flex items-center space-x-2">
+<h4 class="font-bold text-error text-md">Firefox on Windows 11</h4>
+<span class="bg-error text-white text-[9px] px-1.5 py-0.5 rounded uppercase font-black tracking-widest">Unrecognized</span>
+</div>
+<div class="flex items-center space-x-4 mt-1">
+<span class="text-xs text-on-error-container">IP: 103.55.12.24</span>
+<span class="w-1 h-1 rounded-full bg-error-container"></span>
+<span class="text-xs text-on-error-container">Singapore, SG</span>
+<span class="w-1 h-1 rounded-full bg-error-container"></span>
+<span class="text-xs text-on-error-container">Active 12m ago</span>
+</div>
+</div>
+</div>
+<button class="bg-error text-white font-bold text-xs px-6 py-2 rounded-lg hover:bg-red-800 transition-all shadow-md">
+                                Secure Account
+                            </button>
+</div>
+</div>
+</div>
+<!-- Contextual Info / Footer -->
+<div class="mt-16 grid grid-cols-1 md:grid-cols-2 gap-12 border-t border-surface-container pt-12">
+<div>
+<h5 class="text-sm font-bold text-on-surface mb-3 flex items-center space-x-2">
+<span class="material-symbols-outlined text-primary text-lg" data-icon="shield">shield</span>
+<span>Security Recommendations</span>
+</h5>
+<p class="text-on-surface-variant text-sm leading-relaxed mb-4">We recommend revoking any sessions that you do not recognize immediately. If you've recently lost a device, click the 'Log out other sessions' button above to force a re-login on all devices.</p>
+<a class="text-primary font-bold text-xs uppercase tracking-widest hover:underline" href="#">View full security audit log</a>
+</div>
+<div class="glass-panel p-6 rounded-xl border border-white/40 shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<p class="text-xs font-black uppercase tracking-widest text-outline">Network Map</p>
+<span class="text-[10px] font-bold text-primary bg-primary-container px-2 py-0.5 rounded-full">LIVE</span>
+</div>
+<div class="aspect-video w-full rounded-lg bg-surface-container overflow-hidden grayscale">
+<img alt="Abstract map showing data points" class="w-full h-full object-cover opacity-60" data-alt="Highly detailed technical world map with glowing data connection lines and node points on a dark slate background, professional analytical style" data-location="Global" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQVf2DKYFrKJcooW_-P7pAorICouhZ-xkDKJRhJfw2m12A0rqEp9rpw346zuxEkzdv-F5C2ch2Fsamx9zXFY0On8amdQH6Ls0ATu5rAFLoBZQT4IroWzVHQwCuoRK9zNU9tpaoMeeE1I62cI-XLDV9Y3KZxospRLEZ5EVefRo-vSo5dRwRkjo7yL_OnE0CWpHIIisSsmAHaZfEe4teR2LjIjy2s0fi5Q8IgjRrzYGkHa08RVXdcCy00ljV0qZh4y-HOVhxzcCzlzE"/>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Contextual FAB Suppression: No FAB on Settings/Security Screens per guidelines -->
+</body></html>
