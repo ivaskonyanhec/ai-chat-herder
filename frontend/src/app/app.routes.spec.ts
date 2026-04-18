@@ -31,7 +31,7 @@ describe('app routes', () => {
 
     const compiled: Element = fixture.nativeElement;
     expect(compiled.querySelector('[data-testid="main-chat"]')).not.toBeNull();
-    expect(compiled.querySelector('[data-testid="chat-area"]')).not.toBeNull();
+    expect(compiled.querySelector('[data-testid="rooms-home"]')).not.toBeNull();
   });
 
   it('activates the sessions child route under the workspace shell', async () => {
