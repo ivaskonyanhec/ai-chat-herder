@@ -85,6 +85,9 @@ api.MapGroup("/auth").MapAuthEndpoints();
 api.MapGroup("/sessions").MapSessionsEndpoints();
 api.MapGroup("/users").MapUserEndpoints();
 api.MapGroup("/rooms").MapRoomEndpoints();
+api.MapGroup("").MapRoomInvitationEndpoints();   // mounts /rooms/{id}/invitations and /invitations at /api
+api.MapGroup("/messages").MapMessageEndpoints();
+api.MapGroup("").MapNotificationEndpoints();     // mounts /unread, /rooms/{id}/read, /dialogs/{id}/read at /api
 
 app.Run();
 
