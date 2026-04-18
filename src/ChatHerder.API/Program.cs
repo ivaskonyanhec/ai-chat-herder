@@ -1,24 +1,60 @@
 // Production AllowedHosts is set via the AllowedHosts env var (ASP.NET Core env-var
 // config provider overrides appsettings.json). Docker Compose must set AllowedHosts=<domain>.
+using System.Text;
+using ChatHerder.API.Endpoints;
 using ChatHerder.API.Middleware;
+using ChatHerder.Infrastructure;
 using ChatHerder.Infrastructure.Persistence;
+using ChatHerder.Infrastructure.Security;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
-// SignalR — required by PresenceHub and ChatHub (AGENT.md §10)
 builder.Services.AddSignalR();
 
-// Authentication — JWT (AGENT.md §7); details wired in Phase 3
-builder.Services.AddAuthentication();
-builder.Services.AddAuthorization();
+// Infrastructure (EF Core, Redis, Argon2id, JWT service, email)
+builder.Services.AddInfrastructure(builder.Configuration);
 
-// EF Core — reads connection string from config; never hardcoded (AGENT.md §3.3)
-builder.Services.AddDbContext<AppDbContext>(opts =>
-    opts.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
+// JWT Bearer authentication (AGENT.md §7)
+var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSettings>()
+    ?? throw new InvalidOperationException("Jwt configuration section is missing.");
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(opts =>
+    {
+        opts.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer           = true,
+            ValidateAudience         = true,
+            ValidateLifetime         = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer              = jwtSettings.Issuer,
+            ValidAudience            = jwtSettings.Audience,
+            IssuerSigningKey         = new SymmetricSecurityKey(
+                                           Encoding.UTF8.GetBytes(jwtSettings.SecretKey)),
+            ClockSkew = TimeSpan.Zero, // exact 15-min expiry; no grace period
+        };
+        // WebSocket / SignalR: token arrives as ?access_token= query string (AGENT.md §3.4)
+        opts.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = ctx =>
+            {
+                var token = ctx.Request.Query["access_token"].ToString();
+                if (!string.IsNullOrEmpty(token) &&
+                    ctx.HttpContext.Request.Path.StartsWithSegments("/hubs"))
+                {
+                    ctx.Token = token;
+                }
+                return Task.CompletedTask;
+            },
+        };
+    });
+
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
@@ -28,8 +64,7 @@ using (var scope = app.Services.CreateScope())
     await scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.MigrateAsync();
 }
 
-// Middleware pipeline — strict order per AGENT.md §5:
-// UseAuthentication → BanCheckMiddleware → SessionValidationMiddleware → UseAuthorization
+// Middleware pipeline — strict order per AGENT.md §5
 app.UseAuthentication();
 app.UseMiddleware<BanCheckMiddleware>();
 app.UseMiddleware<SessionValidationMiddleware>();
@@ -41,11 +76,14 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// Health check — required by docker-compose healthcheck
 app.MapGet("/api/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }))
    .AllowAnonymous();
 
+// Endpoint groups
+var api = app.MapGroup("/api");
+api.MapGroup("/auth").MapAuthEndpoints();
+api.MapGroup("/sessions").MapSessionsEndpoints();
+
 app.Run();
 
-// Exposed for WebApplicationFactory in integration tests
 public partial class Program { }
