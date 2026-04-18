@@ -209,3 +209,11 @@ Format: `[Timestamp] | Task | Reasoning | Changes`
 ---
 
 `[2026-04-18 T48]` | **Replace MAX()+1 sequence generation with ContextSequences counter table** | `SELECT MAX(SequenceNumber) + 1 FROM Messages WHERE RoomId = X` has a race condition: two concurrent transactions can both read the same MAX and both attempt to insert the same sequence number, violating the unique index. The earlier spec presented this as safe with a "row-level lock" but no explicit lock target was identified — the lock must be on a dedicated counter row, not on the Messages table scan | Fix: New `ContextSequences` table `(ContextType varchar PK, ContextId uuid PK, NextValue bigint)`. Row created when room/dialog is created; deleted when room/dialog is deleted. Sequence allocation: `UPDATE ContextSequences SET NextValue = NextValue + 1 WHERE ContextType = 'room' AND ContextId = @roomId RETURNING NextValue` — executes in the same transaction as the message INSERT. PostgreSQL row-level lock on the ContextSequences row serializes concurrent writers for the same context. No MAX() scan, no race window, no Redis dependency for sequence correctness.
+
+---
+
+## 2026-04-18 — Agent Instruction Files
+
+---
+
+`[2026-04-18 T49]` | **Create AGENT.md and CLAUDE.md** | A machine-readable system instruction file is required for AI agents (Codex, Claude, etc.) to operate consistently in this hackathon project without re-deriving architecture decisions from scratch each session. `CLAUDE.md` provides Claude Code–specific extensions and keeps in sync with `AGENT.md` as the single source of truth | Created: `AGENT.md` (18 sections: identity, transparency protocol, coding standards, tech stack, clean architecture, domain model, security model, DB schema invariants, full API endpoint reference, SignalR hub contracts, presence engine Redis keys, messaging rules, attachments, room permission matrix, UI structure, non-functional constraints, Jabber gate, key decisions); Created: `CLAUDE.md` (extends AGENT.md with Claude Code skill invocation rules, memory file policy, tool preferences, and sync rule)
