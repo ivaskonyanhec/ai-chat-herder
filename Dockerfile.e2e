@@ -1,0 +1,21 @@
+# Playwright E2E runner — headless Chromium in Docker.
+# Build context: project root (e2e/ subdirectory is copied in).
+FROM mcr.microsoft.com/playwright:v1.49.0-noble
+
+WORKDIR /e2e
+
+# Install Node dependencies first (cached layer on package.json changes).
+COPY e2e/package.json e2e/package-lock.json ./
+RUN npm ci --prefer-offline
+
+# Copy test sources.
+COPY e2e/ ./
+
+# Reports are written here; host mounts this path for post-run inspection.
+RUN mkdir -p playwright-report
+
+# BASE_URL must point to the frontend service (e.g. http://frontend inside Docker).
+ENV BASE_URL=http://frontend
+
+# Run all test files with HTML, JSON, and console-list reporters.
+CMD ["npx", "playwright", "test", "--reporter=html,json,list"]

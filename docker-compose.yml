@@ -64,6 +64,12 @@ services:
       context: .
       dockerfile: Dockerfile.backend
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
       ASPNETCORE_URLS: http://+:8080
@@ -118,6 +124,34 @@ services:
       - "4200:80"   # Also mapped to Angular's conventional dev port
     depends_on:
       - backend
+    networks:
+      - chatnet
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost/api/health > /dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  # ── E2E Test Runner (Playwright + Chromium) ───────────────────────────────────
+  # Not started in normal operation. Run with: docker compose --profile e2e up e2e
+  # Reports are written to ./e2e-reports on the host.
+  e2e:
+    build:
+      context: .
+      dockerfile: Dockerfile.e2e
+    profiles:
+      - e2e
+    environment:
+      BASE_URL: http://frontend
+      CI:       "true"
+    volumes:
+      - ./e2e-reports:/e2e/playwright-report
+    depends_on:
+      frontend:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
     networks:
       - chatnet
 

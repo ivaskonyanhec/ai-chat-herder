@@ -253,3 +253,7 @@ Format: `[Timestamp] | Task | Reasoning | Changes`
 ---
 
 `[2026-04-18 T57]` | **Scale message history to 100K, add DOM sliding window, add performance test spec** | 3-year-old active room can accumulate 100K+ messages; architecture says "10,000+" which understates the real requirement; keyset pagination handles DB scale but DOM accumulation is unaddressed (100K DOM nodes degrades rendering); no performance test spec exists | ARCHITECTURE.md §9: update scale, add DOM sliding window strategy (max 200 messages in DOM, prune on paginate); §16: update history metric, add O(log N) query benchmark spec
+
+---
+
+`[2026-04-18 T58]` | **Create Playwright E2E test suite, Dockerfile.e2e, and TESTING_SETUP.md** | Automated end-to-end tests required to validate real-time scenarios (multi-tab presence, SignalR delivery latency, file upload/download, ban enforcement) that unit tests cannot cover; Docker integration ensures tests run in CI against a fully composed stack | Created: `e2e/playwright.config.ts`, `e2e/package.json`, `e2e/tsconfig.json`, `e2e/helpers/api.helpers.ts`, `e2e/fixtures/test-fixtures.ts`, `e2e/tests/01-auth.spec.ts`, `e2e/tests/02-chat.spec.ts`, `e2e/tests/03-presence.spec.ts`, `e2e/tests/04-attachments.spec.ts`, `e2e/tests/05-admin.spec.ts`; `Dockerfile.e2e`; `TESTING_SETUP.md`; updated `docker-compose.yml` (added `e2e` profile service), `.env.template` (added E2E vars)

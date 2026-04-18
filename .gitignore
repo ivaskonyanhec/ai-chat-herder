@@ -1,1 +1,8 @@
 .env
+
+# E2E test reports (bind-mounted volume — keep directory, ignore contents)
+e2e-reports/*
+!e2e-reports/.gitkeep
+e2e/playwright-report/
+e2e/.tsbuild/
+e2e/node_modules/
