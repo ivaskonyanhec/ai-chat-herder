@@ -1,5 +1,17 @@
 .env
 
+# .NET build artifacts
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+# Angular build artifacts
+frontend/dist/
+frontend/.angular/
+frontend/node_modules/
+
 # E2E test reports (bind-mounted volume — keep directory, ignore contents)
 e2e-reports/*
 !e2e-reports/.gitkeep

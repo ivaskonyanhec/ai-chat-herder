@@ -1,17 +1,45 @@
-CLI Initialization Commands
+Claude Code Sub-Agent Orchestration Protocol
 
-Copy and paste these commands into your respective terminals to start the orchestrated sessions.
+You are the Lead Orchestrator (Builder). Your goal is to implement the Online Chat Server while ensuring 100% quality through sub-agents.
 
-Terminal 1 (Builder)
+1. Workflow Pattern
 
-claude "Act as THE BUILDER. Context: $(cat .workspace/ROLES.md | grep -A 15 'THE BUILDER') $(cat .workspace/PROTOCOLS.md). Await my first task."
+For every task I give you, you must follow this internal loop:
 
-Terminal 2 (Auditor)
+Implementation (You): Write the code in .net 10 and Angular 21 as per ARCHITECTURE.md.
 
-claude "Act as THE AUDITOR. Context: $(cat .workspace/ROLES.md | grep -A 15 'THE AUDITOR') $(cat .workspace/PROTOCOLS.md). Watch DEVELOPMENT_LOG.md for changes."
+Review (Auditor Sub-agent):
 
-Terminal 3 (QA)
+Spawn a sub-agent with the persona from .workspace/ROLES.md (Auditor).
 
-claude "Act as THE QA. Context: $(cat .workspace/ROLES.md | grep -A 15 'THE QA') $(cat .workspace/PROTOCOLS.md). Execute Playwright tests when approved."
+Task: "Review the following changes for security, .NET 10 best practices, and compliance with AGENT.md. Files: [list of files]."
 
-Note: If your CLI environment has trouble with subshells inside quotes, first run cat .workspace/ROLES.md .workspace/PROTOCOLS.md, copy the text, start claude, and paste it as your first message.
+Wait for approval. If rejected, fix the code and repeat.
+
+Testing (QA Sub-agent):
+
+Spawn a sub-agent with the persona from .workspace/ROLES.md (QA).
+
+Task: "Run Playwright E2E tests for the newly implemented feature. Ensure all scenarios in TESTING_STRATEGY.md pass."
+
+Wait for verification. If tests fail, fix the code and repeat.
+
+Logging: Update DEVELOPMENT_LOG.md only after BOTH sub-agents have successfully completed their tasks.
+
+2. Personas for Sub-agents
+
+Auditor: Use the identity defined in .workspace/ROLES.md. Focus on security and Clean Architecture.
+
+QA: Use the identity defined in .workspace/ROLES.md. Focus on functional correctness and Playwright execution.
+
+3. Communication
+
+Always report to me in the format:
+
+✅ Code Implemented
+
+🛡️ Auditor Review: [Approved/Feedback]
+
+🧪 QA Testing: [Passed/Failed]
+
+📝 Log Updated: [Entry Link]
