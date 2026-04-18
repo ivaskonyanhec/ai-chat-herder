@@ -5,122 +5,49 @@
       <p class="text-on-surface-variant max-w-2xl">Explore open architectural workshops and collaborative design spaces within the global workspace ecosystem.</p>
     </div>
 
-    <!-- Featured / Bento Grid Layout -->
-    <div class="grid grid-cols-1 md:grid-cols-12 gap-6 mb-12">
-      <!-- Featured Room -->
-      <div class="md:col-span-8 group relative overflow-hidden bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/10 p-1 flex flex-col">
-        <div class="relative h-64 overflow-hidden rounded-lg">
-          <img alt="Main Lobby" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBcomcDp_iJ6kFEVaBJ686noj6WNvqg61bWKfsVKTKRlugge0jUtUc4MZ3fKX-gGZxDmoPC7YRLkWddt-8xPeW2XP_NPinPNu-JWO5UD8gHQ3AvNkKMnkV1QUjs3S29pjc2PMR5HIgLAMoG27qyFVh98f7wAf6u5zWNxmkEWokuEJrs3ePnMy14fNZfI0ariC9UGPF6BwskytWdZmm5W8JJHjsJVxNXf_-sXjczjQ0umesjBv7RezoGoDdIC4a4hW0p8x1IvCBDu_U" />
-          <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-          <div class="absolute bottom-6 left-6 text-white">
-            <span class="bg-primary px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-full mb-3 inline-block">Featured Workspace</span>
-            <h2 class="text-2xl font-bold">Urban Planning Collective</h2>
-            <p class="text-slate-200 text-sm opacity-90">Central hub for metropolitan infrastructure and civic design discussions.</p>
-          </div>
-        </div>
-        <div class="p-6 flex items-center justify-between">
-          <div class="flex items-center gap-6">
-            <div class="flex -space-x-2">
-              <img alt="User" class="w-8 h-8 rounded-full border-2 border-white object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCnBCzLLhVy6CfGGQ1pdz2dzfoEpPMYY4tEKhBcPZuRf6NlGCtQ4ITc91IYOUh19qPk1XPiH4O_2vCjJXe3uxtzruIshxK0zKJyDpXv5EOZGrXmWa7HUNBGizsUEILMl0Dt07JXs0RUW-AKol7eA7f42qyqO0fVICMCFVcto1bW8dfBIe_q5ZFoUYHF1mAyF8MC5TRElc6luw6YgpzYv2sypC0Bds12fn93_t0EVgFyjWqzC_7KKlkvEk5SA4o7l-hLpSEsYJPv7IM" />
-              <img alt="User" class="w-8 h-8 rounded-full border-2 border-white object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBUS6UeGG1v1lTJaQkEhBTZDAKppf0z4VwMHPZs7jNt3kdh7-pZdkm016U9_8fmeEdl6PQ54heXbxdLklvyIbbr2G6Ky2tEF3I9XErR2HBY7IFwVXcHHOuLmZDg63J4YLexU3qBjZtceZX9oB26K6zLsCkgJCz_t8wy6lqiC3XbrpJGSbAnSKk79v4AVHm3O09Yxb0vWtpYHdcmcIkPEGW5omVKvjJTr8v4ktOtGgpzM9p21Rga-iVD0WpbVQgOVZu5NH4beP4Xbtw" />
-              <div class="w-8 h-8 rounded-full border-2 border-white bg-surface-container-high flex items-center justify-center text-[10px] font-bold text-on-surface">+142</div>
-            </div>
-            <div class="flex items-center gap-2 text-on-surface-variant text-xs">
-              <span class="material-symbols-outlined text-sm">groups</span>
-              <span>2.4k Active Members</span>
-            </div>
-          </div>
-          <button class="bg-primary text-on-primary px-6 py-2.5 rounded-lg font-bold text-sm hover:bg-primary-dim transition-colors shadow-sm">Join Room</button>
-        </div>
+    @if (isLoading()) {
+      <div class="flex justify-center py-24">
+        <span class="material-symbols-outlined text-4xl text-outline animate-spin">progress_activity</span>
       </div>
-
-      <!-- Statistics Cards -->
-      <div class="md:col-span-4 grid grid-cols-1 gap-6">
-        <div class="bg-primary-container p-6 rounded-xl flex flex-col justify-between">
-          <div>
-            <span class="material-symbols-outlined text-primary mb-4 block">insights</span>
-            <h3 class="text-lg font-bold text-on-primary-container leading-tight">Trending Discussions</h3>
-            <p class="text-on-primary-container/70 text-xs mt-2">Highly active architectural sessions currently in progress.</p>
-          </div>
-          <div class="space-y-3 mt-6">
-            <div class="flex items-center justify-between text-xs font-semibold text-on-primary-container bg-white/40 p-2 rounded-lg">
-              <span>#SustainableTimber</span>
-              <span class="text-primary">Live</span>
-            </div>
-            <div class="flex items-center justify-between text-xs font-semibold text-on-primary-container bg-white/40 p-2 rounded-lg">
-              <span>#ParametricFaçades</span>
-              <span class="text-primary">12 New</span>
-            </div>
-          </div>
-        </div>
-        <div class="bg-surface-container-highest p-6 rounded-xl">
-          <h3 class="text-sm font-bold text-on-surface mb-4">Discovery Metrics</h3>
-          <div class="space-y-4">
-            <div>
-              <div class="flex justify-between text-[10px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">
-                <span>Workspace Density</span><span>88%</span>
-              </div>
-              <div class="h-1 bg-surface-container rounded-full overflow-hidden">
-                <div class="h-full bg-primary w-[88%]"></div>
-              </div>
-            </div>
-            <div>
-              <div class="flex justify-between text-[10px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">
-                <span>New Rooms (24h)</span><span>12</span>
-              </div>
-              <div class="h-1 bg-surface-container rounded-full overflow-hidden">
-                <div class="h-full bg-primary w-[40%]"></div>
-              </div>
-            </div>
-          </div>
-        </div>
+    } @else if (errorMessage()) {
+      <p class="text-error text-sm bg-error-container/20 border border-error/20 rounded-xl px-6 py-4">{{ errorMessage() }}</p>
+    } @else if (rooms().length === 0) {
+      <div class="text-center py-24">
+        <span class="material-symbols-outlined text-5xl text-outline mb-4 block">meeting_room</span>
+        <p class="text-on-surface-variant">No public rooms yet. Be the first to create one.</p>
       </div>
-    </div>
-
-    <!-- Catalog Header + View Toggle -->
-    <div class="flex items-center justify-between mb-8">
-      <h3 class="text-lg font-bold tracking-tight text-on-surface">Available Rooms</h3>
-      <div class="flex items-center gap-2">
-        <button class="p-2 bg-surface-container-lowest border border-outline-variant/20 rounded-lg shadow-sm">
-          <span class="material-symbols-outlined text-lg">grid_view</span>
-        </button>
-        <button class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-lg">
-          <span class="material-symbols-outlined text-lg">list</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Room Cards Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      @for (room of [
-        {icon:'apartment', name:'Sustainable Materials Lab', desc:'Discussing the implementation of carbon-negative materials in commercial residential projects.', members:'852'},
-        {icon:'landscape', name:'Biophilic Design Group', desc:'Integrating nature into interior architectures to enhance occupant well-being and productivity.', members:'1.2k'},
-        {icon:'foundation', name:'Heritage Preservation', desc:'Methods and strategies for restoring historical landmarks while meeting modern safety codes.', members:'431'},
-        {icon:'token', name:'BIM Automation Hub', desc:'Sharing scripts and plugins for Revit and ArchiCAD to streamline documentation workflows.', members:'3.1k'},
-        {icon:'brush', name:'Concept Visualization', desc:'Showcasing high-end architectural renders and discussing lighting and material setups.', members:'928'},
-        {icon:'bolt', name:'Fast-Track Permitting', desc:'Collaborative strategy for navigating complex zoning laws and urban regulations.', members:'215'}
-      ]; track room.name) {
-        <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/10 p-6 flex flex-col justify-between hover:shadow-md transition-shadow">
-          <div>
-            <div class="flex items-center justify-between mb-4">
-              <div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center text-primary">
-                <span class="material-symbols-outlined">{{ room.icon }}</span>
+    } @else {
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @for (room of rooms(); track room.id) {
+          <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/10 p-6 flex flex-col gap-4 hover:shadow-sm transition-shadow">
+            <div class="flex items-start justify-between gap-3">
+              <div class="w-10 h-10 bg-primary-container flex items-center justify-center rounded-lg shrink-0">
+                <span class="material-symbols-outlined text-on-primary-container" style="font-size:1.25rem">meeting_room</span>
               </div>
-              <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Public</span>
+              <span class="text-[10px] font-bold uppercase tracking-widest text-outline bg-surface-container px-2 py-0.5 rounded-full">Public</span>
             </div>
-            <h4 class="text-base font-bold text-on-surface mb-2">{{ room.name }}</h4>
-            <p class="text-on-surface-variant text-sm leading-relaxed">{{ room.desc }}</p>
-          </div>
-          <div class="mt-6 pt-6 border-t border-surface-container flex items-center justify-between">
-            <div class="flex items-center gap-1.5 text-xs text-on-surface-variant">
-              <span class="material-symbols-outlined text-sm">person</span>
-              <span class="font-medium">{{ room.members }} Members</span>
+            <div class="flex-1">
+              <h3 class="font-bold text-on-surface mb-1">{{ room.name }}</h3>
+              @if (room.description) {
+                <p class="text-xs text-on-surface-variant line-clamp-2">{{ room.description }}</p>
+              }
             </div>
-            <button class="text-primary font-bold text-sm hover:underline">Join</button>
+            <div class="flex items-center justify-between pt-2 border-t border-outline-variant/10">
+              <div class="flex items-center gap-1.5 text-xs text-on-surface-variant">
+                <span class="material-symbols-outlined" style="font-size:1rem">group</span>
+                <span>{{ room.memberCount }} members</span>
+              </div>
+              <button
+                class="px-4 py-1.5 bg-primary text-on-primary text-xs font-bold rounded-lg hover:bg-primary-dim transition-colors disabled:opacity-50"
+                [disabled]="joiningRoomId() === room.id"
+                (click)="joinAndNavigate(room.id)"
+              >
+                {{ joiningRoomId() === room.id ? 'Joining…' : 'Join Room' }}
+              </button>
+            </div>
           </div>
-        </div>
-      }
-    </div>
+        }
+      </div>
+    }
   </div>
 </section>
