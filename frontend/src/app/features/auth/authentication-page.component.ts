@@ -2,6 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { ReactiveFormsModule, NonNullableFormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
+import { InputText } from 'primeng/inputtext';
 import { AuthApiService } from '../../core/auth/auth-api.service';
 import { AuthSessionService } from '../../core/auth/auth-session.service';
 import { AuthResponse } from '../../core/auth/auth.models';
@@ -10,7 +11,7 @@ type AuthMode = 'login' | 'register';
 
 @Component({
   selector: 'app-authentication-page',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, InputText],
   templateUrl: './authentication-page.component.html',
   styleUrl: './authentication-page.component.scss',
 })
