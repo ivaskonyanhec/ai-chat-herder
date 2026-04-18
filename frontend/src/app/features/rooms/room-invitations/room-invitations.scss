@@ -1,0 +1,182 @@
+.invitations {
+  padding: var(--spacing-8);
+  height: 100%;
+  overflow-y: auto;
+  background: var(--color-surface);
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: var(--spacing-10);
+  }
+
+  &__title {
+    font-size: var(--font-size-headline-sm);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: var(--color-on-surface);
+    margin-bottom: var(--spacing-1);
+  }
+
+  &__subtitle {
+    font-size: var(--font-size-body-md);
+    color: var(--color-on-surface-variant);
+    font-weight: 500;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: var(--spacing-6);
+  }
+}
+
+.invitation-card {
+  background: var(--color-surface-container-lowest);
+  padding: var(--spacing-6);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-ambient);
+  transition: transform 0.3s;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--spacing-4);
+  }
+
+  &__room {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-4);
+  }
+
+  &__time {
+    font-size: 0.625rem;
+    font-weight: 700;
+    color: var(--color-on-surface-variant);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  &__description {
+    font-size: var(--font-size-body-sm);
+    color: var(--color-on-surface-variant);
+    line-height: var(--line-height-relaxed);
+    margin-bottom: var(--spacing-6);
+  }
+
+  &__inviter {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    margin-bottom: var(--spacing-6);
+  }
+
+  &__actions {
+    display: flex;
+    gap: var(--spacing-3);
+  }
+}
+
+.room-icon {
+  width: 3rem;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-lg);
+  font-weight: 700;
+  font-size: 1.25rem;
+
+  &--primary {
+    background: var(--color-primary-container);
+    color: var(--color-on-primary-container);
+  }
+
+  &--tertiary {
+    background: var(--color-tertiary-container);
+    color: var(--color-on-tertiary-container);
+  }
+}
+
+.room-info {
+  &__name {
+    font-size: var(--font-size-body-md);
+    font-weight: 600;
+    color: var(--color-on-surface);
+    margin: 0;
+  }
+
+  &__meta {
+    font-size: 0.75rem;
+    color: var(--color-on-surface-variant);
+    margin-top: 0.125rem;
+  }
+}
+
+.inviter-avatar {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: var(--radius-full);
+  border: 2px solid white;
+}
+
+.inviter-name {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-on-surface);
+}
+
+.inviter-handle {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.filter-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  background: var(--color-surface-container-low);
+  padding: var(--spacing-2) var(--spacing-4);
+  border-radius: var(--radius-lg);
+  color: var(--color-on-surface-variant);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+
+  span:first-child { font-size: 1.125rem; }
+}
+
+.btn {
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &--primary {
+    flex: 1;
+    background: var(--color-primary);
+    color: white;
+    padding: 0.625rem;
+    font-size: 0.75rem;
+    &:hover { opacity: 0.9; }
+    &:active { transform: scale(0.99); }
+  }
+
+  &--ghost {
+    padding: 0.625rem var(--spacing-4);
+    background: transparent;
+    color: var(--color-on-surface-variant);
+    font-size: 0.75rem;
+    &:hover { background: var(--color-surface-container-low); }
+  }
+}
