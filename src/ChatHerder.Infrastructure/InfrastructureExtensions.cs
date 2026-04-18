@@ -3,6 +3,7 @@ using ChatHerder.Infrastructure.Cache;
 using ChatHerder.Infrastructure.Email;
 using ChatHerder.Infrastructure.Persistence;
 using ChatHerder.Infrastructure.Security;
+using ChatHerder.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,6 +34,10 @@ public static class InfrastructureExtensions
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<ISessionStore, RedisSessionStore>();
         services.AddScoped<IEmailSender, SmtpEmailSender>();
+
+        services.AddSingleton<IPresenceStore, RedisPresenceStore>();
+        services.AddSingleton<IUnreadStore, RedisUnreadStore>();
+        services.AddHostedService<PresenceMonitorService>();
 
         return services;
     }
