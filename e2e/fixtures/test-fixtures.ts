@@ -1,5 +1,6 @@
 import { test as base, BrowserContext, Page } from '@playwright/test';
 import { ApiHelpers, TestUser } from '../helpers/api.helpers';
+import { bootstrapAuthenticatedContext } from '../helpers/auth.helpers';
 
 type E2EFixtures = {
   api:       ApiHelpers;
@@ -30,21 +31,14 @@ export const test = base.extend<E2EFixtures>({
   // equivalent to separate incognito windows.
   ctxA: async ({ browser, userA }, use) => {
     const ctx = await browser.newContext();
-    // Inject the access token before any navigation so Angular reads it on bootstrap.
-    await ctx.addInitScript(
-      (token: string) => localStorage.setItem('access_token', token),
-      userA.accessToken,
-    );
+    await bootstrapAuthenticatedContext(ctx, userA);
     await use(ctx);
     await ctx.close();
   },
 
   ctxB: async ({ browser, userB }, use) => {
     const ctx = await browser.newContext();
-    await ctx.addInitScript(
-      (token: string) => localStorage.setItem('access_token', token),
-      userB.accessToken,
-    );
+    await bootstrapAuthenticatedContext(ctx, userB);
     await use(ctx);
     await ctx.close();
   },

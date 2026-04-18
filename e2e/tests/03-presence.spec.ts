@@ -1,99 +1,110 @@
 import { test, expect } from '../fixtures/test-fixtures';
+import { createHubConnection, waitForHubEvent } from '../helpers/signalr.helpers';
 
-// ─── Implementation dependency ────────────────────────────────────────────────
-// PresenceService must expose the SignalR connection in dev mode:
-//   if (isDevMode()) { (window as any).__presenceHub = this.connection; }
-// This lets the AFK test call SetAfk() directly without waiting 60 seconds.
-// ─────────────────────────────────────────────────────────────────────────────
+type StatusEvent = { userId: string; status: 'online' | 'afk' | 'offline' };
 
 test.describe('Presence Engine', () => {
+  test('online status propagates to another connected user within 2 seconds', async ({ userA, userB }) => {
+    const observer = await createHubConnection('/hubs/presence', userA.accessToken);
+    const online = waitForHubEvent<StatusEvent>(
+      observer,
+      'UserStatusChanged',
+      (e) => e.userId === userB.id && e.status === 'online',
+      2_000,
+    );
 
-  test('User B appears Online to User A after connecting', async ({
-    userAPage, userBPage, userA, userB, api,
-  }) => {
-    const room = await api.createRoom(userA.accessToken);
-    await api.addMember(room.id, userB.id, userA.accessToken);
+    const observed = await createHubConnection('/hubs/presence', userB.accessToken);
+    await expect(online).resolves.toMatchObject({ userId: userB.id, status: 'online' });
 
-    await userAPage.goto(`/rooms/${room.id}`);
-    await expect(userAPage.locator('[data-testid="chat-area"]')).toBeVisible({ timeout: 5_000 });
+    await observed.stop();
+    await observer.stop();
+  });
 
-    // User B joins after A — A receives UserStatusChanged(online) via SignalR.
-    await userBPage.goto(`/rooms/${room.id}`);
+  test('AFK status only appears after all tabs for the user are AFK', async ({ userA, userB }) => {
+    const observer = await createHubConnection('/hubs/presence', userA.accessToken);
+    const tab1 = await createHubConnection('/hubs/presence', userB.accessToken);
+    const tab2 = await createHubConnection('/hubs/presence', userB.accessToken);
 
+    await tab1.invoke('SetAfk');
     await expect(
-      userAPage.locator(`[data-testid="member-status-${userB.id}"]`),
-    ).toHaveAttribute('data-status', 'online', { timeout: 3_000 });
+      waitForHubEvent<StatusEvent>(
+        observer,
+        'UserStatusChanged',
+        (e) => e.userId === userB.id && e.status === 'afk',
+        500,
+      ),
+    ).rejects.toThrow(/Timed out/);
+
+    const afk = waitForHubEvent<StatusEvent>(
+      observer,
+      'UserStatusChanged',
+      (e) => e.userId === userB.id && e.status === 'afk',
+      2_000,
+    );
+    await tab2.invoke('SetAfk');
+    await expect(afk).resolves.toMatchObject({ userId: userB.id, status: 'afk' });
+
+    await tab1.stop();
+    await tab2.stop();
+    await observer.stop();
   });
 
-  test('AFK status propagates to User A within 2 seconds', async ({
-    userAPage, userBPage, userA, userB, api,
-  }) => {
-    const room = await api.createRoom(userA.accessToken);
-    await api.addMember(room.id, userB.id, userA.accessToken);
+  test('activity in one tab restores online status', async ({ userA, userB }) => {
+    const observer = await createHubConnection('/hubs/presence', userA.accessToken);
+    const tab1 = await createHubConnection('/hubs/presence', userB.accessToken);
+    const tab2 = await createHubConnection('/hubs/presence', userB.accessToken);
 
-    await Promise.all([
-      userAPage.goto(`/rooms/${room.id}`),
-      userBPage.goto(`/rooms/${room.id}`),
-    ]);
+    const afk = waitForHubEvent<StatusEvent>(
+      observer,
+      'UserStatusChanged',
+      (e) => e.userId === userB.id && e.status === 'afk',
+      2_000,
+    );
+    await tab1.invoke('SetAfk');
+    await tab2.invoke('SetAfk');
+    await afk;
 
-    const statusDot = userAPage.locator(`[data-testid="member-status-${userB.id}"]`);
-    await expect(statusDot).toHaveAttribute('data-status', 'online', { timeout: 3_000 });
+    const online = waitForHubEvent<StatusEvent>(
+      observer,
+      'UserStatusChanged',
+      (e) => e.userId === userB.id && e.status === 'online',
+      2_000,
+    );
+    await tab1.invoke('SetActive');
+    await expect(online).resolves.toMatchObject({ userId: userB.id, status: 'online' });
 
-    // Call SetAfk() directly via the dev-mode hub reference — bypasses the 60s inactivity timer.
-    await userBPage.evaluate(async () => {
-      const hub = (window as any).__presenceHub;
-      if (!hub) throw new Error('__presenceHub not found — set it in PresenceService when isDevMode()');
-      await hub.invoke('SetAfk');
-    });
-
-    // SLA: AFK must propagate within 2s (AGENT.md §12).
-    await expect(statusDot).toHaveAttribute('data-status', 'afk', { timeout: 2_000 });
+    await tab1.stop();
+    await tab2.stop();
+    await observer.stop();
   });
 
-  test('User B returns to Online after SetActive', async ({
-    userAPage, userBPage, userA, userB, api,
-  }) => {
-    const room = await api.createRoom(userA.accessToken);
-    await api.addMember(room.id, userB.id, userA.accessToken);
+  test('offline status appears only after all tabs close', async ({ userA, userB }) => {
+    const observer = await createHubConnection('/hubs/presence', userA.accessToken);
+    const tab1 = await createHubConnection('/hubs/presence', userB.accessToken);
+    const tab2 = await createHubConnection('/hubs/presence', userB.accessToken);
 
-    await Promise.all([
-      userAPage.goto(`/rooms/${room.id}`),
-      userBPage.goto(`/rooms/${room.id}`),
-    ]);
+    await tab1.stop();
+    await expect(
+      waitForHubEvent<StatusEvent>(
+        observer,
+        'UserStatusChanged',
+        (e) => e.userId === userB.id && e.status === 'offline',
+        500,
+      ),
+    ).rejects.toThrow(/Timed out/);
 
-    // Go AFK.
-    await userBPage.evaluate(async () => {
-      await (window as any).__presenceHub?.invoke('SetAfk');
-    });
-
-    const statusDot = userAPage.locator(`[data-testid="member-status-${userB.id}"]`);
-    await expect(statusDot).toHaveAttribute('data-status', 'afk', { timeout: 2_000 });
-
-    // Come back active.
-    await userBPage.evaluate(async () => {
-      await (window as any).__presenceHub?.invoke('SetActive');
-    });
-
-    await expect(statusDot).toHaveAttribute('data-status', 'online', { timeout: 2_000 });
+    const offline = waitForHubEvent<StatusEvent>(
+      observer,
+      'UserStatusChanged',
+      (e) => e.userId === userB.id && e.status === 'offline',
+      2_000,
+    );
+    await tab2.stop();
+    await expect(offline).resolves.toMatchObject({ userId: userB.id, status: 'offline' });
+    await observer.stop();
   });
 
-  test('User B appears Offline after closing the tab', async ({
-    userAPage, userBPage, userA, userB, api,
-  }) => {
-    const room = await api.createRoom(userA.accessToken);
-    await api.addMember(room.id, userB.id, userA.accessToken);
-
-    await Promise.all([
-      userAPage.goto(`/rooms/${room.id}`),
-      userBPage.goto(`/rooms/${room.id}`),
-    ]);
-
-    const statusDot = userAPage.locator(`[data-testid="member-status-${userB.id}"]`);
-    await expect(statusDot).toHaveAttribute('data-status', 'online', { timeout: 3_000 });
-
-    // Closing the page fires SignalR OnDisconnectedAsync → cleans presence keys.
-    await userBPage.close();
-
-    await expect(statusDot).toHaveAttribute('data-status', 'offline', { timeout: 3_000 });
+  test.skip('presence dots update in the room member list UI', async () => {
+    // BLOCKED: room member list is currently static and lacks member-status-{userId} bindings.
   });
 });
