@@ -1,90 +1,96 @@
-<section class="sessions-panel">
-  <header class="sessions-panel__header">
+<div class="flex-1 overflow-y-auto p-8 bg-surface">
+  <div class="max-w-4xl mx-auto space-y-8">
     <div>
-      <p class="sessions-panel__eyebrow">Security</p>
-      <h2 class="sessions-panel__title" data-testid="sessions-title">Active Sessions</h2>
-      <p class="sessions-panel__copy">
-        Manage current authenticated connections and revoke access from devices you no longer trust.
-      </p>
+      <h2 class="text-2xl font-bold tracking-tight text-on-surface" data-testid="sessions-title">Active Sessions</h2>
+      <p class="text-on-surface-variant text-sm mt-1">Manage and revoke active sessions across all your devices.</p>
     </div>
-  </header>
 
-  @if (errorMessage()) {
-    <p class="sessions-panel__error" role="alert">{{ errorMessage() }}</p>
-  }
-
-  @if (isLoading()) {
-    <div class="sessions-panel__loading">
-      <p-progress-spinner ariaLabel="Loading sessions" strokeWidth="4" />
-    </div>
-  } @else {
-    @if (currentSession(); as current) {
-      <p-card styleClass="sessions-panel__card sessions-panel__card--current" data-testid="current-session-card">
-        <div class="sessions-panel__card-header">
-          <div>
-            <p class="sessions-panel__section-label">Current Session</p>
-            <h3 class="sessions-panel__card-title">{{ current.userAgent }}</h3>
-          </div>
-          <p-tag value="Current Session" severity="success" />
-        </div>
-
-        <div class="sessions-panel__meta-grid">
-          <div>
-            <p class="sessions-panel__section-label">IP Address</p>
-            <p class="sessions-panel__meta-value">{{ current.ipAddress }}</p>
-          </div>
-          <div>
-            <p class="sessions-panel__section-label">Created</p>
-            <p class="sessions-panel__meta-value">{{ formatTimestamp(current.createdAt) }}</p>
-          </div>
-          <div>
-            <p class="sessions-panel__section-label">Expires</p>
-            <p class="sessions-panel__meta-value">{{ formatTimestamp(current.expiresAt) }}</p>
-          </div>
-          <div>
-            <p class="sessions-panel__section-label">Persistence</p>
-            <p class="sessions-panel__meta-value">
-              {{ current.keepSignedIn ? 'Keep signed in' : 'Session only' }}
-            </p>
-          </div>
-        </div>
-      </p-card>
+    @if (errorMessage()) {
+      <div class="bg-error-container/20 border border-error/20 text-error px-4 py-3 rounded-lg text-sm">
+        {{ errorMessage() }}
+      </div>
     }
 
-    @if (otherSessions().length > 0) {
-      <div class="sessions-panel__list">
-        <p class="sessions-panel__section-label">Other Active Connections</p>
-
-        @for (session of otherSessions(); track session.id) {
-          <p-card
-            styleClass="sessions-panel__card sessions-panel__card--secondary"
-            [attr.data-testid]="'session-row-' + session.id"
-          >
-            <div class="sessions-panel__row">
-              <div class="sessions-panel__row-copy">
-                <h3 class="sessions-panel__row-title">{{ session.userAgent }}</h3>
-                <p class="sessions-panel__row-meta">
-                  IP {{ session.ipAddress }} · Created {{ formatTimestamp(session.createdAt) }}
-                </p>
-              </div>
-              <button
-                pButton
-                type="button"
-                [attr.data-testid]="'revoke-session-' + session.id"
-                label="Revoke"
-                severity="secondary"
-                [outlined]="true"
-                [loading]="isRevoking(session.id)"
-                (click)="revokeSession(session.id)"
-              ></button>
-            </div>
-          </p-card>
-        }
+    @if (isLoading()) {
+      <div class="flex items-center justify-center py-16 text-on-surface-variant">
+        <span class="material-symbols-outlined animate-spin mr-3">progress_activity</span>
+        <span>Loading sessions…</span>
       </div>
     } @else {
-      <p-card styleClass="sessions-panel__card sessions-panel__card--empty">
-        <p class="sessions-panel__empty-copy">No other active sessions are currently open.</p>
-      </p-card>
+      <!-- Current Session -->
+      @if (currentSession(); as session) {
+        <section class="bg-surface-container-lowest rounded-xl p-8 shadow-sm border border-outline-variant/10" data-testid="current-session-card">
+          <div class="flex items-start justify-between mb-6">
+            <div>
+              <div class="flex items-center gap-3 mb-2">
+                <h3 class="text-lg font-bold text-on-surface">Current Session</h3>
+                <span class="bg-status-online/15 text-status-online text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-widest">Active</span>
+              </div>
+              <p class="text-on-surface-variant text-sm">This device is currently authenticated.</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div>
+              <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">IP Address</p>
+              <p class="text-sm font-semibold text-on-surface">{{ session.ipAddress || 'Unknown' }}</p>
+            </div>
+            <div>
+              <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">User Agent</p>
+              <p class="text-sm font-semibold text-on-surface truncate">{{ session.userAgent || 'Unknown' }}</p>
+            </div>
+            <div>
+              <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Created</p>
+              <p class="text-sm text-on-surface">{{ formatTimestamp(session.createdAt) }}</p>
+            </div>
+            <div>
+              <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Expires</p>
+              <p class="text-sm text-on-surface">{{ formatTimestamp(session.expiresAt) }}</p>
+            </div>
+          </div>
+        </section>
+      }
+
+      <!-- Other Active Sessions -->
+      @if (otherSessions().length > 0) {
+        <section class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+          <div class="px-8 py-6 border-b border-surface-container">
+            <div class="flex items-center gap-3">
+              <h3 class="text-lg font-bold text-on-surface">Other Active Connections</h3>
+              <span class="bg-primary-container text-on-primary-container text-[11px] font-black px-2.5 py-0.5 rounded-full">{{ otherSessions().length }}</span>
+            </div>
+          </div>
+          <div class="divide-y divide-surface-container">
+            @for (session of otherSessions(); track session.id) {
+              <div class="px-8 py-5 flex items-center justify-between hover:bg-surface-container-low transition-colors" [attr.data-testid]="'session-row-' + session.id">
+                <div class="flex items-center gap-4">
+                  <div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center">
+                    <span class="material-symbols-outlined text-outline">devices</span>
+                  </div>
+                  <div>
+                    <p class="text-sm font-semibold text-on-surface">{{ session.userAgent || 'Unknown device' }}</p>
+                    <p class="text-xs text-on-surface-variant">{{ session.ipAddress || 'Unknown IP' }} · {{ formatTimestamp(session.createdAt) }}</p>
+                  </div>
+                </div>
+                <button
+                  class="text-[11px] font-bold text-error hover:bg-error-container/20 px-3 py-1.5 rounded-lg transition-all disabled:opacity-50"
+                  [attr.data-testid]="'revoke-session-' + session.id"
+                  [disabled]="isRevoking(session.id)"
+                  (click)="revokeSession(session.id)"
+                >
+                  {{ isRevoking(session.id) ? 'Revoking…' : 'Revoke' }}
+                </button>
+              </div>
+            }
+          </div>
+        </section>
+      }
+
+      @if (!currentSession() && otherSessions().length === 0) {
+        <div class="text-center py-16 text-on-surface-variant">
+          <span class="material-symbols-outlined text-5xl mb-4 block">devices</span>
+          <p class="text-sm">No active sessions found.</p>
+        </div>
+      }
     }
-  }
-</section>
+  </div>
+</div>

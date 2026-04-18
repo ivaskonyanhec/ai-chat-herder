@@ -1,15 +1,10 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { finalize } from 'rxjs';
-import { ButtonModule } from 'primeng/button';
-import { CardModule } from 'primeng/card';
-import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { TagModule } from 'primeng/tag';
 import { SessionsApiService, SessionRecord } from '../../core/session/sessions-api.service';
 
 @Component({
   selector: 'app-sessions-panel',
-  imports: [CommonModule, ButtonModule, CardModule, ProgressSpinnerModule, TagModule],
+  imports: [],
   templateUrl: './sessions-panel.component.html',
   styleUrl: './sessions-panel.component.scss',
 })
