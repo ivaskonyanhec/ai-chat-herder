@@ -26,6 +26,43 @@ export interface RoomMemberDto {
   presenceStatus: string;
 }
 
+export interface FriendRequestDto {
+  id: string;
+  senderId: string;
+  senderUsername: string;
+  receiverId: string;
+  receiverUsername: string;
+  status: string;
+  message: string | null;
+}
+
+export interface FriendDto {
+  friendshipId: string;
+  userId: string;
+  username: string;
+}
+
+export interface BlockDto {
+  blockedUserId: string;
+  blockedUsername: string;
+}
+
+export interface DialogDto {
+  id: string;
+  otherUserId: string;
+  otherUsername: string;
+  isFrozen: boolean;
+}
+
+export interface DialogMessageDto {
+  id: string;
+  sequenceNumber: number;
+  content: string | null;
+  sender: { id: string; username: string };
+  editedAt: string | null;
+  isDeleted: boolean;
+}
+
 export class ApiHelpers {
   readonly baseUrl: string;
 
@@ -123,6 +160,94 @@ export class ApiHelpers {
     const members = await res.json();
     await ctx.dispose();
     return members;
+  }
+
+  async sendFriendRequest(senderToken: string, username: string, message?: string): Promise<void> {
+    const ctx = await this.authContext(senderToken);
+    const res = await ctx.post('/api/friends/requests', {
+      data: { username, message },
+    });
+    expect(res.status(), await res.text()).toBe(204);
+    await ctx.dispose();
+  }
+
+  async getFriendRequests(accessToken: string): Promise<FriendRequestDto[]> {
+    const ctx = await this.authContext(accessToken);
+    const res = await ctx.get('/api/friends/requests');
+    expect(res.status(), await res.text()).toBe(200);
+    const requests = await res.json();
+    await ctx.dispose();
+    return requests;
+  }
+
+  async acceptFriendRequest(accessToken: string, requestId: string): Promise<void> {
+    const ctx = await this.authContext(accessToken);
+    const res = await ctx.post(`/api/friends/requests/${requestId}/accept`, { data: {} });
+    expect(res.status(), await res.text()).toBe(204);
+    await ctx.dispose();
+  }
+
+  async getFriends(accessToken: string): Promise<FriendDto[]> {
+    const ctx = await this.authContext(accessToken);
+    const res = await ctx.get('/api/friends');
+    expect(res.status(), await res.text()).toBe(200);
+    const friends = await res.json();
+    await ctx.dispose();
+    return friends;
+  }
+
+  async removeFriend(accessToken: string, userId: string): Promise<void> {
+    const ctx = await this.authContext(accessToken);
+    const res = await ctx.delete(`/api/friends/${userId}`);
+    expect(res.status(), await res.text()).toBe(204);
+    await ctx.dispose();
+  }
+
+  async createDialog(accessToken: string, userId: string): Promise<DialogDto> {
+    const ctx = await this.authContext(accessToken);
+    const res = await ctx.post('/api/dialogs', {
+      data: { userId },
+    });
+    expect(res.status(), await res.text()).toBe(200);
+    const dialog = await res.json();
+    await ctx.dispose();
+    return dialog;
+  }
+
+  async getDialog(accessToken: string, dialogId: string): Promise<DialogDto> {
+    const ctx = await this.authContext(accessToken);
+    const res = await ctx.get(`/api/dialogs/${dialogId}`);
+    expect(res.status(), await res.text()).toBe(200);
+    const dialog = await res.json();
+    await ctx.dispose();
+    return dialog;
+  }
+
+  async getDialogMessages(accessToken: string, dialogId: string): Promise<DialogMessageDto[]> {
+    const ctx = await this.authContext(accessToken);
+    const res = await ctx.get(`/api/dialogs/${dialogId}/messages`);
+    expect(res.status(), await res.text()).toBe(200);
+    const messages = await res.json();
+    await ctx.dispose();
+    return messages;
+  }
+
+  async blockUser(accessToken: string, userId: string): Promise<void> {
+    const ctx = await this.authContext(accessToken);
+    const res = await ctx.post('/api/blocks', {
+      data: { userId },
+    });
+    expect(res.status(), await res.text()).toBe(204);
+    await ctx.dispose();
+  }
+
+  async getBlocks(accessToken: string): Promise<BlockDto[]> {
+    const ctx = await this.authContext(accessToken);
+    const res = await ctx.get('/api/blocks');
+    expect(res.status(), await res.text()).toBe(200);
+    const blocks = await res.json();
+    await ctx.dispose();
+    return blocks;
   }
 
   async context(): Promise<APIRequestContext> {

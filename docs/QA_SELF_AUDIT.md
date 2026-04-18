@@ -3,9 +3,9 @@
 ## 11.1 Summary
 
 - Total requirements reviewed: 77
-- Covered: 24
-- Partially covered: 18
-- Blocked: 24
+- Covered: 28
+- Partially covered: 20
+- Blocked: 18
 - Not covered: 11
 
 This audit is intentionally conservative. A requirement is not marked `COVERED` unless a concrete Playwright test exists and exercises the behavior. Tests that are present but skipped are counted as `BLOCKED`, not covered.
@@ -27,6 +27,10 @@ This audit is intentionally conservative. A requirement is not marked `COVERED` 
 - FR-2.2.3-2 offline only when all tabs close
 - FR-2.2.4-1 view active sessions with browser/IP details
 - FR-2.2.4-2 revoke selected active sessions
+- FR-2.3.1-1 personal friend list after accepted request
+- FR-2.3.2-1 send friend request by username with optional text
+- FR-2.3.3-1 recipient accepts friendship through live browser page
+- FR-2.3.4-1 remove friend
 - FR-2.4.1-1 room creation
 - FR-2.4.2-2 unique room names
 - FR-2.4.3-1 public catalog fields
@@ -42,11 +46,13 @@ This audit is intentionally conservative. A requirement is not marked `COVERED` 
 - FR-2.1.3-4 persistent login: new browser context bootstrap is covered, but browser-close refresh-token behavior is not fully verified.
 - FR-2.1.5-1 account deletion: API deletion is covered; UI action is not wired.
 - FR-2.2.2-1 AFK rule: deterministic hub semantics are covered; natural 61-second browser inactivity with visible UI is blocked.
+- FR-2.3.5-1 user block: API block removes friendship, records block, denies new friend request, and freezes existing dialog; full browser read-only PM UX is not covered.
 - FR-2.4.2-1 room properties: owner/admin/member/ban state is covered; editable UI property flows are not.
 - FR-2.4.3-3 public room joining: public join and banned rejoin are covered; catalog join UI is not.
 - FR-2.4.7-1 and FR-2.4.7-2 owner/admin roles: ban-related cases are covered; full admin modal action set is not.
 - FR-2.4.8-2 banned cannot rejoin: access/rejoin API covered; immediate browser removal is blocked.
 - FR-2.4.8-3 loss of room access: room API access covered; file access is blocked.
+- FR-2.5.1-1 personal dialogs: creation, history, author edit, and author delete are covered through REST/SignalR; live browser DM event rendering and route auto-selection remain incomplete.
 - FR-2.5.2-1 message content: multiline/emoji/UTF-8/3 KB limit are covered; attachments and replies are blocked.
 - FR-2.5.4-1 message editing: author edit and edited timestamp are covered; browser edited indicator is not.
 - FR-2.5.5-1 message deletion: author delete is covered; admin delete and browser deleted state are not.
@@ -61,11 +67,11 @@ This audit is intentionally conservative. A requirement is not marked `COVERED` 
 
 | Requirement ID | Reason | Change Needed |
 | -------------- | ------ | ------------- |
-| FR-2.3.* | Friend/contact endpoints and dynamic UI are absent or static. | Implement/map friend request, friendship, remove friend, and user block endpoints and UI. |
+| FR-2.3.2-2 | Sending a friend request from a room user list is still unavailable. | Bind dynamic room members UI to a send-friend action with optional text. |
+| FR-2.3.6-1 | Dialog creation and hub sending are not yet gated to friends with no blocks. | Enforce friendship/unblocked checks in dialog creation and direct-message send paths. |
 | FR-2.4.6-1 | File deletion side effects cannot be verified without file endpoints. | Map upload/download endpoints and room deletion file assertions. |
 | FR-2.4.8-1 | No remove-member UI/action separate from explicit ban endpoint. | Add remove member action that records a room ban. |
 | FR-2.4.8-2 | Ban endpoint does not broadcast `RemovedFromRoom`. | Publish SignalR removal event to active banned user connections. |
-| FR-2.5.1-1 | Dialog setup and dynamic DM UI are missing. | Implement friend/dialog creation flow and bind DM UI to ChatService. |
 | FR-2.5.3-1 | Reply controls and dynamic quoted rendering are absent. | Add reply composer state, send `replyToId`, render quote blocks with test IDs. |
 | FR-2.6.* and NFR-3.4-2 | No file upload/download endpoints are mapped in `Program.cs`; upload UI is absent. | Create `FileEndpoints`, enforce size/access rules, add `file-input`, `upload-submit`, and download link test IDs. |
 | UI-4.1.1-1 | Member list/status UI is static. | Bind room members to `/api/rooms/{id}/members` and PresenceService updates. |
@@ -76,16 +82,17 @@ This audit is intentionally conservative. A requirement is not marked `COVERED` 
 ## 11.5 Not Covered
 
 - Password reset and password hashing storage checks: not included in this E2E/UAT layer yet.
-- Admin message deletion, room deletion side effects, unread indicators, and long-idle no-logout behavior still need E2E additions.
+- Admin message deletion, room deletion side effects, unread indicators, friend-request-from-room UI, and long-idle no-logout behavior still need E2E additions.
 - Capacity/load requirements: intentionally not covered by Playwright; they belong in the k6 load-testing layer.
 - Jabber requirements: optional advanced scope is not implemented.
 
 ## 11.6 Risk Review
 
 - Multi-tab presence: server semantics are covered, but browser-visible member status is still static.
-- Session management: API session isolation is covered; active-session UI revocation needs browser E2E.
+- Session management: API session isolation and active-session UI revocation are covered; refresh-token browser-close behavior remains only partially covered.
 - Access control: room ban access is covered; attachment security is completely blocked by missing file endpoints.
 - Moderation: ban persistence works through API, but immediate removal of active users is not broadcast.
 - Attachment security: high risk until upload/download endpoints enforce membership checks and size limits.
 - Persistence/history: message refetch and chronological API fetch are covered, but infinite scroll and offline delivery need tests.
+- Social/DM gating: friend and block endpoints now have E2E coverage, but direct-message creation/sending still needs friendship and block enforcement.
 - Non-functional timing: presence timing is covered; message delivery timing is blocked by missing ChatHub room join for chat connections and missing message text test IDs.
