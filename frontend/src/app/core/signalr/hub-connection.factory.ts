@@ -3,7 +3,7 @@ import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr';
 
 export type HubConnectionFactory = (
   url: string,
-  getToken: () => string,
+  getToken: () => string | Promise<string>,
 ) => HubConnection;
 
 export const HUB_CONNECTION_FACTORY = new InjectionToken<HubConnectionFactory>(

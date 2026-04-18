@@ -4,7 +4,15 @@ export interface RoomMemberPresence {
   userId: string;
   username: string;
   avatarUrl: string | null;
-  status: PresenceStatus;
+  role: string;
+  joinedAt: string;
+  presenceStatus: PresenceStatus;
+}
+
+export interface RoomMemberJoined {
+  userId: string;
+  username: string;
+  avatarUrl: string | null;
 }
 
 export interface UserSummaryDto {
@@ -37,7 +45,7 @@ export interface DialogMessageDto {
   id: string;
   sequenceNumber: number;
   content: string | null;
-  author: UserSummaryDto;
+  sender: UserSummaryDto;
   sentAt: string;
   editedAt: string | null;
   isDeleted: boolean;
@@ -48,10 +56,10 @@ export interface DialogMessageDto {
 // PresenceHub server→client event payloads
 export interface UserStatusChangedEvent { userId: string; status: PresenceStatus; }
 export interface RoomMembersSnapshotEvent { roomId: string; members: RoomMemberPresence[]; }
-export interface MemberJoinedEvent { roomId: string; user: RoomMemberPresence; }
+export interface MemberJoinedEvent { roomId: string; user: RoomMemberJoined; }
 export interface MemberLeftEvent { roomId: string; userId: string; }
-export interface RemovedFromRoomEvent { roomId: string; reason: string; }
-export interface FriendRequestReceivedEvent { requestId: string; fromUserId: string; fromUsername: string; message: string; }
+export interface RemovedFromRoomEvent { roomId: string; }
+export interface FriendRequestReceivedEvent { requestId: string; fromUserId: string; fromUsername: string; message: string | null; }
 export interface FriendRequestAcceptedEvent { userId: string; username: string; }
 export interface RoomInvitationReceivedEvent { invitationId: string; roomId: string; roomName: string; fromUserId: string; }
 export interface DialogFrozenEvent { dialogId: string; }
@@ -62,7 +70,7 @@ export interface MessageDeletedEvent { messageId: string; roomId: string; }
 export interface UserTypingEvent { roomId: string; userId: string; isTyping: boolean; }
 export interface DirectMessageDeletedEvent { messageId: string; dialogId: string; }
 export interface UserTypingInDialogEvent { dialogId: string; userId: string; isTyping: boolean; }
-export interface UnreadCountChangedEvent { contextType: string; contextId: string; count: number; }
+export interface UnreadCountChangedEvent { contextType: 'room' | 'dialog'; contextId: string; count: number; }
 
 // Union types for ChatService event signals
 export type RoomChatEvent =
