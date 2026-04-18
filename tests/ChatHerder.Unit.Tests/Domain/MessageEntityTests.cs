@@ -5,42 +5,78 @@ namespace ChatHerder.Unit.Tests.Domain;
 public sealed class MessageEntityTests
 {
     [Fact]
-    public void Message_HasAttachmentId_Property()
+    public void Message_EditedAt_IsNullByDefault()
     {
-        var prop = typeof(Message).GetProperty("AttachmentId");
-        Assert.NotNull(prop);
-        Assert.Equal(typeof(Guid?), prop.PropertyType);
+        var msg = new Message
+        {
+            RoomId = Guid.NewGuid(),
+            AuthorId = Guid.NewGuid(),
+            Content = "hello",
+            SequenceNumber = 1,
+        };
+
+        Assert.Null(msg.EditedAt);
     }
 
     [Fact]
-    public void Message_HasEditedAt_Property()
+    public void Message_EditedAt_CanBeSet()
     {
-        var prop = typeof(Message).GetProperty("EditedAt");
-        Assert.NotNull(prop);
-        Assert.Equal(typeof(DateTime?), prop.PropertyType);
+        var msg = new Message
+        {
+            RoomId = Guid.NewGuid(),
+            AuthorId = Guid.NewGuid(),
+            Content = "hello",
+            SequenceNumber = 1,
+        };
+        var ts = DateTime.UtcNow;
+
+        msg.EditedAt = ts;
+
+        Assert.Equal(ts, msg.EditedAt);
     }
 
     [Fact]
-    public void Message_HasDeletedByUserId_Property()
+    public void Message_DeletedByUserId_IsNullByDefault()
     {
-        var prop = typeof(Message).GetProperty("DeletedByUserId");
-        Assert.NotNull(prop);
-        Assert.Equal(typeof(Guid?), prop.PropertyType);
+        var msg = new Message
+        {
+            RoomId = Guid.NewGuid(),
+            AuthorId = Guid.NewGuid(),
+            Content = "hello",
+            SequenceNumber = 1,
+        };
+
+        Assert.Null(msg.DeletedByUserId);
     }
 
     [Fact]
-    public void PersonalDialogMessage_HasAttachmentId_Property()
+    public void Message_DeletedByUserId_CanBeSet()
     {
-        var prop = typeof(PersonalDialogMessage).GetProperty("AttachmentId");
-        Assert.NotNull(prop);
-        Assert.Equal(typeof(Guid?), prop.PropertyType);
+        var msg = new Message
+        {
+            RoomId = Guid.NewGuid(),
+            AuthorId = Guid.NewGuid(),
+            Content = "hello",
+            SequenceNumber = 1,
+        };
+        var adminId = Guid.NewGuid();
+
+        msg.DeletedByUserId = adminId;
+
+        Assert.Equal(adminId, msg.DeletedByUserId);
     }
 
     [Fact]
-    public void PersonalDialogMessage_HasEditedAt_Property()
+    public void PersonalDialogMessage_EditedAt_IsNullByDefault()
     {
-        var prop = typeof(PersonalDialogMessage).GetProperty("EditedAt");
-        Assert.NotNull(prop);
-        Assert.Equal(typeof(DateTime?), prop.PropertyType);
+        var dm = new PersonalDialogMessage
+        {
+            DialogId = Guid.NewGuid(),
+            AuthorId = Guid.NewGuid(),
+            Content = "hello",
+            SequenceNumber = 1,
+        };
+
+        Assert.Null(dm.EditedAt);
     }
 }

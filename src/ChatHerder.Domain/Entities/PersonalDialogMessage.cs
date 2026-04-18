@@ -8,7 +8,6 @@ public sealed class PersonalDialogMessage
     public required string Content { get; set; }
     public required long SequenceNumber { get; init; } // per-dialog monotonic
     public Guid? ReplyToMessageId { get; init; }
-    public Guid? AttachmentId { get; init; }
     public DateTime SentAt { get; init; } = DateTime.UtcNow;
     public DateTime? EditedAt { get; set; }
     public DateTime? DeletedAt { get; set; }
