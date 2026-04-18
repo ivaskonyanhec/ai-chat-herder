@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { provideRouter, Router } from '@angular/router';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
-import { throwError } from 'rxjs';
+import { throwError, of } from 'rxjs';
 import { providePrimeNG } from 'primeng/config';
 import { WorkspaceShellComponent } from './workspace-shell.component';
 import { AuthApiService } from '../../core/auth/auth-api.service';
@@ -57,5 +57,27 @@ describe('WorkspaceShellComponent', () => {
 
     expect(authSession.clearSession).not.toHaveBeenCalled();
     expect(navigateByUrl).not.toHaveBeenCalled();
+  });
+
+  it('clears session and navigates to /auth on successful logout', () => {
+    const authApi = {
+      logout: vi.fn().mockReturnValue(of(null)),
+    };
+    const authSession = {
+      user: signal(null).asReadonly(),
+      clearSession: vi.fn(),
+    };
+
+    TestBed.configureTestingModule({
+      imports: [WorkspaceShellComponent],
+      providers: buildProviders(authApi, authSession),
+    });
+
+    const fixture = TestBed.createComponent(WorkspaceShellComponent);
+    const navigateByUrl = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+    fixture.componentInstance.logout();
+
+    expect(authSession.clearSession).toHaveBeenCalledOnce();
+    expect(navigateByUrl).toHaveBeenCalledWith('/auth');
   });
 });

@@ -68,20 +68,24 @@
 
     <div class="workspace-sidebar__footer">
       <p-button
+        class="block w-full"
         label="Create Room"
         icon="pi pi-plus"
+        data-testid="create-room"
         styleClass="w-full"
       />
-      @if (logoutError()) {
-        <p class="workspace-sidebar__error">{{ logoutError() }}</p>
-      }
       <p-button
+        class="block w-full"
         label="Sign out"
         severity="secondary"
         [text]="true"
         styleClass="w-full"
+        data-testid="logout-btn"
         (onClick)="logout()"
       />
+      @if (logoutError()) {
+        <p class="workspace-sidebar__error" data-testid="logout-error">{{ logoutError() }}</p>
+      }
     </div>
   </aside>
 
