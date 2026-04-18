@@ -12,27 +12,29 @@ public static class RoomEndpoints
 {
     public static RouteGroupBuilder MapRoomEndpoints(this RouteGroupBuilder group)
     {
-        group.MapGet("",              GetPublicCatalog) .AllowAnonymous();
-        group.MapGet("/my",           GetMyRooms)       .RequireAuthorization();
-        group.MapPost("",             CreateRoom)       .RequireAuthorization();
-        group.MapGet("/{id:guid}",    GetRoom)          .RequireAuthorization();
-        group.MapPatch("/{id:guid}",  UpdateRoom)       .RequireAuthorization();
-        group.MapDelete("/{id:guid}", DeleteRoom)       .RequireAuthorization();
-        group.MapPost("/{id:guid}/join",    JoinRoom)   .RequireAuthorization();
-        group.MapDelete("/{id:guid}/leave", LeaveRoom)  .RequireAuthorization();
-        group.MapGet("/{id:guid}/members",  GetMembers) .RequireAuthorization();
+        group.MapGet("", GetPublicCatalog).AllowAnonymous();
+        group.MapGet("/my", GetMyRooms).RequireAuthorization();
+        group.MapPost("", CreateRoom).RequireAuthorization();
+        group.MapGet("/{id:guid}", GetRoom).RequireAuthorization();
+        group.MapPatch("/{id:guid}", UpdateRoom).RequireAuthorization();
+        group.MapDelete("/{id:guid}", DeleteRoom).RequireAuthorization();
+        group.MapPost("/{id:guid}/join", JoinRoom).RequireAuthorization();
+        group.MapDelete("/{id:guid}/leave", LeaveRoom).RequireAuthorization();
+        group.MapGet("/{id:guid}/members", GetMembers).RequireAuthorization();
         group.MapGet("/{id:guid}/messages", GetMessages).RequireAuthorization();
-        group.MapGet("/{id:guid}/bans",                          GetBans)         .RequireAuthorization();
-        group.MapPost("/{id:guid}/members/{userId:guid}/ban",    BanMember)       .RequireAuthorization();
-        group.MapDelete("/{id:guid}/bans/{userId:guid}",         UnbanMember)     .RequireAuthorization();
-        group.MapPost("/{id:guid}/members/{userId:guid}/make-admin", MakeAdmin)   .RequireAuthorization();
-        group.MapDelete("/{id:guid}/members/{userId:guid}/admin",    RemoveAdmin) .RequireAuthorization();
-        group.MapDelete("/{id:guid}/messages/{msgId:guid}",      DeleteMessage)   .RequireAuthorization();
+        group.MapGet("/{id:guid}/bans", GetBans).RequireAuthorization();
+        group.MapPost("/{id:guid}/members/{userId:guid}/ban", BanMember).RequireAuthorization();
+        group.MapDelete("/{id:guid}/bans/{userId:guid}", UnbanMember).RequireAuthorization();
+        group.MapPost("/{id:guid}/members/{userId:guid}/make-admin", MakeAdmin).RequireAuthorization();
+        group.MapDelete("/{id:guid}/members/{userId:guid}/admin", RemoveAdmin).RequireAuthorization();
+        group.MapDelete("/{id:guid}/messages/{msgId:guid}", DeleteMessage).RequireAuthorization();
         return group;
     }
 
-    internal static Task<IResult> CreateRoomInternal(CreateRoomRequest req, ClaimsPrincipal p, AppDbContext db, CancellationToken ct)
+    internal static Task<IResult> CreateRoomInternal(CreateRoomRequest req, ClaimsPrincipal p, AppDbContext db,
+        CancellationToken ct)
         => CreateRoom(req, p, db, ct);
+
     internal static Task<IResult> JoinRoomInternal(Guid id, ClaimsPrincipal p, AppDbContext db, CancellationToken ct)
         => JoinRoom(id, p, db, ct);
 
@@ -44,7 +46,7 @@ public static class RoomEndpoints
         CancellationToken ct = default)
     {
         limit = Math.Clamp(limit, 1, 100);
-        page  = Math.Max(1, page);
+        page = Math.Max(1, page);
 
         var query = db.Rooms.Where(r => r.Visibility == RoomVisibility.Public && r.DeletedAt == null);
 
@@ -111,10 +113,10 @@ public static class RoomEndpoints
 
         var room = new Room
         {
-            Name        = req.Name,
+            Name = req.Name,
             Description = req.Description,
-            Visibility  = visibility,
-            OwnerId     = userId,
+            Visibility = visibility,
+            OwnerId = userId,
         };
         db.Rooms.Add(room);
 
@@ -122,14 +124,14 @@ public static class RoomEndpoints
         {
             RoomId = room.Id,
             UserId = userId,
-            Role   = MemberRole.Owner,
+            Role = MemberRole.Owner,
         });
 
-        db.ContextSequences.Add(new Domain.Entities.ContextSequences
+        db.ContextSequences.Add(new ContextSequences
         {
-            ContextType = Domain.Enums.ContextType.Room,
-            ContextId   = room.Id,
-            NextValue   = 1,
+            ContextType = ContextType.Room,
+            ContextId = room.Id,
+            NextValue = 1,
         });
 
         await db.SaveChangesAsync(ct);
@@ -152,7 +154,7 @@ public static class RoomEndpoints
             return Results.Unauthorized();
 
         var membership = await db.RoomMemberships.FirstOrDefaultAsync(m => m.RoomId == id && m.UserId == userId, ct);
-        var count      = await db.RoomMemberships.CountAsync(m => m.RoomId == id, ct);
+        var count = await db.RoomMemberships.CountAsync(m => m.RoomId == id, ct);
 
         return Results.Ok(new RoomDto(
             room.Id, room.Name, room.Description,
@@ -193,7 +195,8 @@ public static class RoomEndpoints
 
         await db.SaveChangesAsync(ct);
         var count = await db.RoomMemberships.CountAsync(m => m.RoomId == id, ct);
-        return Results.Ok(new RoomDto(room.Id, room.Name, room.Description, room.Visibility.ToString(), room.OwnerId, room.CreatedAt, count, "Owner"));
+        return Results.Ok(new RoomDto(room.Id, room.Name, room.Description, room.Visibility.ToString(), room.OwnerId,
+            room.CreatedAt, count, "Owner"));
     }
 
     private static async Task<IResult> DeleteRoom(
@@ -228,7 +231,8 @@ public static class RoomEndpoints
         await db.RoomMemberships.Where(m => m.RoomId == id).ExecuteDeleteAsync(ct);
         await db.RoomBans.Where(b => b.RoomId == id).ExecuteDeleteAsync(ct);
         await db.RoomInvitations.Where(i => i.RoomId == id).ExecuteDeleteAsync(ct);
-        await db.ContextSequences.Where(s => s.ContextType == Domain.Enums.ContextType.Room && s.ContextId == id).ExecuteDeleteAsync(ct);
+        await db.ContextSequences.Where(s => s.ContextType == ContextType.Room && s.ContextId == id)
+            .ExecuteDeleteAsync(ct);
 
         room.DeletedAt = DateTime.UtcNow;
         await db.SaveChangesAsync(ct);
@@ -249,7 +253,8 @@ public static class RoomEndpoints
         if (room is null) return Results.NotFound();
         if (room.Visibility == RoomVisibility.Private) return Results.Forbid();
 
-        var activeBan = await db.RoomBans.AnyAsync(b => b.RoomId == id && b.BannedUserId == userId && b.RevokedAt == null, ct);
+        var activeBan =
+            await db.RoomBans.AnyAsync(b => b.RoomId == id && b.BannedUserId == userId && b.RevokedAt == null, ct);
         if (activeBan) return Results.Problem("You are banned from this room.", statusCode: 403);
 
         var already = await db.RoomMemberships.AnyAsync(m => m.RoomId == id && m.UserId == userId, ct);
@@ -272,7 +277,8 @@ public static class RoomEndpoints
 
         var membership = await db.RoomMemberships.FirstOrDefaultAsync(m => m.RoomId == id && m.UserId == userId, ct);
         if (membership is null) return Results.NotFound();
-        if (membership.Role == MemberRole.Owner) return Results.BadRequest(new { error = "Owner cannot leave. Delete the room instead." });
+        if (membership.Role == MemberRole.Owner)
+            return Results.BadRequest(new { error = "Owner cannot leave. Delete the room instead." });
 
         await db.RoomMemberships.Where(m => m.RoomId == id && m.UserId == userId).ExecuteDeleteAsync(ct);
         return Results.NoContent();
@@ -300,7 +306,8 @@ public static class RoomEndpoints
         foreach (var m in members)
         {
             var status = await presence.GetStatusAsync(m.UserId, ct) ?? "offline";
-            dtos.Add(new RoomMemberDto(m.UserId, m.User.Username, m.User.AvatarUrl, m.Role.ToString(), m.JoinedAt, status));
+            dtos.Add(new RoomMemberDto(m.UserId, m.User.Username, m.User.AvatarUrl, m.Role.ToString(), m.JoinedAt,
+                status));
         }
 
         return Results.Ok(dtos);
@@ -373,14 +380,15 @@ public static class RoomEndpoints
         var targetMembership = await db.RoomMemberships
             .FirstOrDefaultAsync(m => m.RoomId == id && m.UserId == userId, ct);
         if (targetMembership is null) return Results.NotFound();
-        if (targetMembership.Role == MemberRole.Owner) return Results.BadRequest(new { error = "Cannot ban the room owner." });
+        if (targetMembership.Role == MemberRole.Owner)
+            return Results.BadRequest(new { error = "Cannot ban the room owner." });
 
         db.RoomBans.Add(new RoomBan
         {
-            RoomId         = id,
-            BannedUserId   = userId,
+            RoomId = id,
+            BannedUserId = userId,
             BannedByUserId = callerId,
-            Reason         = req.Reason,
+            Reason = req.Reason,
         });
         await db.RoomMemberships.Where(m => m.RoomId == id && m.UserId == userId).ExecuteDeleteAsync(ct);
         await db.SaveChangesAsync(ct);
@@ -404,7 +412,7 @@ public static class RoomEndpoints
             .FirstOrDefaultAsync(b => b.RoomId == id && b.BannedUserId == userId && b.RevokedAt == null, ct);
         if (ban is null) return Results.NotFound();
 
-        ban.RevokedAt       = DateTime.UtcNow;
+        ban.RevokedAt = DateTime.UtcNow;
         ban.RevokedByUserId = callerId;
         await db.SaveChangesAsync(ct);
 
@@ -500,10 +508,11 @@ public static class RoomEndpoints
 
         if (!await IsAdminOrOwner(db, id, callerId, ct)) return Results.Forbid();
 
-        var msg = await db.Messages.FirstOrDefaultAsync(m => m.Id == msgId && m.RoomId == id && m.DeletedAt == null, ct);
+        var msg = await db.Messages.FirstOrDefaultAsync(m => m.Id == msgId && m.RoomId == id && m.DeletedAt == null,
+            ct);
         if (msg is null) return Results.NotFound();
 
-        msg.DeletedAt       = DateTime.UtcNow;
+        msg.DeletedAt = DateTime.UtcNow;
         msg.DeletedByUserId = callerId;
         await db.SaveChangesAsync(ct);
         return Results.NoContent();
@@ -526,16 +535,21 @@ public static class RoomEndpoints
         m.SentAt,
         m.EditedAt,
         m.DeletedAt != null,
-        m.ReplyToMessage is null ? null : new MessageDto(
-            m.ReplyToMessage.Id,
-            m.ReplyToMessage.SequenceNumber,
-            m.ReplyToMessage.DeletedAt == null ? m.ReplyToMessage.Content : null,
-            new UserSummary(m.ReplyToMessage.Author.Id, m.ReplyToMessage.Author.Username, m.ReplyToMessage.Author.AvatarUrl),
-            m.ReplyToMessage.SentAt, m.ReplyToMessage.EditedAt, m.ReplyToMessage.DeletedAt != null, null, null),
-        m.Attachment is null ? null : new AttachmentDto(
-            m.Attachment.Id,
-            m.Attachment.FileName,
-            m.Attachment.ContentType,
-            m.Attachment.SizeBytes,
-            m.Attachment.Comment));
+        m.ReplyToMessage is null
+            ? null
+            : new MessageDto(
+                m.ReplyToMessage.Id,
+                m.ReplyToMessage.SequenceNumber,
+                m.ReplyToMessage.DeletedAt == null ? m.ReplyToMessage.Content : null,
+                new UserSummary(m.ReplyToMessage.Author.Id, m.ReplyToMessage.Author.Username,
+                    m.ReplyToMessage.Author.AvatarUrl),
+                m.ReplyToMessage.SentAt, m.ReplyToMessage.EditedAt, m.ReplyToMessage.DeletedAt != null, null, null),
+        m.Attachment is null
+            ? null
+            : new AttachmentDto(
+                m.Attachment.Id,
+                m.Attachment.FileName,
+                m.Attachment.ContentType,
+                m.Attachment.SizeBytes,
+                m.Attachment.Comment));
 }

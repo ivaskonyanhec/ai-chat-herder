@@ -1,0 +1,74 @@
+<section class="rooms-home__rail">
+  <header class="rooms-home__section-header">
+    <p class="rooms-home__section-label">Public Rooms</p>
+    <h2 class="rooms-home__section-title">#engineering-room</h2>
+  </header>
+
+  <div class="rooms-home__room-list">
+    <button class="rooms-home__room rooms-home__room--active" type="button">#engineering-room</button>
+    <button class="rooms-home__room" type="button">#product-systems</button>
+    <button class="rooms-home__room" type="button">#ops-review</button>
+  </div>
+</section>
+
+<section class="rooms-home__chat">
+  <header class="rooms-home__chat-header">
+    <div>
+      <p class="rooms-home__section-label">Room View</p>
+      <h2 class="rooms-home__chat-title">#engineering-room</h2>
+    </div>
+    <span class="rooms-home__room-tag">Public</span>
+  </header>
+
+  <div class="rooms-home__messages" data-testid="chat-area">
+    <article class="rooms-home__message">
+      <div class="rooms-home__avatar">AC</div>
+      <div>
+        <div class="rooms-home__message-meta">
+          <span>Alice Chen</span>
+          <time>10:24 AM</time>
+        </div>
+        <p data-testid="message-text">
+          Reviewing the Angular shell now that backend auth is in place. The UI frame is aligned to the approved slate protocol.
+        </p>
+      </div>
+    </article>
+
+    <article class="rooms-home__message">
+      <div class="rooms-home__avatar rooms-home__avatar--secondary">BV</div>
+      <div>
+        <div class="rooms-home__message-meta">
+          <span>{{ user()?.username ?? 'Current User' }}</span>
+          <time>10:31 AM</time>
+        </div>
+        <p data-testid="message-text">
+          Auth routing, session bootstrap, and the first workspace shell are now the active frontend foundation.
+        </p>
+      </div>
+    </article>
+  </div>
+
+  <footer class="rooms-home__composer">
+    <input
+      data-testid="message-input"
+      class="rooms-home__composer-input"
+      type="text"
+      placeholder="Message composition lands here in the next slice."
+    />
+  </footer>
+</section>
+
+<aside class="rooms-home__members">
+  <header class="rooms-home__section-header">
+    <p class="rooms-home__section-label">Members</p>
+    <h2 class="rooms-home__section-title">Current session</h2>
+  </header>
+
+  <div class="rooms-home__member-card">
+    <span class="rooms-home__status-dot" [attr.data-testid]="memberStatusTestId()"></span>
+    <div>
+      <p class="rooms-home__member-name">{{ user()?.username ?? 'Authenticated user' }}</p>
+      <p class="rooms-home__member-meta">{{ user()?.email ?? 'active session' }}</p>
+    </div>
+  </div>
+</aside>

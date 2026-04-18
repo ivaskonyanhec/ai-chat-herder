@@ -1,0 +1,181 @@
+:host {
+  display: contents;
+}
+
+.rooms-home__rail,
+.rooms-home__members {
+  padding: var(--spacing-8) var(--spacing-5);
+  background: var(--color-surface-container);
+}
+
+.rooms-home__chat {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-width: 0;
+  background: var(--color-surface-container-lowest);
+}
+
+.rooms-home__chat-header,
+.rooms-home__section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-4);
+}
+
+.rooms-home__chat-header {
+  padding: var(--spacing-6);
+}
+
+.rooms-home__section-label {
+  margin: 0;
+  color: var(--color-outline-variant);
+  font-size: var(--font-size-label-md);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.rooms-home__section-title,
+.rooms-home__chat-title {
+  margin: var(--spacing-2) 0 0;
+  color: var(--color-on-surface);
+  font-size: var(--font-size-title-lg);
+  font-weight: var(--font-weight-bold);
+}
+
+.rooms-home__room-list {
+  display: grid;
+  gap: var(--spacing-2);
+}
+
+.rooms-home__room {
+  border: 0;
+  padding: var(--spacing-3) var(--spacing-4);
+  border-radius: var(--radius-md);
+  color: var(--color-on-surface);
+  background: transparent;
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  text-align: left;
+}
+
+.rooms-home__room--active {
+  background: color-mix(in srgb, var(--color-surface-container-lowest) 35%, transparent);
+}
+
+.rooms-home__room-tag {
+  align-self: center;
+  padding: 0.35rem 0.65rem;
+  border-radius: var(--radius-md);
+  color: var(--color-on-surface-variant);
+  background: var(--color-surface-container);
+  font-size: var(--font-size-label-sm);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.rooms-home__messages {
+  display: grid;
+  align-content: start;
+  gap: var(--spacing-6);
+  padding: 0 var(--spacing-6) var(--spacing-6);
+  overflow: auto;
+}
+
+.rooms-home__message {
+  display: grid;
+  grid-template-columns: 2.5rem minmax(0, 1fr);
+  gap: var(--spacing-4);
+}
+
+.rooms-home__avatar {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-md);
+  color: var(--color-on-primary);
+  background: var(--color-primary);
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-weight-bold);
+}
+
+.rooms-home__avatar--secondary {
+  background: var(--color-secondary);
+}
+
+.rooms-home__message-meta {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-2);
+  color: var(--color-on-surface);
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-weight-bold);
+}
+
+.rooms-home__message-meta time {
+  color: var(--color-outline);
+  font-size: var(--font-size-label-sm);
+  letter-spacing: var(--letter-spacing-metadata);
+}
+
+.rooms-home__message p {
+  margin: 0;
+  max-width: 42rem;
+  color: var(--color-on-surface);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-relaxed);
+}
+
+.rooms-home__composer {
+  padding: 0 var(--spacing-6) var(--spacing-6);
+}
+
+.rooms-home__composer-input {
+  width: 100%;
+  border: 0;
+  border-radius: var(--radius-md);
+  padding: 1rem 1rem 0.95rem;
+  background: var(--color-surface-container-low);
+  color: var(--color-on-surface);
+}
+
+.rooms-home__member-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--spacing-3);
+  margin-top: var(--spacing-6);
+  padding: var(--spacing-4);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-container-lowest);
+}
+
+.rooms-home__status-dot {
+  display: inline-block;
+  width: var(--status-dot-size);
+  height: var(--status-dot-size);
+  margin-top: 0.35rem;
+  border: var(--status-dot-border);
+  border-radius: var(--radius-full);
+  background: var(--color-status-online);
+}
+
+.rooms-home__member-name,
+.rooms-home__member-meta {
+  margin: 0;
+}
+
+.rooms-home__member-name {
+  color: var(--color-on-surface);
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-weight-bold);
+}
+
+.rooms-home__member-meta {
+  margin-top: var(--spacing-1);
+  color: var(--color-on-surface-variant);
+  font-size: var(--font-size-label-md);
+}

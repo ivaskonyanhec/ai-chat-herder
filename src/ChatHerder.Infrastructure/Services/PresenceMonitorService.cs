@@ -4,15 +4,47 @@ using Microsoft.Extensions.Logging;
 
 namespace ChatHerder.Infrastructure.Services;
 
-// Ghost-cleanup safety net. Runs every 20s, removes stale tabs (no heartbeat in >70s).
-// Primary AFK transitions happen via hub methods; this is the fallback sweeper.
+/// <summary>
+/// Background presence sweeper that enforces fallback status transitions when client-driven
+/// AFK/offline signals are missing (for example, abrupt tab close, disconnect, or tab hibernation).
+/// </summary>
+/// <param name="presence">
+/// Presence storage abstraction used to read active users, inspect tab heartbeats,
+/// and persist status changes.
+/// </param>
+/// <param name="logger">
+/// Logger used for operational diagnostics during sweep cycles.
+/// </param>
+/// <remarks>
+/// Runs on a fixed interval and applies these rules per user:
+/// <list type="number">
+/// <item><description>Remove stale tabs (no heartbeat older than the configured threshold).</description></item>
+/// <item><description>Set user to <c>offline</c> if no tabs remain.</description></item>
+/// <item><description>Set user to <c>afk</c> if all remaining tabs are AFK.</description></item>
+/// </list>
+/// Primary AFK transitions should still come from hub methods; this service is a safety net.
+/// </remarks>
 public sealed class PresenceMonitorService(
     IPresenceStore presence,
     ILogger<PresenceMonitorService> logger) : BackgroundService
 {
+    /// <summary>
+    /// Delay between sweep executions.
+    /// </summary>
     private static readonly TimeSpan Interval = TimeSpan.FromSeconds(20);
+
+    /// <summary>
+    /// Heartbeat age threshold (in seconds) after which a tab is considered stale.
+    /// </summary>
     private const double StaleSeconds = 70;
 
+    /// <summary>
+    /// Starts the background loop and executes sweeps until cancellation is requested.
+    /// </summary>
+    /// <param name="stoppingToken">
+    /// Token used by the host to stop the background service gracefully.
+    /// </param>
+    /// <returns>A task that completes when the service stops.</returns>
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)
@@ -22,12 +54,23 @@ public sealed class PresenceMonitorService(
         }
     }
 
+    /// <summary>
+    /// Executes one sweep cycle:
+    /// removes stale tabs, recalculates effective user status,
+    /// and updates the active-user set when needed.
+    /// </summary>
+    /// <param name="ct">Cancellation token for the current sweep operation.</param>
+    /// <returns>A task representing the asynchronous sweep work.</returns>
+    /// <remarks>
+    /// Exceptions are handled internally (except cancellation) so a single failing cycle
+    /// does not terminate the background service.
+    /// </remarks>
     internal async Task SweepAsync(CancellationToken ct)
     {
         try
         {
             var activeUsers = await presence.GetActiveUsersAsync(ct);
-            var threshold   = DateTimeOffset.UtcNow.ToUnixTimeSeconds() - StaleSeconds;
+            var threshold = DateTimeOffset.UtcNow.ToUnixTimeSeconds() - StaleSeconds;
 
             foreach (var userId in activeUsers)
             {

@@ -1,14 +1,11 @@
-import { Component, computed, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, inject, signal } from '@angular/core';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthApiService } from '../../core/auth/auth-api.service';
 import { AuthSessionService } from '../../core/auth/auth-session.service';
-import { SessionsPanelComponent } from '../sessions/sessions-panel.component';
-
-type WorkspaceView = 'rooms' | 'sessions';
 
 @Component({
   selector: 'app-workspace-shell',
-  imports: [SessionsPanelComponent],
+  imports: [RouterLink, RouterLinkActive, RouterOutlet],
   templateUrl: './workspace-shell.component.html',
   styleUrl: './workspace-shell.component.scss',
 })
@@ -17,17 +14,7 @@ export class WorkspaceShellComponent {
   private readonly authSession = inject(AuthSessionService);
   private readonly router = inject(Router);
 
-  readonly activeView = signal<WorkspaceView>('rooms');
   readonly logoutError = signal('');
-  readonly user = this.authSession.user;
-  readonly memberStatusTestId = computed(() => {
-    const user = this.user();
-    return user ? `member-status-${user.id}` : 'member-status-anonymous';
-  });
-
-  setActiveView(view: WorkspaceView): void {
-    this.activeView.set(view);
-  }
 
   logout(): void {
     this.logoutError.set('');
