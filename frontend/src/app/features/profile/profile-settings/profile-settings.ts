@@ -1,5 +1,8 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
+import { finalize } from 'rxjs';
 import { AuthSessionService } from '../../../core/auth/auth-session.service';
+import { UsersApiService } from '../../../core/users/users-api.service';
+import type { User } from '../../../core/auth/auth.models';
 
 @Component({
   selector: 'app-profile-settings',
@@ -10,5 +13,17 @@ import { AuthSessionService } from '../../../core/auth/auth-session.service';
 })
 export class ProfileSettingsComponent {
   private readonly authSession = inject(AuthSessionService);
-  readonly user = this.authSession.user;
+  private readonly usersApi = inject(UsersApiService);
+
+  readonly isLoading = signal(true);
+  readonly profile = signal<User | null>(this.authSession.user());
+
+  constructor() {
+    this.usersApi.getMe()
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: user => this.profile.set(user),
+        error: () => { /* fall back to cached session user */ },
+      });
+  }
 }

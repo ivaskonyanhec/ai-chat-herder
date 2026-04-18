@@ -17,7 +17,7 @@
               <div class="relative">
                 <div class="w-32 h-32 rounded-full ring-4 ring-surface-container-high overflow-hidden">
                   <img
-                    [src]="user()?.avatarUrl || 'https://lh3.googleusercontent.com/aida-public/AB6AXuB4BQF6R94p2c-RGScZkvhvtRCAwLkFZavcdhUaO_d33ro5mtIlXhx_w96jAw7gxTD7ZwQuvD8N22XqKRbYS8L1Ck1O6AG9kCH3V1XZT8fO7CEy6CDxtxCgOOsX6MashMBXeJhcwCpNTMOUIpGIn5Sgmb5tqFuTokhuKNryqP78rIuft1-mluiuQl0LLqS9VwGb_rjSEUYSUgMhC93CXM4pUnwRZT4EQDUEB69YWK3GND-FYiChdZq8HDBqI1oHlPCAF9Q6gE7P4zM'"
+                    [src]="profile()?.avatarUrl || 'https://lh3.googleusercontent.com/aida-public/AB6AXuB4BQF6R94p2c-RGScZkvhvtRCAwLkFZavcdhUaO_d33ro5mtIlXhx_w96jAw7gxTD7ZwQuvD8N22XqKRbYS8L1Ck1O6AG9kCH3V1XZT8fO7CEy6CDxtxCgOOsX6MashMBXeJhcwCpNTMOUIpGIn5Sgmb5tqFuTokhuKNryqP78rIuft1-mluiuQl0LLqS9VwGb_rjSEUYSUgMhC93CXM4pUnwRZT4EQDUEB69YWK3GND-FYiChdZq8HDBqI1oHlPCAF9Q6gE7P4zM'"
                     alt="Current Avatar"
                     class="w-full h-full object-cover"
                   />
@@ -30,7 +30,7 @@
                 </button>
               </div>
               <div class="text-center">
-                <h3 class="text-lg font-bold text-on-surface tracking-tight">{{ user()?.username }}</h3>
+                <h3 class="text-lg font-bold text-on-surface tracking-tight">{{ profile()?.username }}</h3>
                 <p class="text-xs text-on-surface-variant uppercase tracking-widest font-semibold mt-1">Lead Architect</p>
               </div>
               <div class="w-full pt-4 border-t border-surface-container flex justify-between items-center text-[11px] font-bold text-on-surface-variant uppercase tracking-tighter">
@@ -82,7 +82,7 @@
                     <input
                       class="w-full bg-surface-container-low border-none rounded-lg text-sm py-3 px-4 focus:ring-1 focus:ring-primary text-on-surface font-medium outline-none"
                       type="text"
-                      [value]="user()?.username"
+                      [value]="profile()?.username"
                     />
                   </div>
                   <div class="space-y-2">
@@ -100,7 +100,7 @@
                     class="w-full bg-surface-container-low border-none rounded-lg text-sm py-3 px-4 focus:ring-1 focus:ring-primary text-on-surface font-medium outline-none disabled:opacity-60 disabled:cursor-not-allowed"
                     disabled
                     type="email"
-                    [value]="user()?.email"
+                    [value]="profile()?.email"
                   />
                   <p class="text-[10px] text-on-surface-variant italic">Contact administrator to modify workspace credentials.</p>
                 </div>
