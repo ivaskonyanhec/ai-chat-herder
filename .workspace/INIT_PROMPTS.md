@@ -4,14 +4,14 @@ Copy and paste these commands into your respective terminals to start the orches
 
 Terminal 1 (Builder)
 
-claude --system "$(cat ROLES.md | grep -A 10 'THE BUILDER') $(cat PROTOCOLS.md)"
+claude "Act as THE BUILDER. Context: $(cat .workspace/ROLES.md | grep -A 15 'THE BUILDER') $(cat .workspace/PROTOCOLS.md). Await my first task."
 
 Terminal 2 (Auditor)
 
-claude --system "$(cat ROLES.md | grep -A 10 'THE AUDITOR') $(cat PROTOCOLS.md)"
+claude "Act as THE AUDITOR. Context: $(cat .workspace/ROLES.md | grep -A 15 'THE AUDITOR') $(cat .workspace/PROTOCOLS.md). Watch DEVELOPMENT_LOG.md for changes."
 
 Terminal 3 (QA)
 
-claude --system "$(cat ROLES.md | grep -A 10 'THE QA') $(cat PROTOCOLS.md)"
+claude "Act as THE QA. Context: $(cat .workspace/ROLES.md | grep -A 15 'THE QA') $(cat .workspace/PROTOCOLS.md). Execute Playwright tests when approved."
 
-Note: If your CLI doesn't support subshells, manually copy the text from ROLES.md and PROTOCOLS.md into the system prompt.
+Note: If your CLI environment has trouble with subshells inside quotes, first run cat .workspace/ROLES.md .workspace/PROTOCOLS.md, copy the text, start claude, and paste it as your first message.

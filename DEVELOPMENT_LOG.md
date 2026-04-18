@@ -257,3 +257,109 @@ Format: `[Timestamp] | Task | Reasoning | Changes`
 ---
 
 `[2026-04-18 T58]` | **Create Playwright E2E test suite, Dockerfile.e2e, and TESTING_SETUP.md** | Automated end-to-end tests required to validate real-time scenarios (multi-tab presence, SignalR delivery latency, file upload/download, ban enforcement) that unit tests cannot cover; Docker integration ensures tests run in CI against a fully composed stack | Created: `e2e/playwright.config.ts`, `e2e/package.json`, `e2e/tsconfig.json`, `e2e/helpers/api.helpers.ts`, `e2e/fixtures/test-fixtures.ts`, `e2e/tests/01-auth.spec.ts`, `e2e/tests/02-chat.spec.ts`, `e2e/tests/03-presence.spec.ts`, `e2e/tests/04-attachments.spec.ts`, `e2e/tests/05-admin.spec.ts`; `Dockerfile.e2e`; `TESTING_SETUP.md`; updated `docker-compose.yml` (added `e2e` profile service), `.env.template` (added E2E vars)
+
+---
+
+## 2026-04-18 — AUDITOR Review: T58 Playwright E2E Suite
+
+---
+
+`[2026-04-18 T59]` | **[REJECTED] AUDITOR review of T58 E2E test suite** | Status: **REJECTED** — two endpoint mismatches against AGENT.md §9 spec, one missing Docker build artifact, and missing nginx security headers. Tests would compile and run against stubs but exercise wrong backend routes on the real server.
+
+### Findings
+
+#### CRITICAL — Wrong ban endpoint (`e2e/helpers/api.helpers.ts:87`)
+
+```ts
+// Current (WRONG):
+const res = await ctx.delete(`/api/rooms/${roomId}/members/${userId}`);
+```
+AGENT.md §9 specifies the ban operation as:
+```
+POST   /rooms/{id}/members/{userId}/ban    [admin]
+```
+There is **no** `DELETE /rooms/{id}/members/{userId}` in the spec. The comment on line 86 fabricates this endpoint. The correct call is:
+```ts
+const res = await ctx.post(`/api/rooms/${roomId}/members/${userId}/ban`);
+```
+**Impact:** The ban test (`05-admin.spec.ts`) and the non-member file access test (`04-attachments.spec.ts`) call a non-existent endpoint, meaning ban state is never actually set — the file-access 403 and the "banned user cannot rejoin" tests are structurally void.
+
+---
+
+#### CRITICAL — Wrong promote-to-admin endpoint (`e2e/tests/05-admin.spec.ts:61`)
+
+```ts
+// Current (WRONG):
+await promoteCtx.post(`/api/rooms/${room.id}/admins/${userB.id}`);
+```
+AGENT.md §9 specifies:
+```
+POST   /rooms/{id}/members/{userId}/make-admin    [owner]
+```
+Correct call:
+```ts
+await promoteCtx.post(`/api/rooms/${room.id}/members/${userB.id}/make-admin`);
+```
+**Impact:** The "owner cannot be banned by admin" test never actually promotes User B to admin — the scenario under test never occurs, making this test meaningless.
+
+---
+
+#### MEDIUM — `__presenceHub` optional-chaining silently swallows missing implementation (`e2e/tests/03-presence.spec.ts:66`, `:73`)
+
+Lines 66 and 73 use `?.invoke(...)` optional chaining:
+```ts
+await (window as any).__presenceHub?.invoke('SetAfk');   // line 66
+await (window as any).__presenceHub?.invoke('SetActive'); // line 73
+```
+If `PresenceService` has not yet exposed `__presenceHub` in dev mode, these calls silently become no-ops. The `data-status` assertions that follow will then pass trivially (status never changes) rather than failing loudly. Only the first AFK test (line 45) correctly throws. All three presence tests must use the same throwing guard pattern as line 45.
+
+---
+
+#### MEDIUM — Missing `package-lock.json` breaks `Dockerfile.e2e` build (`Dockerfile.e2e:9`)
+
+```dockerfile
+COPY e2e/package.json e2e/package-lock.json ./
+RUN npm ci --prefer-offline
+```
+`e2e/package-lock.json` does not exist in the repository (`ls e2e/` confirms only `package.json`). `npm ci` requires a lockfile. The Docker image will fail to build. Fix: run `npm install` locally to generate `package-lock.json` and commit it, or switch to `npm install --prefer-offline` in the Dockerfile (weaker reproducibility guarantee).
+
+---
+
+#### LOW — Nginx config missing security response headers (`frontend/nginx.conf`)
+
+The proxy config sets no HTTP security headers. At minimum, add to the `server {}` block:
+```nginx
+add_header X-Frame-Options "SAMEORIGIN" always;
+add_header X-Content-Type-Options "nosniff" always;
+add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+```
+`X-Content-Type-Options: nosniff` is particularly important given the app serves binary file attachments (`application/octet-stream`) through Nginx — without it, browsers may sniff MIME type and execute content as script.
+
+---
+
+### What is correct (do not regress)
+
+- `workers: 1` + `fullyParallel: false` — correct; shared DB/Redis cannot safely parallelize ✓
+- `addInitScript()` for pre-bootstrap token injection — correct pattern ✓
+- `depends_on: condition: service_healthy` on all downstream services ✓
+- Non-root `appuser` in `Dockerfile.backend` ✓
+- All credentials via env vars; no hardcoded secrets ✓
+- Redis AOF (`--appendonly yes`) in docker-compose ✓
+- `client_max_body_size 25M` in nginx (covers 20 MB upload + multipart overhead) ✓
+- WebSocket `Upgrade`/`Connection` headers correctly forwarded for SignalR ✓
+
+### Required fixes before re-submission (return to BUILD)
+
+1. `e2e/helpers/api.helpers.ts` `banMember()`: change `ctx.delete(…/members/${userId})` → `ctx.post(…/members/${userId}/ban)`
+2. `e2e/tests/05-admin.spec.ts` promote call: change `/admins/${userB.id}` → `/members/${userB.id}/make-admin`
+3. `e2e/tests/03-presence.spec.ts` lines 66 and 73: replace `?.invoke(...)` with throwing guard identical to line 45
+4. Run `npm install` in `e2e/` and commit `package-lock.json`
+5. `frontend/nginx.conf`: add `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy` headers
+
+---
+
+## 2026-04-18 — QA Status Check
+
+---
+
+`[2026-04-18 T60]` | **[BLOCKED] QA pre-flight: no APPROVED tasks available for test execution** | THE QA read the last 5 log entries (T56–T60). Current global state: T58 E2E suite was submitted as BUILD, reviewed at T59 as **[REJECTED]** by AUDITOR. Five blocking findings documented. No task bears [APPROVED] status. Per the state machine, QA must not run tests until a task is [APPROVED]. | Pre-execution static audit independently confirmed all five T59 findings — endpoint mismatches (`banMember` uses `DELETE /members/{userId}` vs spec `POST /members/{userId}/ban`; promote uses `/admins/{userId}` vs spec `/members/{userId}/make-admin`), optional-chain silent-no-op in presence tests, missing `package-lock.json`, missing nginx security headers. No regressions introduced by QA. Awaiting Builder to address T59 findings and resubmit as next BUILD entry before QA can proceed.

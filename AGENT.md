@@ -599,3 +599,41 @@ Design sketch if requested:
 | Reply snapshot embedded in DTO | Quoted text survives original message deletion |
 | Soft delete for messages | Preserves reply chain coherence; placeholder maintains threading |
 | Minimal APIs (no controllers) | Idiomatic .NET 10; endpoint groups are independently testable via `WebApplicationFactory` |
+
+---
+
+## 20. E2E Testing Infrastructure
+
+**Framework:** Playwright 1.49 + TypeScript. All tests live in `e2e/`.
+
+**Run locally:**
+```bash
+cd e2e && npm install && npx playwright install chromium --with-deps
+BASE_URL=http://localhost npx playwright test
+```
+
+**Run in Docker (CI):**
+```bash
+docker compose --profile e2e up --build e2e
+# Reports written to ./e2e-reports/ (bind-mounted volume)
+```
+
+**Test suites (14 tests across 5 files):**
+
+| File | Scenarios |
+|------|-----------|
+| `e2e/tests/01-auth.spec.ts` | Registration, login, session persistence, invalid credentials |
+| `e2e/tests/02-chat.spec.ts` | Message delivery < 3s, self-message loopback, input clear |
+| `e2e/tests/03-presence.spec.ts` | online → AFK (≤ 2s) → active → offline transitions |
+| `e2e/tests/04-attachments.spec.ts` | 5 MB upload, member download 200, non-member download 403 |
+| `e2e/tests/05-admin.spec.ts` | Owner role display, ban enforcement (3s), 403 rejoin, owner protection |
+
+**Critical implementation requirement:** `PresenceService` (Angular) **must** expose its SignalR connection in dev mode:
+```typescript
+if (isDevMode()) { (window as any).__presenceHub = this.connection; }
+```
+The AFK test (`03-presence.spec.ts`) calls `hub.invoke('SetAfk')` directly from `page.evaluate()` — this bypasses the 60s inactivity timer and makes the test deterministic. Without this, the AFK test cannot run.
+
+**`data-testid` contract:** All Playwright selectors use `data-testid` attributes. Full list in `TESTING_SETUP.md §5`. Angular components must declare these — tests will fail at selector resolution if missing.
+
+**Infrastructure:** `Dockerfile.e2e` (Playwright/Chromium container), `e2e` Docker Compose service (profile `e2e`, `depends_on: service_healthy`). Reports at `e2e-reports/index.html`.

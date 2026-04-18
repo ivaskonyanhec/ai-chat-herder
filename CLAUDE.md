@@ -79,3 +79,11 @@ See `AGENT.md` §19 and `DESIGN.md`.
 - Pixel-accurate HTML mockups: `designs/*.html` (open in browser before implementing any screen)
 - CSS custom properties: `designs/tokens.css` (import globally — no hardcoded hex values in components)
 - Design rules (No-Line, Glass & Gradient, roundness limits, component specs): `DESIGN.md`
+
+## E2E Testing
+
+See `AGENT.md` §20 and `TESTING_SETUP.md`.
+
+- Test runner: `e2e/` directory (Playwright + TypeScript, 14 tests across 5 spec files)
+- `PresenceService` **must** expose `(window as any).__presenceHub` when `isDevMode()` — required by the AFK presence test
+- All Angular components must declare `data-testid` attributes per the contract in `TESTING_SETUP.md §5`
