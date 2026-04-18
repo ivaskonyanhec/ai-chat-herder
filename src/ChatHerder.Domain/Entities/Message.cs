@@ -8,10 +8,14 @@ public sealed class Message
     public required string Content { get; set; }      // max 3 KB enforced at endpoint
     public required long SequenceNumber { get; init; } // per-room monotonic; allocated via ContextSequences
     public Guid? ReplyToMessageId { get; init; }       // self-ref nullable FK
+    public Guid? AttachmentId { get; init; }
     public DateTime SentAt { get; init; } = DateTime.UtcNow;
+    public DateTime? EditedAt { get; set; }
     public DateTime? DeletedAt { get; set; }
+    public Guid? DeletedByUserId { get; set; }
 
     public Room Room { get; init; } = null!;
     public User Author { get; init; } = null!;
     public Message? ReplyToMessage { get; init; }
+    public Attachment? Attachment { get; init; }
 }

@@ -115,9 +115,14 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             e.HasKey(msg => msg.Id);
             e.HasIndex(msg => new { msg.RoomId, msg.SequenceNumber }).IsUnique(); // gap-detection invariant
             e.Property(msg => msg.Content).HasMaxLength(3072).IsRequired();       // 3 KB limit
+            e.Property(msg => msg.AttachmentId);
+            e.Property(msg => msg.EditedAt);
+            e.Property(msg => msg.DeletedByUserId);
             e.HasOne(msg => msg.Room).WithMany().HasForeignKey(msg => msg.RoomId).OnDelete(DeleteBehavior.Cascade);
             e.HasOne(msg => msg.Author).WithMany().HasForeignKey(msg => msg.AuthorId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne(msg => msg.ReplyToMessage).WithMany().HasForeignKey(msg => msg.ReplyToMessageId).OnDelete(DeleteBehavior.SetNull);
+            e.HasOne(msg => msg.Attachment).WithMany().HasForeignKey(msg => msg.AttachmentId).OnDelete(DeleteBehavior.SetNull);
+            e.HasOne<User>().WithMany().HasForeignKey(msg => msg.DeletedByUserId).OnDelete(DeleteBehavior.SetNull);
         });
 
         // ── Attachments ────────────────────────────────────────────────────────
@@ -147,9 +152,12 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             e.HasKey(dm => dm.Id);
             e.HasIndex(dm => new { dm.DialogId, dm.SequenceNumber }).IsUnique();
             e.Property(dm => dm.Content).HasMaxLength(3072).IsRequired();
+            e.Property(dm => dm.AttachmentId);
+            e.Property(dm => dm.EditedAt);
             e.HasOne(dm => dm.Dialog).WithMany().HasForeignKey(dm => dm.DialogId).OnDelete(DeleteBehavior.Cascade);
             e.HasOne(dm => dm.Author).WithMany().HasForeignKey(dm => dm.AuthorId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne(dm => dm.ReplyToMessage).WithMany().HasForeignKey(dm => dm.ReplyToMessageId).OnDelete(DeleteBehavior.SetNull);
+            e.HasOne(dm => dm.Attachment).WithMany().HasForeignKey(dm => dm.AttachmentId).OnDelete(DeleteBehavior.SetNull);
         });
 
         // ── FriendRequests ─────────────────────────────────────────────────────
