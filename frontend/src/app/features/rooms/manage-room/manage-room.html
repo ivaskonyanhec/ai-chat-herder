@@ -207,9 +207,38 @@
     @if (activeTab() === 'invitations') {
       <div class="flex-1 overflow-y-auto px-8 py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div class="mb-6 flex gap-3">
-          <input class="flex-1 bg-surface-container-low border-none rounded-lg px-4 py-2 text-sm focus:ring-1 focus:ring-primary/30 outline-none"
-                 placeholder="Username to invite..." [(ngModel)]="inviteUsername" />
+          <div class="relative flex-1">
+            <input
+              class="w-full bg-surface-container-low border-none rounded-lg px-4 py-2 text-sm focus:ring-1 focus:ring-primary/30 outline-none"
+              placeholder="Username to invite..."
+              data-testid="invite-username-input"
+              [ngModel]="inviteUsername"
+              (ngModelChange)="onInviteUsernameInput($event)" />
+            @if (inviteSuggestions().length > 0) {
+              <div
+                class="absolute left-0 right-0 top-full z-20 mt-1 rounded-lg bg-surface-container-lowest shadow-lg ring-1 ring-outline-variant/40 overflow-hidden"
+                data-testid="invite-user-suggestions">
+                @for (suggestion of inviteSuggestions(); track suggestion.id) {
+                  <button
+                    type="button"
+                    class="w-full flex items-center gap-3 px-3 py-2 text-left text-sm text-on-surface hover:bg-surface-container-high"
+                    [attr.data-testid]="'invite-user-suggestion-' + suggestion.username"
+                    (click)="selectInviteSuggestion(suggestion)">
+                    @if (suggestion.avatarUrl) {
+                      <img [src]="suggestion.avatarUrl" [alt]="suggestion.username" class="w-6 h-6 rounded-full object-cover" />
+                    } @else {
+                      <span class="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center text-[10px] font-bold text-on-surface-variant">
+                        {{ suggestion.username[0].toUpperCase() }}
+                      </span>
+                    }
+                    <span class="truncate">{{ suggestion.username }}</span>
+                  </button>
+                }
+              </div>
+            }
+          </div>
           <button class="px-4 py-2 bg-primary text-on-primary text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity"
+                  data-testid="send-room-invitation"
                   (click)="sendInvitation()">Invite</button>
         </div>
         <div class="space-y-2 pb-8">

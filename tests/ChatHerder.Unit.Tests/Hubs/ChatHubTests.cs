@@ -17,12 +17,33 @@ public sealed class ChatHubTests
         new(new DbContextOptionsBuilder<AppDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
 
+    private static AppDbContext BuildSqliteDb()
+    {
+        var opts = new DbContextOptionsBuilder<AppDbContext>()
+            .UseSqlite($"Data Source=file:chathub-{Guid.NewGuid():N}?mode=memory&cache=shared")
+            .Options;
+        var db = new AppDbContext(opts);
+        db.Database.EnsureCreated();
+        return db;
+    }
+
+    private static bool IsUnreadPayload(object?[] args, Guid contextId, long count)
+    {
+        if (args.Length != 1 || args[0] is null) return false;
+        var payload = args[0]!;
+        return payload.GetType().GetProperty("contextType")?.GetValue(payload)?.Equals("room") == true
+            && payload.GetType().GetProperty("contextId")?.GetValue(payload)?.Equals(contextId) == true
+            && payload.GetType().GetProperty("count")?.GetValue(payload)?.Equals(count) == true;
+    }
+
     private static ChatHub BuildHub(AppDbContext db, Guid userId,
-        IUnreadStore? unread = null, IPresenceStore? presence = null)
+        IUnreadStore? unread = null, IPresenceStore? presence = null,
+        IHubContext<PresenceHub>? presenceHub = null)
     {
         var hub = new ChatHub(db,
             unread   ?? Substitute.For<IUnreadStore>(),
-            presence ?? Substitute.For<IPresenceStore>());
+            presence ?? Substitute.For<IPresenceStore>(),
+            presenceHub ?? Substitute.For<IHubContext<PresenceHub>>());
 
         var context = Substitute.For<HubCallerContext>();
         context.ConnectionId.Returns("conn-chat");
@@ -124,8 +145,58 @@ public sealed class ChatHubTests
     [Fact]
     public void ChatHub_CanBeInstantiated_WithMockedDependencies()
     {
-        var hub = new ChatHub(BuildDb(), Substitute.For<IUnreadStore>(), Substitute.For<IPresenceStore>());
+        var hub = new ChatHub(BuildDb(), Substitute.For<IUnreadStore>(), Substitute.For<IPresenceStore>(), Substitute.For<IHubContext<PresenceHub>>());
         Assert.NotNull(hub);
+    }
+
+    [Fact]
+    public async Task SendMessage_SendsUnreadCountChanged_OnPresenceHubConnections()
+    {
+        var senderId = Guid.NewGuid();
+        var recipientId = Guid.NewGuid();
+        await using var db = BuildSqliteDb();
+        var sender = new User { Id = senderId, Username = "sender", Email = "sender@test.local", PasswordHash = "x" };
+        var recipient = new User { Id = recipientId, Username = "recipient", Email = "recipient@test.local", PasswordHash = "x" };
+        var room = new Room { Name = "r", Visibility = RoomVisibility.Public, OwnerId = senderId };
+        db.Users.AddRange(sender, recipient);
+        db.Rooms.Add(room);
+        db.RoomMemberships.AddRange(
+            new RoomMembership { RoomId = room.Id, UserId = senderId, Role = MemberRole.Owner },
+            new RoomMembership { RoomId = room.Id, UserId = recipientId, Role = MemberRole.Member });
+        await db.SaveChangesAsync();
+
+        var unread = Substitute.For<IUnreadStore>();
+        unread.GetCountAsync(recipientId, "room", room.Id, Arg.Any<CancellationToken>()).Returns(1);
+        var presence = Substitute.For<IPresenceStore>();
+        presence.GetConnectionIdsAsync(recipientId, Arg.Any<CancellationToken>())
+            .Returns(["presence-conn-recipient"]);
+        var presenceHub = Substitute.For<IHubContext<PresenceHub>>();
+        var presenceHubClients = Substitute.For<IHubClients>();
+        var presenceClient = Substitute.For<IClientProxy>();
+        object?[]? unreadArgs = null;
+        presenceClient
+            .When(x => x.SendCoreAsync(
+                "UnreadCountChanged",
+                Arg.Any<object?[]>(),
+                Arg.Any<CancellationToken>()))
+            .Do(call => unreadArgs = call.ArgAt<object?[]>(1));
+        presenceHub.Clients.Returns(presenceHubClients);
+        presenceHubClients.Clients(Arg.Any<IReadOnlyList<string>>()).Returns(presenceClient);
+
+        var roomClient = Substitute.For<IClientProxy>();
+        var callerClients = Substitute.For<IHubCallerClients>();
+        callerClients.Group($"room:{room.Id}").Returns(roomClient);
+        var hub = BuildHub(db, senderId, unread, presence, presenceHub);
+        hub.Clients = callerClients;
+
+        await hub.SendMessage(room.Id, "hello");
+
+        await presenceClient.Received(1).SendCoreAsync(
+            "UnreadCountChanged",
+            Arg.Any<object?[]>(),
+            Arg.Any<CancellationToken>());
+        Assert.NotNull(unreadArgs);
+        Assert.True(IsUnreadPayload(unreadArgs, room.Id, 1));
     }
 
     [Fact]

@@ -6,6 +6,7 @@ import { PresenceService } from './presence.service';
 import { HUB_CONNECTION_FACTORY } from './hub-connection.factory';
 import { AuthRefreshService } from '../auth/auth-refresh.service';
 import { AuthSessionService } from '../auth/auth-session.service';
+import { UnreadService } from './unread.service';
 
 function buildMockConnection(initialState = 'Connected') {
   const handlers: Record<string, (...args: unknown[]) => void> = {};
@@ -28,6 +29,7 @@ function buildMockConnection(initialState = 'Connected') {
 describe('PresenceService', () => {
   let service: PresenceService;
   let mockConn: ReturnType<typeof buildMockConnection>;
+  let unreadService: UnreadService;
 
   beforeEach(async () => {
     mockConn = buildMockConnection();
@@ -48,6 +50,7 @@ describe('PresenceService', () => {
     });
 
     service = TestBed.inject(PresenceService);
+    unreadService = TestBed.inject(UnreadService);
     await service.connect();
   });
 
@@ -72,6 +75,12 @@ describe('PresenceService', () => {
     mockConn._trigger('UserStatusChanged', { userId: 'u1', status: 'online' });
     mockConn._trigger('MemberLeft', { roomId: 'r1', userId: 'u1' });
     expect(service.presenceMap().has('u1')).toBe(true);
+  });
+
+  it('UnreadCountChanged updates unread counts from the presence hub connection', () => {
+    mockConn._trigger('UnreadCountChanged', { contextType: 'room', contextId: 'room-1', count: 2 });
+
+    expect(unreadService.getCount('room', 'room-1')).toBe(2);
   });
 
   it('disconnect stops the hub connection and sets connected false', async () => {

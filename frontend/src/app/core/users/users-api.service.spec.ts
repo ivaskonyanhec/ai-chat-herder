@@ -54,4 +54,11 @@ describe('UsersApiService', () => {
     expect(req.request.method).toBe('GET');
     req.flush(null);
   });
+
+  it('searches users by query with a limit', () => {
+    service.searchUsers('ali', 8).subscribe();
+    const req = httpMock.expectOne('/api/users/search?q=ali&limit=8');
+    expect(req.request.method).toBe('GET');
+    req.flush([]);
+  });
 });

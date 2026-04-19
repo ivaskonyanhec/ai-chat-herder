@@ -76,7 +76,8 @@
                   </span>
                   @let count = getUnreadCount('room', room.id);
                   @if (count > 0) {
-                    <span class="ml-1 shrink-0 min-w-[1.25rem] h-5 px-1 bg-primary text-on-primary text-[10px] font-black rounded-full flex items-center justify-center">{{ count }}</span>
+                    <span class="ml-1 shrink-0 min-w-[1.25rem] h-5 px-1 bg-primary text-on-primary text-[10px] font-black rounded-full flex items-center justify-center"
+                          [attr.data-testid]="'unread-badge-' + room.id">{{ count }}</span>
                   }
                 </a>
               } @empty {
@@ -109,7 +110,8 @@
                   </span>
                   @let count = getUnreadCount('room', room.id);
                   @if (count > 0) {
-                    <span class="ml-1 shrink-0 min-w-[1.25rem] h-5 px-1 bg-primary text-on-primary text-[10px] font-black rounded-full flex items-center justify-center">{{ count }}</span>
+                    <span class="ml-1 shrink-0 min-w-[1.25rem] h-5 px-1 bg-primary text-on-primary text-[10px] font-black rounded-full flex items-center justify-center"
+                          [attr.data-testid]="'unread-badge-' + room.id">{{ count }}</span>
                   }
                 </a>
               } @empty {

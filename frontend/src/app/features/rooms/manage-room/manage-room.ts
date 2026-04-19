@@ -5,6 +5,7 @@ import { finalize } from 'rxjs';
 import { AuthSessionService } from '../../../core/auth/auth-session.service';
 import { RoomsApiService } from '../../../core/rooms/rooms-api.service';
 import { RoomsAdminApiService } from '../../../core/rooms/rooms-admin-api.service';
+import { UsersApiService, type UserSearchResult } from '../../../core/users/users-api.service';
 import type { RoomDto, RoomMemberDto, RoomBanDto, RoomInvitationDto } from '../../../core/rooms/rooms.models';
 
 type Tab = 'members' | 'admins' | 'banned' | 'invitations' | 'settings';
@@ -22,6 +23,7 @@ export class ManageRoomComponent implements OnInit {
   private readonly authSession = inject(AuthSessionService);
   private readonly roomsApi = inject(RoomsApiService);
   private readonly adminApi = inject(RoomsAdminApiService);
+  private readonly usersApi = inject(UsersApiService);
 
   readonly user = this.authSession.user;
   readonly roomId = this.route.snapshot.params['id'] as string;
@@ -31,6 +33,8 @@ export class ManageRoomComponent implements OnInit {
   readonly members = signal<RoomMemberDto[]>([]);
   readonly bans = signal<RoomBanDto[]>([]);
   readonly invitations = signal<RoomInvitationDto[]>([]);
+  readonly inviteSuggestions = signal<UserSearchResult[]>([]);
+  readonly isSearchingInvitees = signal(false);
   readonly isLoading = signal(false);
   readonly errorMessage = signal('');
 
@@ -93,10 +97,44 @@ export class ManageRoomComponent implements OnInit {
     this.adminApi.sendInvitation(this.roomId, this.inviteUsername.trim()).subscribe({
       next: () => {
         this.inviteUsername = '';
+        this.inviteSuggestions.set([]);
         this.loadInvitations();
       },
       error: () => this.errorMessage.set('Failed to send invitation. Check the username.'),
     });
+  }
+
+  onInviteUsernameInput(value: string): void {
+    this.inviteUsername = value;
+    const query = value.trim();
+    if (query.length < 2) {
+      this.inviteSuggestions.set([]);
+      return;
+    }
+
+    this.isSearchingInvitees.set(true);
+    this.usersApi.searchUsers(query, 8)
+      .pipe(finalize(() => this.isSearchingInvitees.set(false)))
+      .subscribe({
+        next: users => {
+          const memberUsernames = new Set(this.members().map(m => m.username.toLowerCase()));
+          const pendingUsernames = new Set(
+            this.invitations()
+              .filter(inv => inv.status === 'Pending')
+              .map(inv => inv.invitedUsername.toLowerCase()),
+          );
+          this.inviteSuggestions.set(users.filter(user =>
+            !memberUsernames.has(user.username.toLowerCase()) &&
+            !pendingUsernames.has(user.username.toLowerCase()),
+          ));
+        },
+        error: () => this.inviteSuggestions.set([]),
+      });
+  }
+
+  selectInviteSuggestion(user: UserSearchResult): void {
+    this.inviteUsername = user.username;
+    this.inviteSuggestions.set([]);
   }
 
   saveSettings(): void {
