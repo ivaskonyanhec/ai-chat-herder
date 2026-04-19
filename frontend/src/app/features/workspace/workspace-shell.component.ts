@@ -11,6 +11,7 @@ import { UnreadService } from '../../core/signalr/unread.service';
 import { NotificationsApiService } from '../../core/notifications/notifications-api.service';
 import { RoomsApiService } from '../../core/rooms/rooms-api.service';
 import { FriendsApiService } from '../../core/friends/friends-api.service';
+import { InvitationsApiService } from '../../core/invitations/invitations-api.service';
 import type { RoomDto } from '../../core/rooms/rooms.models';
 import type { FriendDto } from '../../core/friends/friends.models';
 
@@ -30,6 +31,7 @@ export class WorkspaceShellComponent implements OnInit, OnDestroy {
   private readonly notificationsApi = inject(NotificationsApiService);
   private readonly roomsApi = inject(RoomsApiService);
   private readonly friendsApi = inject(FriendsApiService);
+  private readonly invitationsApi = inject(InvitationsApiService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly user = this.authSession.user;
@@ -39,15 +41,32 @@ export class WorkspaceShellComponent implements OnInit, OnDestroy {
   readonly friends = signal<FriendDto[]>([]);
   readonly unreadCounts = this.unread.unreadCounts;
 
-  readonly publicRooms = computed(() => this.myRooms().filter(r => r.visibility === 'Public'));
-  readonly privateRooms = computed(() => this.myRooms().filter(r => r.visibility === 'Private'));
+  readonly publicRooms = computed(() => {
+    const q = this.searchQuery().toLowerCase();
+    return this.myRooms().filter(r =>
+      r.visibility === 'Public' && (!q || r.name.toLowerCase().includes(q))
+    );
+  });
+  readonly privateRooms = computed(() => {
+    const q = this.searchQuery().toLowerCase();
+    return this.myRooms().filter(r =>
+      r.visibility === 'Private' && (!q || r.name.toLowerCase().includes(q))
+    );
+  });
   readonly publicRoomsExpanded = signal(true);
   readonly privateRoomsExpanded = signal(true);
   readonly sidebarOpen = signal(false);
+  readonly pendingInvitationCount = signal(0);
+  readonly searchQuery = signal('');
 
   constructor() {
     effect(() => {
       if (this.presence.addedToRoom()) this.loadRooms();
+    });
+    effect(() => {
+      if (this.presence.invitationReceived()) {
+        this.pendingInvitationCount.update(n => n + 1);
+      }
     });
   }
 
@@ -66,7 +85,12 @@ export class WorkspaceShellComponent implements OnInit, OnDestroy {
         filter((event): event is NavigationEnd => event instanceof NavigationEnd),
         takeUntilDestroyed(this.destroyRef),
       )
-      .subscribe(() => this.loadRooms());
+      .subscribe(event => {
+        this.loadRooms();
+        if (event.urlAfterRedirects === '/app/invitations') {
+          this.pendingInvitationCount.set(0);
+        }
+      });
   }
 
   ngOnDestroy(): void {
@@ -135,6 +159,11 @@ export class WorkspaceShellComponent implements OnInit, OnDestroy {
     });
     this.friendsApi.getFriends().subscribe({
       next: friends => this.friends.set(friends),
+    });
+    this.invitationsApi.getMyInvitations().subscribe({
+      next: invitations => this.pendingInvitationCount.set(
+        invitations.filter(i => i.status === 'Pending').length
+      ),
     });
   }
 
