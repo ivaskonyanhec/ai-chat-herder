@@ -12,7 +12,7 @@ import { FilesApiService } from '../../../core/files/files-api.service';
 import { NotificationsApiService } from '../../../core/notifications/notifications-api.service';
 import { UnreadService } from '../../../core/signalr/unread.service';
 import type { RoomDto } from '../../../core/rooms/rooms.models';
-import type { MessageDto } from '../../../core/signalr/hub.models';
+import type { MessageDto, RoomMemberPresence } from '../../../core/signalr/hub.models';
 import type { AttachmentDto } from '../../../core/files/files.models';
 
 @Component({
@@ -43,6 +43,8 @@ export class RoomChatComponent implements OnInit, OnDestroy {
   readonly isSending = signal(false);
   readonly isUploading = signal(false);
   readonly pendingAttachment = signal<AttachmentDto | null>(null);
+  readonly members = signal<RoomMemberPresence[]>([]);
+  readonly presenceMap = this.presence.presenceMap;
 
   constructor() {
     effect(() => {
@@ -63,6 +65,35 @@ export class RoomChatComponent implements OnInit, OnDestroy {
           )
         );
       }
+    });
+
+    effect(() => {
+      const snap = this.presence.roomMembersSnapshot();
+      if (!snap || snap.roomId !== this.roomId()) return;
+      this.members.set(snap.members);
+    });
+
+    effect(() => {
+      const event = this.presence.memberJoined();
+      if (!event || event.roomId !== this.roomId()) return;
+      const status = this.presence.presenceMap().get(event.user.userId) ?? 'online';
+      this.members.update(list => [
+        ...list.filter(m => m.userId !== event.user.userId),
+        {
+          userId:         event.user.userId,
+          username:       event.user.username,
+          avatarUrl:      event.user.avatarUrl,
+          role:           'Member' as const,
+          joinedAt:       new Date().toISOString(),
+          presenceStatus: status,
+        },
+      ]);
+    });
+
+    effect(() => {
+      const event = this.presence.memberLeft();
+      if (!event || event.roomId !== this.roomId()) return;
+      this.members.update(list => list.filter(m => m.userId !== event.userId));
     });
   }
 

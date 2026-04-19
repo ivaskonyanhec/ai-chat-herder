@@ -131,4 +131,31 @@
     </div>
 
   </section>
+
+  <!-- Right Sidebar: Online Members -->
+  <aside class="bg-surface-container w-56 shrink-0 h-full overflow-y-auto hidden lg:flex flex-col p-4 border-l border-outline-variant/10">
+    <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-3">Members</p>
+    @for (member of members(); track member.userId) {
+      <div class="flex items-center gap-2 py-1">
+        <div class="relative shrink-0">
+          @if (member.avatarUrl) {
+            <img [src]="member.avatarUrl" [alt]="member.username" class="w-7 h-7 rounded-full object-cover" />
+          } @else {
+            <div class="w-7 h-7 rounded-full bg-surface-container-high flex items-center justify-center">
+              <span class="text-[10px] font-bold text-on-surface-variant">{{ member.username[0].toUpperCase() }}</span>
+            </div>
+          }
+          <span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-surface-container"
+                [attr.data-testid]="'member-status-' + member.userId"
+                [class]="(presenceMap().get(member.userId) ?? member.presenceStatus) === 'online'
+                  ? 'bg-green-500'
+                  : (presenceMap().get(member.userId) ?? member.presenceStatus) === 'afk'
+                  ? 'bg-yellow-400'
+                  : 'bg-outline'">
+          </span>
+        </div>
+        <span class="text-xs text-on-surface truncate">{{ member.username }}</span>
+      </div>
+    }
+  </aside>
 </div>
