@@ -13,8 +13,7 @@ Prerequisites: Docker 25+, Docker Compose V2, 4 GB free RAM.
 
 ### 1. Start the Application
 ```bash
-cp .env.template .env
-# Fill in every <CHANGE_ME> value in .env
+cp .env.template .env   # defaults work for local dev; see .env.template to harden for production
 docker compose up --build -d
 ```
 The app is available at **http://localhost**.
