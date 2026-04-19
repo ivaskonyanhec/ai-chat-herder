@@ -69,7 +69,53 @@ public static class FilesEndpoints
                               attachment.SizeBytes, attachment.Comment));
     }
 
-    private static Task<IResult> GetFile(
-        Guid id, ClaimsPrincipal principal, AppDbContext db, IFileStorage storage, CancellationToken ct)
-        => Task.FromResult(Results.StatusCode(StatusCodes.Status501NotImplemented)); // stub — implemented in Task 3
+    private static async Task<IResult> GetFile(
+        Guid id,
+        ClaimsPrincipal principal,
+        AppDbContext db,
+        IFileStorage storage,
+        CancellationToken ct)
+    {
+        if (!Guid.TryParse(principal.FindFirstValue("user_id"), out var callerId))
+            return Results.Unauthorized();
+
+        var attachment = await db.Attachments.FindAsync([id], ct);
+        if (attachment is null) return Results.NotFound();
+
+        if (attachment.MessageId.HasValue)
+        {
+            var msg = await db.Messages
+                .FirstOrDefaultAsync(m => m.Id == attachment.MessageId, ct);
+            if (msg is null) return Results.NotFound();
+
+            var isMember = await db.RoomMemberships
+                .AnyAsync(m => m.RoomId == msg.RoomId && m.UserId == callerId, ct);
+            if (!isMember)
+                return Results.StatusCode(StatusCodes.Status403Forbidden);
+
+            var isBanned = await db.RoomBans
+                .AnyAsync(b => b.RoomId == msg.RoomId && b.BannedUserId == callerId && b.RevokedAt == null, ct);
+            if (isBanned)
+                return Results.StatusCode(StatusCodes.Status403Forbidden);
+        }
+        else if (attachment.PersonalDialogMessageId.HasValue)
+        {
+            var pdm = await db.PersonalDialogMessages
+                .Include(m => m.Dialog)
+                .FirstOrDefaultAsync(m => m.Id == attachment.PersonalDialogMessageId, ct);
+            if (pdm is null) return Results.NotFound();
+
+            if (pdm.Dialog.User1Id != callerId && pdm.Dialog.User2Id != callerId)
+                return Results.StatusCode(StatusCodes.Status403Forbidden);
+        }
+        else
+        {
+            // Unlinked orphan — only the uploader may preview
+            if (attachment.UploadedByUserId != callerId)
+                return Results.StatusCode(StatusCodes.Status403Forbidden);
+        }
+
+        var stream = await storage.OpenReadAsync(attachment.StoragePath, ct);
+        return Results.Stream(stream, attachment.ContentType, attachment.FileName);
+    }
 }
