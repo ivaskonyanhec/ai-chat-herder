@@ -32,7 +32,7 @@
         </div>
       } @else {
         @for (msg of messages(); track msg.id) {
-          <div class="flex gap-4 group">
+          <div class="flex gap-4 group" [attr.data-testid]="'message-' + msg.id">
             @if (msg.sender.avatarUrl) {
               <img [alt]="msg.sender.username" [src]="msg.sender.avatarUrl"
                 class="w-10 h-10 rounded-lg object-cover shrink-0" />
@@ -50,9 +50,9 @@
                 }
               </div>
               @if (msg.isDeleted) {
-                <p class="text-sm text-outline italic">Message deleted.</p>
+                <p class="text-sm text-outline italic" data-testid="message-deleted">Message deleted.</p>
               } @else {
-                <p class="text-sm text-on-surface leading-relaxed max-w-2xl">{{ msg.content }}</p>
+                <p class="text-sm text-on-surface leading-relaxed max-w-2xl" data-testid="message-text">{{ msg.content }}</p>
                 @if (msg.attachment) {
                   <div class="flex items-center gap-3 mt-2 px-3 py-2 bg-surface-container rounded-lg max-w-xs">
                     <span class="material-symbols-outlined text-on-surface-variant shrink-0">
