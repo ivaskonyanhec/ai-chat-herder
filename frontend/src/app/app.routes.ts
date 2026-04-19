@@ -13,6 +13,7 @@ import { RoomInvitationsComponent } from './features/rooms/room-invitations/room
 import { PlatformBansComponent } from './features/admin/platform-bans/platform-bans';
 import { ManageRoomComponent } from './features/rooms/manage-room/manage-room';
 import { DirectMessagesComponent } from './features/dialogs/direct-messages/direct-messages';
+import { BlockedUsersComponent } from './features/contacts/blocked-users/blocked-users';
 
 export const routes: Routes = [
   {
@@ -58,6 +59,10 @@ export const routes: Routes = [
       {
         path: 'requests',
         component: FriendRequestsComponent,
+      },
+      {
+        path: 'blocks',
+        component: BlockedUsersComponent,
       },
       {
         path: 'invitations',

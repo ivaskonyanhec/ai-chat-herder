@@ -1,0 +1,48 @@
+<div class="flex h-full overflow-hidden bg-surface">
+  <div class="flex-1 overflow-y-auto p-8">
+    <div class="max-w-2xl mx-auto">
+      <div class="flex items-end justify-between mb-6">
+        <h1 class="text-2xl font-extrabold tracking-tight text-on-surface">Blocked Users</h1>
+      </div>
+
+      @if (isLoading()) {
+        <div class="flex justify-center py-12">
+          <span class="material-symbols-outlined text-3xl text-outline animate-spin">progress_activity</span>
+        </div>
+      } @else if (errorMessage()) {
+        <p class="text-error text-sm bg-error-container/20 border border-error/20 rounded-xl px-4 py-3">{{ errorMessage() }}</p>
+      } @else if (blocks().length === 0) {
+        <div class="text-center py-12 text-on-surface-variant">
+          <span class="material-symbols-outlined text-4xl mb-4 block">block</span>
+          <p class="text-sm">No blocked users.</p>
+        </div>
+      } @else {
+        <div class="space-y-3">
+          @for (block of blocks(); track block.blockedUserId) {
+            <div class="bg-surface-container-lowest rounded-xl p-4 border border-outline-variant/10 flex items-center gap-4">
+              <div class="w-10 h-10 rounded-full bg-surface-container overflow-hidden shrink-0">
+                @if (block.blockedAvatarUrl) {
+                  <img [src]="block.blockedAvatarUrl" class="w-full h-full object-cover" alt="" />
+                } @else {
+                  <div class="w-full h-full flex items-center justify-center">
+                    <span class="material-symbols-outlined text-on-surface-variant" style="font-size:1.25rem">person</span>
+                  </div>
+                }
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="font-bold text-on-surface text-sm truncate">{{ block.blockedUsername }}</p>
+                <p class="text-[11px] text-on-surface-variant">Blocked {{ block.createdAt | date:'mediumDate' }}</p>
+              </div>
+              <button
+                class="py-1.5 px-4 bg-surface-container-high text-on-surface text-xs font-bold rounded-lg hover:bg-error hover:text-on-error transition-colors disabled:opacity-50"
+                [disabled]="unblockingId() === block.blockedUserId"
+                [attr.data-testid]="'unblock-' + block.blockedUserId"
+                (click)="unblock(block.blockedUserId)"
+              >Unblock</button>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+</div>
