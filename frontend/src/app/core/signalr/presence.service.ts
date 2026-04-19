@@ -30,6 +30,7 @@ export class PresenceService {
   private lastThrottledAt = 0;
   private isAfk = false;
   private readonly joinedRooms = new Set<string>();
+  private readonly joinedDialogs = new Set<string>();
 
   private readonly _connected = signal(false);
   private readonly _presenceMap = signal<Map<string, PresenceStatus>>(new Map());
@@ -54,6 +55,7 @@ export class PresenceService {
 
     this.connection.onreconnected(() => {
       this.rejoinAllRooms();
+      this.rejoinAllDialogs();
     });
 
     this.connection.onclose(() => {
@@ -75,6 +77,7 @@ export class PresenceService {
     this.stopAfkTracking();
     this.removeActivityListeners();
     this.joinedRooms.clear();
+    this.joinedDialogs.clear();
 
     if (this.connection) {
       await this.connection.stop();
@@ -93,6 +96,18 @@ export class PresenceService {
     if (!this.connection) return;
     await this.connection.invoke('LeaveRoom', roomId);
     this.joinedRooms.delete(roomId);
+  }
+
+  async joinDialog(dialogId: string): Promise<void> {
+    if (!this.connection) return;
+    await this.connection.invoke('JoinDialog', dialogId);
+    this.joinedDialogs.add(dialogId);
+  }
+
+  async leaveDialog(dialogId: string): Promise<void> {
+    if (!this.connection) return;
+    await this.connection.invoke('LeaveDialog', dialogId);
+    this.joinedDialogs.delete(dialogId);
   }
 
   private registerHandlers(conn: HubConnection): void {
@@ -206,6 +221,12 @@ export class PresenceService {
   private rejoinAllRooms(): void {
     for (const roomId of this.joinedRooms) {
       void this.connection?.invoke('JoinRoom', roomId);
+    }
+  }
+
+  private rejoinAllDialogs(): void {
+    for (const dialogId of this.joinedDialogs) {
+      void this.connection?.invoke('JoinDialog', dialogId);
     }
   }
 }

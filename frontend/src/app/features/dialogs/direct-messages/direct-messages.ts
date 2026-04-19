@@ -6,6 +6,7 @@ import { ChatService } from '../../../core/signalr/chat.service';
 import { FilesApiService } from '../../../core/files/files-api.service';
 import { NotificationsApiService } from '../../../core/notifications/notifications-api.service';
 import { UnreadService } from '../../../core/signalr/unread.service';
+import { PresenceService } from '../../../core/signalr/presence.service';
 import type { DialogDto } from '../../../core/dialogs/dialogs.models';
 import type { DialogMessageDto } from '../../../core/signalr/hub.models';
 import type { AttachmentDto } from '../../../core/files/files.models';
@@ -24,6 +25,7 @@ export class DirectMessagesComponent {
   private readonly filesApi = inject(FilesApiService);
   private readonly notificationsApi = inject(NotificationsApiService);
   private readonly unread = inject(UnreadService);
+  private readonly presence = inject(PresenceService);
 
   readonly user = this.authSession.user;
   readonly isLoadingDialogs = signal(true);
@@ -58,7 +60,10 @@ export class DirectMessagesComponent {
   }
 
   selectDialog(dialog: DialogDto): void {
+    const prev = this.selectedDialog();
+    if (prev) void this.presence.leaveDialog(prev.id);
     this.selectedDialog.set(dialog);
+    void this.presence.joinDialog(dialog.id);
     this.loadMessages(dialog.id);
   }
 
