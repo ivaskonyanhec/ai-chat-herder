@@ -7,6 +7,7 @@ import { AuthSessionService } from '../../../core/auth/auth-session.service';
 import { FriendsApiService } from '../../../core/friends/friends-api.service';
 import { DialogsApiService } from '../../../core/dialogs/dialogs-api.service';
 import { BlocksApiService } from '../../../core/blocks/blocks-api.service';
+import { UsersApiService, UserSearchResult } from '../../../core/users/users-api.service';
 import type { FriendDto, FriendRequestDto } from '../../../core/friends/friends.models';
 import type { BlockDto } from '../../../core/blocks/blocks.models';
 
@@ -22,6 +23,7 @@ export class ContactsHomeComponent {
   private readonly friendsApi = inject(FriendsApiService);
   private readonly dialogsApi = inject(DialogsApiService);
   private readonly blocksApi = inject(BlocksApiService);
+  private readonly usersApi = inject(UsersApiService);
   private readonly router = inject(Router);
 
   readonly user = this.authSession.user;
@@ -40,6 +42,8 @@ export class ContactsHomeComponent {
   readonly unblockingId = signal<string | null>(null);
   readonly processingRequestId = signal<string | null>(null);
   readonly sendingRequest = signal(false);
+  readonly userSuggestions = signal<UserSearchResult[]>([]);
+  readonly isSearchingUsers = signal(false);
 
   readonly incomingRequests = computed(() => {
     const userId = this.user()?.id;
@@ -153,10 +157,46 @@ export class ContactsHomeComponent {
         next: () => {
           this.newRequestUsername.set('');
           this.newRequestMessage.set('');
+          this.userSuggestions.set([]);
           this.requestStatusMessage.set('Friend request sent.');
         },
         error: () => this.errorMessage.set('Unable to send friend request right now.'),
       });
+  }
+
+  onUsernameInput(value: string): void {
+    this.newRequestUsername.set(value);
+    const query = value.trim();
+    if (query.length < 2) {
+      this.userSuggestions.set([]);
+      return;
+    }
+
+    this.isSearchingUsers.set(true);
+    this.usersApi.searchUsers(query, 8)
+      .pipe(finalize(() => this.isSearchingUsers.set(false)))
+      .subscribe({
+        next: users => {
+          const selfId = this.user()?.id;
+          const friendUsernames = new Set(this.friends().map(f => f.username.toLowerCase()));
+          const pendingOutgoing = new Set(
+            this.outgoingRequests().map(r => r.receiverUsername.toLowerCase())
+          );
+          this.userSuggestions.set(
+            users.filter(u =>
+              u.id !== selfId &&
+              !friendUsernames.has(u.username.toLowerCase()) &&
+              !pendingOutgoing.has(u.username.toLowerCase())
+            )
+          );
+        },
+        error: () => this.userSuggestions.set([]),
+      });
+  }
+
+  selectSuggestion(user: UserSearchResult): void {
+    this.newRequestUsername.set(user.username);
+    this.userSuggestions.set([]);
   }
 
   formatDate(iso: string): string {
