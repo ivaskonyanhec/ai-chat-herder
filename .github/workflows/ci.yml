@@ -95,10 +95,55 @@ jobs:
             echo "- Command: \`npm test -- --watch=false\`"
           } >> "$GITHUB_STEP_SUMMARY"
 
+  backend-integration:
+    name: Backend Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore ChatHerder.sln
+
+      - name: Run backend integration tests
+        run: >
+          dotnet test tests/ChatHerder.Integration.Tests/ChatHerder.Integration.Tests.csproj
+          --configuration Release
+          --no-restore
+          --logger "trx;LogFileName=backend-integration.trx"
+          --results-directory TestResults/backend-integration
+          --verbosity normal
+
+      - name: Report backend integration results
+        if: always()
+        run: |
+          {
+            echo "### Backend Integration Tests"
+            echo ""
+            echo "- Job status: ${{ job.status }}"
+            echo "- Results directory: \`TestResults/backend-integration\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload backend integration results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-integration-test-results
+          path: TestResults/backend-integration
+          if-no-files-found: ignore
+
   e2e-uat:
     name: E2E/UAT Tests
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    needs: [backend-unit, backend-integration, frontend-unit]
 
     steps:
       - name: Checkout
