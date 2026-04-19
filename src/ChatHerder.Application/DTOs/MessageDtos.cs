@@ -18,7 +18,8 @@ public sealed record MessageDto(
     DateTime? EditedAt,
     bool IsDeleted,
     MessageDto? ReplyTo,        // embedded snapshot at send time
-    AttachmentDto? Attachment);
+    AttachmentDto? Attachment,
+    IReadOnlyList<ReactionSummaryDto> Reactions);
 
 public sealed record DialogMessageDto(
     Guid Id,
@@ -30,6 +31,9 @@ public sealed record DialogMessageDto(
     bool IsDeleted,
     DialogMessageDto? ReplyTo,
     AttachmentDto? Attachment);
+
+public sealed record ToggleReactionRequest(string Emoji);
+public sealed record ReactionSummaryDto(string Emoji, int Count, IReadOnlyList<Guid> UserIds);
 
 public sealed record EditMessageRequest(string Content);
 public sealed record SendMessageRequest(string Content, Guid? ReplyToId, Guid? AttachmentId);

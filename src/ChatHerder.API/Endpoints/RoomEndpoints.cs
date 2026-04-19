@@ -379,7 +379,13 @@ public static class RoomEndpoints
         }
 
         var messages = await query.ToListAsync(ct);
-        return Results.Ok(messages.Select(ToDto));
+        var msgIds = messages.Select(m => m.Id).ToList();
+        var reactions = await db.MessageReactions
+            .Where(r => msgIds.Contains(r.MessageId))
+            .ToListAsync(ct);
+        var reactionsByMsg = reactions.GroupBy(r => r.MessageId)
+            .ToDictionary(g => g.Key, g => (IEnumerable<MessageReaction>)g.ToList());
+        return Results.Ok(messages.Select(m => ToDto(m, reactionsByMsg.GetValueOrDefault(m.Id))));
     }
 
     private static async Task<IResult> BanMember(
@@ -566,7 +572,7 @@ public static class RoomEndpoints
         return role is MemberRole.Admin or MemberRole.Owner;
     }
 
-    internal static MessageDto ToDto(Message m) => new(
+    internal static MessageDto ToDto(Message m, IEnumerable<MessageReaction>? reactions = null) => new(
         m.Id,
         m.SequenceNumber,
         m.DeletedAt == null ? m.Content : null,
@@ -582,7 +588,7 @@ public static class RoomEndpoints
                 m.ReplyToMessage.DeletedAt == null ? m.ReplyToMessage.Content : null,
                 new UserSummary(m.ReplyToMessage.Author.Id, m.ReplyToMessage.Author.Username,
                     m.ReplyToMessage.Author.AvatarUrl),
-                m.ReplyToMessage.SentAt, m.ReplyToMessage.EditedAt, m.ReplyToMessage.DeletedAt != null, null, null),
+                m.ReplyToMessage.SentAt, m.ReplyToMessage.EditedAt, m.ReplyToMessage.DeletedAt != null, null, null, []),
         m.Attachment is null
             ? null
             : new AttachmentDto(
@@ -590,5 +596,9 @@ public static class RoomEndpoints
                 m.Attachment.FileName,
                 m.Attachment.ContentType,
                 m.Attachment.SizeBytes,
-                m.Attachment.Comment));
+                m.Attachment.Comment),
+        (reactions ?? [])
+            .GroupBy(r => r.Emoji)
+            .Select(g => new ReactionSummaryDto(g.Key, g.Count(), g.Select(r => r.UserId).ToList()))
+            .ToList());
 }
