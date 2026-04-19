@@ -18,31 +18,31 @@
           <span>CRITICAL ACTION</span>
         </div>
       </div>
-      <form class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
+      <form class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end" (ngSubmit)="issueBan()">
         <div class="col-span-1">
           <label class="block text-[11px] font-bold text-on-surface-variant mb-2 uppercase tracking-tight">Username</label>
           <div class="relative">
             <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-sm">person</span>
-            <input class="w-full bg-surface-container-low border-none rounded-lg py-2.5 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary/20 placeholder-outline-variant" placeholder="Search by username..." type="text" />
+            <input class="w-full bg-surface-container-low border-none rounded-lg py-2.5 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary/20 placeholder-outline-variant" placeholder="Search by username..." type="text" [(ngModel)]="banUsername" name="banUsername" />
           </div>
         </div>
         <div class="col-span-1">
           <label class="block text-[11px] font-bold text-on-surface-variant mb-2 uppercase tracking-tight">Ban Reason (Required)</label>
-          <input class="w-full bg-surface-container-low border-none rounded-lg py-2.5 px-4 text-sm focus:ring-2 focus:ring-primary/20 placeholder-outline-variant" placeholder="Ban reason (required)" type="text" />
+          <input class="w-full bg-surface-container-low border-none rounded-lg py-2.5 px-4 text-sm focus:ring-2 focus:ring-primary/20 placeholder-outline-variant" placeholder="Ban reason (required)" type="text" [(ngModel)]="banReason" name="banReason" />
         </div>
         <div class="col-span-1">
           <label class="block text-[11px] font-bold text-on-surface-variant mb-2 uppercase tracking-tight">Duration</label>
-          <select class="w-full bg-surface-container-low border-none rounded-lg py-2.5 px-4 text-sm focus:ring-2 focus:ring-primary/20">
-            <option>24 Hours</option>
-            <option>7 Days</option>
-            <option>30 Days</option>
-            <option>Permanent</option>
+          <select class="w-full bg-surface-container-low border-none rounded-lg py-2.5 px-4 text-sm focus:ring-2 focus:ring-primary/20" [(ngModel)]="banDuration" name="banDuration">
+            <option value="24">24 Hours</option>
+            <option value="168">7 Days</option>
+            <option value="720">30 Days</option>
+            <option value="permanent">Permanent</option>
           </select>
         </div>
         <div class="col-span-1">
-          <button class="w-full bg-primary text-on-primary font-semibold py-2.5 rounded-lg hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2" type="submit">
+          <button class="w-full bg-primary text-on-primary font-semibold py-2.5 rounded-lg hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2" type="submit" [disabled]="isSubmitting()">
             <span class="material-symbols-outlined text-sm">gavel</span>
-            <span>Issue Ban</span>
+            <span>{{ isSubmitting() ? 'Issuing...' : 'Issue Ban' }}</span>
           </button>
         </div>
       </form>
@@ -52,12 +52,16 @@
       </div>
     </section>
 
+    @if (errorMessage()) {
+      <p class="text-error text-sm bg-error-container/20 border border-error/20 rounded-xl px-4 py-3 -mt-4">{{ errorMessage() }}</p>
+    }
+
     <!-- Active Bans Table -->
     <section class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
       <div class="px-8 py-6 flex items-center justify-between">
         <div class="flex items-center gap-3">
           <h3 class="text-lg font-bold text-on-surface">Active Bans</h3>
-          <span class="bg-primary-container text-on-primary-container text-[11px] font-black px-2.5 py-0.5 rounded-full">4</span>
+          <span class="bg-primary-container text-on-primary-container text-[11px] font-black px-2.5 py-0.5 rounded-full">{{ activeBans().length }}</span>
         </div>
         <div class="flex gap-2">
           <button class="p-2 hover:bg-surface-container rounded-lg transition-colors text-outline">
@@ -81,29 +85,37 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-surface-container">
-            @for (ban of [
-              {initials:'JD', name:'johndoe_92', by:'Admin_Sarah', reason:'Repeated policy violation...', issued:'Oct 24, 2023', expires:'Permanent', permanent:true},
-              {initials:'SM', name:'shadow_master', by:'System_Auto', reason:'Spam detection (Level 3)', issued:'Nov 02, 2023', expires:'Nov 09, 2023', permanent:false},
-              {initials:'KL', name:'kyle_l', by:'Admin_Mike', reason:'Harassment reporting', issued:'Nov 05, 2023', expires:'Nov 12, 2023', permanent:false},
-              {initials:'AN', name:'alice_node', by:'Admin_Sarah', reason:'External site phishing', issued:'Nov 06, 2023', expires:'Dec 06, 2023', permanent:false}
-            ]; track ban.name) {
-              <tr class="hover:bg-surface-container-low transition-colors">
-                <td class="px-8 py-5">
-                  <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-xs font-bold text-primary">{{ ban.initials }}</div>
-                    <span class="text-sm font-semibold text-on-surface">{{ ban.name }}</span>
-                  </div>
-                </td>
-                <td class="px-8 py-5"><span class="text-sm text-on-surface-variant">{{ ban.by }}</span></td>
-                <td class="px-8 py-5"><span class="text-sm text-on-surface-variant">{{ ban.reason }}</span></td>
-                <td class="px-8 py-5"><span class="text-sm text-on-surface-variant">{{ ban.issued }}</span></td>
-                <td class="px-8 py-5">
-                  <span class="text-sm" [class.font-bold]="ban.permanent" [class.text-error]="ban.permanent" [class.text-on-surface-variant]="!ban.permanent">{{ ban.expires }}</span>
-                </td>
-                <td class="px-8 py-5 text-right">
-                  <button class="text-[11px] font-bold text-primary hover:bg-primary-container px-3 py-1.5 rounded-lg transition-all">Revoke</button>
-                </td>
-              </tr>
+            @if (isLoading()) {
+              <tr><td colspan="6" class="px-8 py-5 text-center text-on-surface-variant text-sm">Loading...</td></tr>
+            } @else if (activeBans().length === 0) {
+              <tr><td colspan="6" class="px-8 py-5 text-center text-on-surface-variant text-sm">No active bans.</td></tr>
+            } @else {
+              @for (ban of activeBans(); track ban.id) {
+                <tr class="hover:bg-surface-container-low transition-colors">
+                  <td class="px-8 py-5">
+                    <div class="flex items-center gap-3">
+                      <div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-xs font-bold text-primary">
+                        {{ ban.username.slice(0, 2).toUpperCase() }}
+                      </div>
+                      <span class="text-sm font-semibold text-on-surface">{{ ban.username }}</span>
+                    </div>
+                  </td>
+                  <td class="px-8 py-5"><span class="text-sm text-on-surface-variant">{{ ban.issuedByAdminUsername }}</span></td>
+                  <td class="px-8 py-5"><span class="text-sm text-on-surface-variant">{{ ban.reason }}</span></td>
+                  <td class="px-8 py-5"><span class="text-sm text-on-surface-variant">{{ ban.createdAt | date:'MMM d, y' }}</span></td>
+                  <td class="px-8 py-5">
+                    @if (ban.expiresAt) {
+                      <span class="text-sm text-on-surface-variant">{{ ban.expiresAt | date:'MMM d, y' }}</span>
+                    } @else {
+                      <span class="text-sm font-bold text-error">Permanent</span>
+                    }
+                  </td>
+                  <td class="px-8 py-5 text-right">
+                    <button class="text-[11px] font-bold text-primary hover:bg-primary-container px-3 py-1.5 rounded-lg transition-all"
+                            (click)="revokeBan(ban.userId)">Revoke</button>
+                  </td>
+                </tr>
+              }
             }
           </tbody>
         </table>
@@ -116,7 +128,7 @@
         <div class="flex items-center gap-3">
           <span class="material-symbols-outlined text-outline">history</span>
           <span class="text-sm font-semibold">Revoked Bans</span>
-          <span class="text-[10px] font-black bg-outline-variant/20 px-2 py-0.5 rounded uppercase">12 Total</span>
+          <span class="text-[10px] font-black bg-outline-variant/20 px-2 py-0.5 rounded uppercase">{{ revokedBans().length }} Total</span>
         </div>
         <span class="material-symbols-outlined text-lg">keyboard_arrow_down</span>
       </button>
