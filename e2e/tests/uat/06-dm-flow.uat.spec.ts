@@ -27,7 +27,7 @@ test.describe('UAT: Direct messaging UX', () => {
     const dialog = await api.createDialog(userA.accessToken, userB.id);
 
     // Navigate userA to the DM page and select the dialog
-    await userAPage.goto('/app/dialogs');
+    await userAPage.goto(`/app/messages/${dialog.id}`);
     await expect(userAPage.locator(`[data-testid="dialog-item-${dialog.id}"]`)).toBeVisible({ timeout: 10_000 });
     await userAPage.click(`[data-testid="dialog-item-${dialog.id}"]`);
     await expect(userAPage.locator('[data-testid="dm-messages"]')).toBeVisible({ timeout: 5_000 });
@@ -57,7 +57,7 @@ test.describe('UAT: Direct messaging UX', () => {
     // userB blocks userA → dialog becomes frozen
     await api.blockUser(userB.accessToken, userA.id);
 
-    await userAPage.goto('/app/dialogs');
+    await userAPage.goto(`/app/messages/${dialog.id}`);
     await expect(userAPage.locator(`[data-testid="dialog-item-${dialog.id}"]`)).toBeVisible({ timeout: 10_000 });
     await userAPage.click(`[data-testid="dialog-item-${dialog.id}"]`);
 

@@ -86,12 +86,15 @@
         } @else {
           @for (msg of messages(); track msg.id) {
             @if (!msg.isDeleted) {
-              <div [class]="msg.sender.id === user()?.id ? 'flex justify-end' : 'flex'">
+              <div class="flex" [class.justify-end]="msg.sender.id === user()?.id">
                 <div
                   class="max-w-xs lg:max-w-sm px-4 py-2.5 rounded-xl text-sm"
-                  [class]="msg.sender.id === user()?.id
-                    ? 'bg-primary text-on-primary rounded-br-sm'
-                    : 'bg-surface-container-lowest text-on-surface rounded-bl-sm'"
+                  [class.bg-primary]="msg.sender.id === user()?.id"
+                  [class.text-on-primary]="msg.sender.id === user()?.id"
+                  [class.rounded-br-sm]="msg.sender.id === user()?.id"
+                  [class.bg-surface-container-lowest]="msg.sender.id !== user()?.id"
+                  [class.text-on-surface]="msg.sender.id !== user()?.id"
+                  [class.rounded-bl-sm]="msg.sender.id !== user()?.id"
                 >
                   @if (msg.replyTo) {
                     <div class="border-l-2 border-current/30 pl-2 mb-1 opacity-70"
@@ -126,7 +129,7 @@
                 </div>
               </div>
             } @else {
-              <div [class]="msg.sender.id === user()?.id ? 'flex justify-end' : 'flex'">
+              <div class="flex" [class.justify-end]="msg.sender.id === user()?.id">
                 <div class="px-4 py-2 rounded-xl text-xs text-on-surface-variant italic bg-surface-container">
                   Message deleted
                 </div>

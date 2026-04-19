@@ -6,11 +6,13 @@ const accessTokenStorageKey = 'access_token';
 
 export async function bootstrapAuthenticatedContext(context: BrowserContext, user: TestUser): Promise<void> {
   await context.addInitScript(
-    ({ accessToken, persistedSession }) => {
-      window.localStorage.setItem(accessTokenStorageKey, accessToken);
-      window.localStorage.setItem(persistentStorageKey, JSON.stringify(persistedSession));
+    ({ accessToken, persistedSession, atKey, psKey }) => {
+      window.localStorage.setItem(atKey, accessToken);
+      window.localStorage.setItem(psKey, JSON.stringify(persistedSession));
     },
     {
+      atKey: accessTokenStorageKey,
+      psKey: persistentStorageKey,
       accessToken: user.accessToken,
       persistedSession: {
         accessToken: user.accessToken,

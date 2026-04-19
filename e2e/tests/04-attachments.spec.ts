@@ -1,6 +1,21 @@
 import { test, expect } from '../fixtures/test-fixtures';
+import type { ApiHelpers } from '../helpers/api.helpers';
 import { createPublicRoomWithMembers } from '../helpers/room.helpers';
 import { createHubConnection } from '../helpers/signalr.helpers';
+
+async function becomeFriends(
+  api: ApiHelpers,
+  senderToken: string,
+  receiverToken: string,
+  receiverUsername: string,
+  senderId: string,
+): Promise<void> {
+  await api.sendFriendRequest(senderToken, receiverUsername, 'attachment test setup');
+  const requests = await api.getFriendRequests(receiverToken);
+  const request = requests.find(r => r.senderId === senderId);
+  if (!request?.id) throw new Error('Friend request not found');
+  await api.acceptFriendRequest(receiverToken, request.id);
+}
 
 test.describe('File attachments', () => {
   test('user uploads an arbitrary file and a room member downloads it with 200', async ({ api, userA, userB }) => {
@@ -68,6 +83,7 @@ test.describe('File attachments', () => {
     const sender = await api.register();
     const recipient = await api.register();
     const outsider = await api.register();
+    await becomeFriends(api, sender.accessToken, recipient.accessToken, recipient.username, sender.id);
     const dialog = await api.createDialog(sender.accessToken, recipient.id);
     const attachment = await api.uploadFile(
       sender.accessToken,
