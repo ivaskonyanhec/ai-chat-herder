@@ -4,6 +4,7 @@ using ChatHerder.Infrastructure.Email;
 using ChatHerder.Infrastructure.Persistence;
 using ChatHerder.Infrastructure.Security;
 using ChatHerder.Infrastructure.Services;
+using ChatHerder.Infrastructure.Storage;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -38,6 +39,9 @@ public static class InfrastructureExtensions
         services.AddSingleton<IPresenceStore, RedisPresenceStore>();
         services.AddSingleton<IUnreadStore, RedisUnreadStore>();
         services.AddHostedService<PresenceMonitorService>();
+
+        services.AddSingleton<IFileStorage, LocalFileStorage>();
+        services.AddHostedService<OrphanCleanupService>();
 
         return services;
     }
