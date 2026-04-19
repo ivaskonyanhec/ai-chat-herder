@@ -2,33 +2,74 @@
   <!-- Side Navigation -->
   <aside class="bg-surface-container-low flex flex-col h-full w-64 border-r border-surface-container shrink-0">
     <div class="p-6">
-      <h3 class="text-base font-bold text-on-surface mb-1">Room Details</h3>
+      <h3 class="text-base font-bold text-on-surface mb-1">{{ room()?.name ?? 'Room' }}</h3>
       <p class="text-sm text-outline">Admin Managed</p>
     </div>
     <nav class="flex-1 px-3 space-y-1">
-      <div class="flex items-center gap-3 py-2 text-on-surface border-l-4 border-primary pl-2 bg-surface-container-high font-semibold cursor-pointer transition-all duration-200 rounded-r-lg">
-        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">group</span>
+      <div class="flex items-center gap-3 py-2 pl-3 cursor-pointer transition-all duration-200 rounded-lg"
+           [class.text-on-surface]="activeTab() === 'members'"
+           [class.border-l-4]="activeTab() === 'members'"
+           [class.border-primary]="activeTab() === 'members'"
+           [class.pl-2]="activeTab() === 'members'"
+           [class.bg-surface-container-high]="activeTab() === 'members'"
+           [class.font-semibold]="activeTab() === 'members'"
+           [class.text-on-surface-variant]="activeTab() !== 'members'"
+           (click)="switchTab('members')">
+        <span class="material-symbols-outlined">group</span>
         <span class="text-sm font-medium">Members</span>
       </div>
-      <div class="flex items-center gap-3 py-2 pl-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-container cursor-pointer transition-all duration-200 rounded-lg">
+      <div class="flex items-center gap-3 py-2 pl-3 cursor-pointer transition-all duration-200 rounded-lg"
+           [class.text-on-surface]="activeTab() === 'admins'"
+           [class.border-l-4]="activeTab() === 'admins'"
+           [class.border-primary]="activeTab() === 'admins'"
+           [class.pl-2]="activeTab() === 'admins'"
+           [class.bg-surface-container-high]="activeTab() === 'admins'"
+           [class.font-semibold]="activeTab() === 'admins'"
+           [class.text-on-surface-variant]="activeTab() !== 'admins'"
+           (click)="switchTab('admins')">
         <span class="material-symbols-outlined">shield_person</span>
         <span class="text-sm font-medium">Admins</span>
       </div>
-      <div class="flex items-center gap-3 py-2 pl-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-container cursor-pointer transition-all duration-200 rounded-lg">
+      <div class="flex items-center gap-3 py-2 pl-3 cursor-pointer transition-all duration-200 rounded-lg"
+           [class.text-on-surface]="activeTab() === 'banned'"
+           [class.border-l-4]="activeTab() === 'banned'"
+           [class.border-primary]="activeTab() === 'banned'"
+           [class.pl-2]="activeTab() === 'banned'"
+           [class.bg-surface-container-high]="activeTab() === 'banned'"
+           [class.font-semibold]="activeTab() === 'banned'"
+           [class.text-on-surface-variant]="activeTab() !== 'banned'"
+           (click)="switchTab('banned')">
         <span class="material-symbols-outlined">block</span>
         <span class="text-sm font-medium">Banned users</span>
       </div>
-      <div class="flex items-center gap-3 py-2 pl-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-container cursor-pointer transition-all duration-200 rounded-lg">
+      <div class="flex items-center gap-3 py-2 pl-3 cursor-pointer transition-all duration-200 rounded-lg"
+           [class.text-on-surface]="activeTab() === 'invitations'"
+           [class.border-l-4]="activeTab() === 'invitations'"
+           [class.border-primary]="activeTab() === 'invitations'"
+           [class.pl-2]="activeTab() === 'invitations'"
+           [class.bg-surface-container-high]="activeTab() === 'invitations'"
+           [class.font-semibold]="activeTab() === 'invitations'"
+           [class.text-on-surface-variant]="activeTab() !== 'invitations'"
+           (click)="switchTab('invitations')">
         <span class="material-symbols-outlined">mail</span>
         <span class="text-sm font-medium">Invitations</span>
       </div>
-      <div class="flex items-center gap-3 py-2 pl-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-container cursor-pointer transition-all duration-200 rounded-lg">
+      <div class="flex items-center gap-3 py-2 pl-3 cursor-pointer transition-all duration-200 rounded-lg"
+           [class.text-on-surface]="activeTab() === 'settings'"
+           [class.border-l-4]="activeTab() === 'settings'"
+           [class.border-primary]="activeTab() === 'settings'"
+           [class.pl-2]="activeTab() === 'settings'"
+           [class.bg-surface-container-high]="activeTab() === 'settings'"
+           [class.font-semibold]="activeTab() === 'settings'"
+           [class.text-on-surface-variant]="activeTab() !== 'settings'"
+           (click)="switchTab('settings')">
         <span class="material-symbols-outlined">settings</span>
         <span class="text-sm font-medium">Settings</span>
       </div>
     </nav>
     <div class="p-6 border-t border-surface-container">
-      <button class="w-full text-left flex items-center gap-2 text-error hover:bg-error/5 p-2 rounded-lg transition-colors">
+      <button class="w-full text-left flex items-center gap-2 text-error hover:bg-error/5 p-2 rounded-lg transition-colors"
+              (click)="deleteRoom()">
         <span class="material-symbols-outlined text-sm">delete</span>
         <span class="text-sm font-semibold">Delete room</span>
       </button>
@@ -40,130 +81,195 @@
     <!-- Header -->
     <header class="px-8 pt-8 pb-4 flex items-center justify-between">
       <div>
-        <h2 class="text-xl font-bold text-on-surface tracking-tight">#engineering-room</h2>
+        <h2 class="text-xl font-bold text-on-surface tracking-tight">#{{ room()?.name }}</h2>
         <p class="text-sm text-outline font-medium">Manage members and permissions</p>
       </div>
-      <button class="p-2 hover:bg-surface-container rounded-full transition-colors text-outline">
+      <button class="p-2 hover:bg-surface-container rounded-full transition-colors text-outline"
+              (click)="close()">
         <span class="material-symbols-outlined">close</span>
       </button>
     </header>
 
-    <!-- Search -->
-    <div class="px-8 py-4">
-      <div class="relative">
-        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-lg">search</span>
-        <input
-          class="w-full bg-surface-container-low border-none rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-1 focus:ring-primary/30 transition-all outline-none"
-          placeholder="Search members..."
-          type="text"
-        />
+    @if (errorMessage()) {
+      <div class="mx-8 mb-2">
+        <p class="text-error text-sm bg-error-container/20 border border-error/20 rounded-xl px-4 py-3">{{ errorMessage() }}</p>
       </div>
-    </div>
+    }
 
-    <!-- Members List -->
-    <div class="flex-1 overflow-y-auto px-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <div class="space-y-2 pb-8">
-        <!-- Member 1 -->
-        <div class="flex items-center justify-between p-4 bg-surface-container-low/50 hover:bg-surface-container-low rounded-xl transition-colors group">
-          <div class="flex items-center gap-3">
-            <div class="relative">
-              <img
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCZxRgw05Zvn_rZXkx8ypS6nB8_fnCcLyeXJrWzAFEPO6RC8KX8hVy_tyL3pbk2OSK16IX46oOG0Jrnh06pxdbUzFGDVQQOacu3zJKSrScOLpPW-Tp5Zggm690zKXu9LPNIj8S9vymfkWJ9hhU60wRMWt0DgkdwCF2GhrvRlUjHa-VJDY0B0vXec3h7hJ_pUxC6knR4ClyCvZk4X_urETMAivwWwDmjpIHH8OdKjyE6as_FAOXnSGd_P1wa6sUS139McBhVZ2JcavQ"
-                alt="Alex"
-                class="w-10 h-10 rounded-full object-cover"
-              />
-              <span class="absolute bottom-0 right-0 w-3 h-3 bg-[#4caf50] border-2 border-surface-container-lowest rounded-full"></span>
-            </div>
-            <div>
-              <h4 class="text-sm font-semibold text-on-surface">Alex Rivera</h4>
-              <p class="text-xs text-outline">alex.r&#64;workspace.com</p>
-            </div>
-          </div>
-          <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button class="px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/5 rounded-md transition-colors">Make admin</button>
-            <button class="px-3 py-1.5 text-xs font-semibold text-outline hover:bg-surface-variant rounded-md transition-colors">Ban</button>
-            <button class="px-3 py-1.5 text-xs font-semibold text-error hover:bg-error/5 rounded-md transition-colors">Remove</button>
-          </div>
+    <!-- Members Tab -->
+    @if (activeTab() === 'members') {
+      <div class="px-8 py-4">
+        <div class="relative">
+          <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-lg">search</span>
+          <input class="w-full bg-surface-container-low border-none rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-1 focus:ring-primary/30 transition-all outline-none"
+                 placeholder="Search members..." type="text" />
         </div>
-
-        <!-- Member 2 -->
-        <div class="flex items-center justify-between p-4 bg-surface-container-low/50 hover:bg-surface-container-low rounded-xl transition-colors group">
-          <div class="flex items-center gap-3">
-            <div class="relative">
-              <img
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCYLvekKKK4CRjv4EmCf7HsuVKshQKj9dKGIrFo5na6gQjfa26GUjjTFPXgn1vHRztJWAVOYNED60PGDDteMoNQP7ldb1B4c9xB0oTvSGKi60rnmzcT4pNEMSvl2xHOQ-FIoi6jCB0wyZmCiFbILyT0fsJ5-xUNQLvAFu8BDXTstsAp-bhWe2jc8kb5hB1CGle2IAUJ8jx-4aHCbkqGJK53RGkNVE4U8svku7-uVIoxqrIzs8UyeB6yhsgA45ioo-m1U2cGA-y94lk"
-                alt="Sarah"
-                class="w-10 h-10 rounded-full object-cover"
-              />
-              <span class="absolute bottom-0 right-0 w-3 h-3 bg-[#ffb300] border-2 border-surface-container-lowest rounded-full"></span>
+      </div>
+      <div class="flex-1 overflow-y-auto px-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div class="space-y-2 pb-8">
+          @if (isLoading()) {
+            <div class="flex justify-center py-8">
+              <span class="material-symbols-outlined text-2xl text-outline animate-spin">progress_activity</span>
             </div>
-            <div>
-              <div class="flex items-center gap-2">
-                <h4 class="text-sm font-semibold text-on-surface">Sarah Chen</h4>
-                <span class="px-1.5 py-0.5 bg-primary-fixed text-on-primary-fixed text-[10px] font-bold rounded uppercase tracking-wider">Admin</span>
+          } @else if (members().length === 0) {
+            <p class="text-center text-on-surface-variant text-sm py-8">No members.</p>
+          } @else {
+            @for (member of members(); track member.userId) {
+              <div class="flex items-center justify-between p-4 bg-surface-container-low/50 hover:bg-surface-container-low rounded-xl transition-colors group">
+                <div class="flex items-center gap-3">
+                  <div class="relative">
+                    @if (member.avatarUrl) {
+                      <img [src]="member.avatarUrl" class="w-10 h-10 rounded-full object-cover" alt="" />
+                    } @else {
+                      <div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center">
+                        <span class="material-symbols-outlined text-on-surface-variant">person</span>
+                      </div>
+                    }
+                    <span class="absolute bottom-0 right-0 w-3 h-3 border-2 border-surface-container-lowest rounded-full"
+                          [style.background-color]="member.presenceStatus === 'online' ? '#4caf50' : member.presenceStatus === 'afk' ? '#ffb300' : '#717c82'"></span>
+                  </div>
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <h4 class="text-sm font-semibold text-on-surface">{{ member.username }}</h4>
+                      @if (member.role === 'Admin') {
+                        <span class="px-1.5 py-0.5 bg-primary-fixed text-on-primary-fixed text-[10px] font-bold rounded uppercase tracking-wider">Admin</span>
+                      }
+                      @if (member.role === 'Owner') {
+                        <span class="px-1.5 py-0.5 bg-secondary-container text-on-secondary-container text-[10px] font-bold rounded uppercase tracking-wider">Owner</span>
+                      }
+                    </div>
+                  </div>
+                </div>
+                <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  @if (member.role === 'Member' && room()?.callerRole === 'Owner') {
+                    <button class="px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/5 rounded-md transition-colors"
+                            (click)="makeAdmin(member.userId)">Make admin</button>
+                  }
+                  @if (member.role === 'Admin' && room()?.callerRole === 'Owner') {
+                    <button class="px-3 py-1.5 text-xs font-semibold text-outline hover:bg-surface-variant rounded-md transition-colors"
+                            (click)="demoteAdmin(member.userId)">Demote</button>
+                  }
+                  @if (member.role !== 'Owner' && (room()?.callerRole === 'Owner' || room()?.callerRole === 'Admin')) {
+                    <button class="px-3 py-1.5 text-xs font-semibold text-outline hover:bg-surface-variant rounded-md transition-colors"
+                            (click)="banMember(member.userId)">Ban</button>
+                  }
+                </div>
               </div>
-              <p class="text-xs text-outline">sarah.c&#64;workspace.com</p>
-            </div>
-          </div>
-          <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button class="px-3 py-1.5 text-xs font-semibold text-outline hover:bg-surface-variant rounded-md transition-colors">Demote</button>
-            <button class="px-3 py-1.5 text-xs font-semibold text-outline hover:bg-surface-variant rounded-md transition-colors">Ban</button>
-            <button class="px-3 py-1.5 text-xs font-semibold text-error hover:bg-error/5 rounded-md transition-colors">Remove</button>
-          </div>
-        </div>
-
-        <!-- Member 3 -->
-        <div class="flex items-center justify-between p-4 bg-surface-container-low/50 hover:bg-surface-container-low rounded-xl transition-colors group">
-          <div class="flex items-center gap-3">
-            <div class="relative">
-              <img
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuC7HDxcmI8VV1q-SP3wCD34f-wCReDZfB2nymw0bBup9-TnBVf_IHM8XUGWCN6uZgXGObMKd33G44i8TehIn8mgSQPbU7wWIod0kT-F5tC4X9SP0BV3KuSWA4ENOYQuP9RmoEVAF2NBMqnS-vGP-hoKvXywkUSACOEaalL-rB8pi_HT1PGW-XV6naqoRcyhy38G6unICS66zZQxQCbN1K5oV_JRIL77pFnbiK03v7LYwy5-3bON9lsohQzASobZxo2zqGOxVRUr00Y"
-                alt="Jordan"
-                class="w-10 h-10 rounded-full object-cover"
-              />
-              <span class="absolute bottom-0 right-0 w-3 h-3 bg-[#717c82] border-2 border-surface-container-lowest rounded-full"></span>
-            </div>
-            <div>
-              <h4 class="text-sm font-semibold text-on-surface">Jordan Smyth</h4>
-              <p class="text-xs text-outline">j.smyth&#64;workspace.com</p>
-            </div>
-          </div>
-          <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button class="px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/5 rounded-md transition-colors">Make admin</button>
-            <button class="px-3 py-1.5 text-xs font-semibold text-outline hover:bg-surface-variant rounded-md transition-colors">Ban</button>
-            <button class="px-3 py-1.5 text-xs font-semibold text-error hover:bg-error/5 rounded-md transition-colors">Remove</button>
-          </div>
-        </div>
-
-        <!-- Member 4 -->
-        <div class="flex items-center justify-between p-4 bg-surface-container-low/50 hover:bg-surface-container-low rounded-xl transition-colors group">
-          <div class="flex items-center gap-3">
-            <div class="relative">
-              <img
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBE8pMsjRnDw2UItmfZO7gW4pJBmSTCQ_V5CBKbt_acsgXFp1fABpWWMZ11cn1_Y6PVnLfVk4q0NfmfGbIUDZKgZAzJcSIKDwAzzuEsJ9d_-zOmK8euJWrYbiXl-yYXrchbIcIwM4NSWx9Chu5Y9tDQ_SPL61P7-snFHnBmyemURYpKLVu33ULZ8e-u2LQ8x3hDg4tcSLs7E6SP8CmTlyogylGuA6hrqqUC3AyVmqcOBfY-LBKoTkpHzjMrCSB8nwxP4gEPMeabwZ4"
-                alt="Elena"
-                class="w-10 h-10 rounded-full object-cover"
-              />
-              <span class="absolute bottom-0 right-0 w-3 h-3 bg-[#4caf50] border-2 border-surface-container-lowest rounded-full"></span>
-            </div>
-            <div>
-              <h4 class="text-sm font-semibold text-on-surface">Elena Rodriguez</h4>
-              <p class="text-xs text-outline">elena.rod&#64;workspace.com</p>
-            </div>
-          </div>
-          <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button class="px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/5 rounded-md transition-colors">Make admin</button>
-            <button class="px-3 py-1.5 text-xs font-semibold text-outline hover:bg-surface-variant rounded-md transition-colors">Ban</button>
-            <button class="px-3 py-1.5 text-xs font-semibold text-error hover:bg-error/5 rounded-md transition-colors">Remove</button>
-          </div>
+            }
+          }
         </div>
       </div>
-    </div>
+    }
 
-    <!-- Footer -->
-    <footer class="p-6 border-t border-surface-container bg-surface-container-low/50 flex justify-end gap-3">
-      <button class="px-6 py-2 text-sm font-bold text-on-surface hover:bg-surface-container rounded-lg transition-colors">Cancel</button>
-      <button class="px-6 py-2 text-sm font-bold bg-primary text-on-primary rounded-lg shadow-sm hover:opacity-90 transition-opacity">Save changes</button>
-    </footer>
+    <!-- Admins Tab -->
+    @if (activeTab() === 'admins') {
+      <div class="flex-1 overflow-y-auto px-8 py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div class="space-y-2 pb-8">
+          @if (admins().length === 0) {
+            <p class="text-center text-on-surface-variant text-sm py-8">No admins yet.</p>
+          } @else {
+            @for (admin of admins(); track admin.userId) {
+              <div class="flex items-center justify-between p-4 bg-surface-container-low/50 hover:bg-surface-container-low rounded-xl transition-colors group">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center">
+                    <span class="material-symbols-outlined text-on-surface-variant">shield_person</span>
+                  </div>
+                  <h4 class="text-sm font-semibold text-on-surface">{{ admin.username }}</h4>
+                </div>
+                @if (room()?.callerRole === 'Owner' && admin.userId !== user()?.id) {
+                  <button class="px-3 py-1.5 text-xs font-semibold text-error hover:bg-error/5 rounded-md transition-colors opacity-0 group-hover:opacity-100"
+                          (click)="demoteAdmin(admin.userId)">Demote</button>
+                }
+              </div>
+            }
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Banned Tab -->
+    @if (activeTab() === 'banned') {
+      <div class="flex-1 overflow-y-auto px-8 py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div class="space-y-2 pb-8">
+          @if (bans().length === 0) {
+            <p class="text-center text-on-surface-variant text-sm py-8">No banned users.</p>
+          } @else {
+            @for (ban of bans(); track ban.bannedUserId) {
+              <div class="flex items-center justify-between p-4 bg-surface-container-low/50 hover:bg-surface-container-low rounded-xl transition-colors group">
+                <div>
+                  <h4 class="text-sm font-semibold text-on-surface">{{ ban.bannedUsername }}</h4>
+                  <p class="text-xs text-outline">Banned by {{ ban.bannedByUsername }}@if (ban.reason) { — {{ ban.reason }} }</p>
+                </div>
+                <button class="px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/5 rounded-md transition-colors opacity-0 group-hover:opacity-100"
+                        (click)="unbanMember(ban.bannedUserId)">Unban</button>
+              </div>
+            }
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Invitations Tab -->
+    @if (activeTab() === 'invitations') {
+      <div class="flex-1 overflow-y-auto px-8 py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div class="mb-6 flex gap-3">
+          <input class="flex-1 bg-surface-container-low border-none rounded-lg px-4 py-2 text-sm focus:ring-1 focus:ring-primary/30 outline-none"
+                 placeholder="Username to invite..." [(ngModel)]="inviteUsername" />
+          <button class="px-4 py-2 bg-primary text-on-primary text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity"
+                  (click)="sendInvitation()">Invite</button>
+        </div>
+        <div class="space-y-2 pb-8">
+          @if (invitations().length === 0) {
+            <p class="text-center text-on-surface-variant text-sm py-4">No pending invitations.</p>
+          } @else {
+            @for (inv of invitations(); track inv.id) {
+              <div class="flex items-center justify-between p-4 bg-surface-container-low/50 rounded-xl">
+                <div>
+                  <h4 class="text-sm font-semibold text-on-surface">{{ inv.invitedUsername }}</h4>
+                  <p class="text-xs text-outline">Invited by {{ inv.invitedByUsername }}</p>
+                </div>
+                <span class="text-xs text-outline">{{ inv.status }}</span>
+              </div>
+            }
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Settings Tab -->
+    @if (activeTab() === 'settings') {
+      <div class="flex-1 overflow-y-auto px-8 py-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div class="max-w-lg space-y-6">
+          <div>
+            <label class="block text-[11px] font-bold text-on-surface-variant mb-2 uppercase tracking-tight">Room Name</label>
+            <input class="w-full bg-surface-container-low border-none rounded-lg px-4 py-2.5 text-sm focus:ring-1 focus:ring-primary/30 outline-none"
+                   [(ngModel)]="editName" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-on-surface-variant mb-2 uppercase tracking-tight">Description</label>
+            <textarea class="w-full bg-surface-container-low border-none rounded-lg px-4 py-2.5 text-sm focus:ring-1 focus:ring-primary/30 outline-none resize-none"
+                      rows="3" [(ngModel)]="editDescription"></textarea>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-on-surface-variant mb-2 uppercase tracking-tight">Visibility</label>
+            <select class="w-full bg-surface-container-low border-none rounded-lg px-4 py-2.5 text-sm focus:ring-1 focus:ring-primary/30 outline-none"
+                    [(ngModel)]="editVisibility">
+              <option value="Public">Public</option>
+              <option value="Private">Private</option>
+            </select>
+          </div>
+          <button class="px-6 py-2.5 bg-primary text-on-primary text-sm font-bold rounded-lg hover:opacity-90 transition-opacity"
+                  (click)="saveSettings()">Save changes</button>
+        </div>
+      </div>
+    }
+
+    <!-- Footer (Members tab only) -->
+    @if (activeTab() === 'members') {
+      <footer class="p-6 border-t border-surface-container bg-surface-container-low/50 flex justify-end gap-3">
+        <button class="px-6 py-2 text-sm font-bold text-on-surface hover:bg-surface-container rounded-lg transition-colors"
+                (click)="close()">Cancel</button>
+      </footer>
+    }
   </section>
 </div>
