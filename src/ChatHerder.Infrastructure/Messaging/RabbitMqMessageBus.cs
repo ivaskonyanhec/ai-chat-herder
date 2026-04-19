@@ -43,6 +43,10 @@ public sealed class RabbitMqMessageBus(
         {
             if (_channel is { IsOpen: true }) return _channel;
 
+            // dispose stale before reassigning
+            if (_channel is not null) { await _channel.DisposeAsync(); _channel = null; }
+            if (_connection is not null) { await _connection.DisposeAsync(); _connection = null; }
+
             var uri = config["RabbitMQ:Uri"]
                 ?? throw new InvalidOperationException("RabbitMQ:Uri is not configured.");
             var factory = new ConnectionFactory { Uri = new Uri(uri) };
@@ -60,7 +64,8 @@ public sealed class RabbitMqMessageBus(
 
     public async ValueTask DisposeAsync()
     {
-        if (_channel is not null) await _channel.CloseAsync();
-        if (_connection is not null) await _connection.CloseAsync();
+        if (_channel is not null) await _channel.DisposeAsync();
+        if (_connection is not null) await _connection.DisposeAsync();
+        _lock.Dispose();
     }
 }
