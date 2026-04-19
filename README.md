@@ -134,13 +134,16 @@ podman compose up --build -d
 podman compose ps
 ```
 
+This starts the five core services: PostgreSQL, Redis, RabbitMQ, backend API, and frontend Nginx. No test runners are included.
+
 | Endpoint | URL |
 |---|---|
 | App | `http://localhost` |
 | Alternate frontend port | `http://localhost:4200` |
-| RabbitMQ management UI | `http://localhost:15672` |
 
 Backend traffic is proxied through the frontend Nginx container via `/api/*` and `/hubs/*`.
+
+> **RabbitMQ management UI** (`http://localhost:15672`) is exposed only when `docker-compose.override.yml` is present (local development). It is not bound in production or CI.
 
 For detailed container operations see `DOCKER_SETUP.md`.
 
@@ -170,30 +173,35 @@ The Angular dev server uses `frontend/proxy.config.json` to forward `/api/*` and
 
 ## Tests
 
+Each test suite is invoked independently. `podman compose up` never starts a test runner automatically.
+
 GitHub Actions runs the .NET unit suite, Angular unit suite, and Dockerized E2E/UAT suite on every push to `main`.
 
-**.NET (unit + integration):**
+**.NET unit + integration:**
 
 ```bash
 dotnet test ChatHerder.sln
 ```
 
-**Frontend (Vitest):**
+**Frontend unit (Vitest):**
 
 ```bash
 cd frontend
 npm test
 ```
 
-**E2E/UAT (Playwright):**
+**E2E / UAT (Playwright) — against a running app:**
 
 ```bash
+# 1. Start the app (if not already running)
 podman compose up --build -d
+
+# 2. Run the full suite
 npm --prefix e2e install
 BASE_URL=http://localhost npm --prefix e2e run test:all
 ```
 
-Or as a single compose command:
+**E2E / UAT — fully containerised (CI mode):**
 
 ```bash
 podman compose --profile e2e up --build e2e
@@ -201,13 +209,13 @@ podman compose --profile e2e up --build e2e
 
 Reports land under `./e2e-reports/latest/`: `summary.md`, `manifest.json`, `results.json`, `junit.xml`, and `html/index.html`. Each run is also archived under `runs/e2e-uat-YYYYMMDDTHHMMSSZ/`.
 
-**Load test:**
+**Load test (k6 — requires the app to be running):**
 
 ```bash
-podman compose run load-tester
+podman compose --profile load run load-tester
 ```
 
-The harness lives in `tests/load/` and targets authenticated SignalR messaging and presence flows.
+The harness lives in `tests/load/` and targets authenticated SignalR messaging and presence flows at 300 concurrent users.
 
 ---
 
