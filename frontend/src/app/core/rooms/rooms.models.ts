@@ -32,3 +32,30 @@ export interface CreateRoomRequest {
   description: string | null;
   visibility: 'Public' | 'Private';
 }
+
+export interface RoomBanDto {
+  bannedUserId: string;
+  bannedUsername: string;
+  bannedByUserId: string;
+  bannedByUsername: string;
+  reason: string | null;
+  createdAt: string;
+}
+
+export interface RoomInvitationDto {
+  id: string;
+  roomId: string;
+  roomName: string;
+  invitedByUserId: string;
+  invitedByUsername: string;
+  invitedUserId: string;
+  invitedUsername: string;
+  status: string;
+  createdAt: string;
+}
+
+export interface UpdateRoomRequest {
+  name: string | null;
+  description: string | null;
+  visibility: 'Public' | 'Private' | null;
+}
