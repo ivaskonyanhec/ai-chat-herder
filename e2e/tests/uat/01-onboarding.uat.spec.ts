@@ -22,8 +22,8 @@ test.describe('UAT: Onboarding and identity', () => {
 
   test('username cannot be changed through profile UI', async ({ userAPage }) => {
     await userAPage.goto('/app/profile');
-    // Username input is always disabled — editing is not supported
-    const usernameInput = userAPage.locator('input[disabled]').filter({ hasText: /.*/ }).first();
+    // Profile settings renders a statically disabled input for the username field
+    const usernameInput = userAPage.locator('input[disabled]').first();
     await expect(usernameInput).toBeVisible({ timeout: 10_000 });
     await expect(usernameInput).toBeDisabled();
   });

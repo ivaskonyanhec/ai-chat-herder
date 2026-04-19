@@ -1,6 +1,6 @@
 import { Injectable, inject, isDevMode, signal } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
-import { HubConnection } from '@microsoft/signalr';
+import { HubConnection, HubConnectionState } from '@microsoft/signalr';
 import { HUB_CONNECTION_FACTORY } from './hub-connection.factory';
 import { AuthSessionService } from '../auth/auth-session.service';
 import type {
@@ -70,6 +70,7 @@ export class PresenceService {
     this._connected.set(true);
     this.startHeartbeat();
     this.startAfkTracking();
+    this.rejoinAllRooms();
   }
 
   async disconnect(): Promise<void> {
@@ -87,9 +88,9 @@ export class PresenceService {
   }
 
   async joinRoom(roomId: string): Promise<void> {
-    if (!this.connection) return;
-    await this.connection.invoke('JoinRoom', roomId);
     this.joinedRooms.add(roomId);
+    if (this.connection?.state !== HubConnectionState.Connected) return;
+    await this.connection.invoke('JoinRoom', roomId);
   }
 
   async leaveRoom(roomId: string): Promise<void> {

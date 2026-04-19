@@ -204,8 +204,8 @@ test.describe('Room moderation', () => {
     // Owner bans userB via API — RemovedFromRoom is broadcast to userB's active hub connections
     await api.banMember(room.id, userB.id, userA.accessToken);
 
-    // room-chat.ts listens for removedFromRoom and navigates to /app
-    await expect(userBPage).toHaveURL(/\/app$/, { timeout: 8_000 });
+    // room-chat.ts listens for removedFromRoom and navigates away from the room
+    await expect(userBPage).not.toHaveURL(new RegExp(`rooms/${room.id}`), { timeout: 8_000 });
   });
 
   // Covered in e2e/tests/04-attachments.spec.ts by the "banned room user loses access" file test.

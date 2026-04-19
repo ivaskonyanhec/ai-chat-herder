@@ -106,7 +106,7 @@ test.describe('Presence Engine', () => {
 
   test('presence dots update in the room member list UI', async ({ userA, userB, userAPage, api }) => {
     const room = await api.createRoom(userA.accessToken, { visibility: 'Public' });
-    await api.joinRoom(room.id, userB.accessToken);
+    await api.joinPublicRoom(room.id, userB.accessToken);
 
     // userB connects to presence hub — goes online
     const presenceB = await createHubConnection('/hubs/presence', userB.accessToken);

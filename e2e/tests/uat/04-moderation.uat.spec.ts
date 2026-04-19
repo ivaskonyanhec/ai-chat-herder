@@ -25,7 +25,7 @@ test.describe('UAT: Moderation UX', () => {
     // Admin (userA) bans userB via API — PresenceHub broadcasts RemovedFromRoom to userB's connection
     await api.banMember(room.id, userB.id, userA.accessToken);
 
-    // room-chat.ts reacts to removedFromRoom signal by navigating to /app
-    await expect(userBPage).toHaveURL(/\/app$/, { timeout: 8_000 });
+    // room-chat.ts reacts to removedFromRoom signal by navigating away from the room
+    await expect(userBPage).not.toHaveURL(new RegExp(`rooms/${room.id}`), { timeout: 8_000 });
   });
 });

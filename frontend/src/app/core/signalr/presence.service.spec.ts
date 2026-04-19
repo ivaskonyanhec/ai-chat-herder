@@ -5,18 +5,19 @@ import { PresenceService } from './presence.service';
 import { HUB_CONNECTION_FACTORY } from './hub-connection.factory';
 import { AuthSessionService } from '../auth/auth-session.service';
 
-function buildMockConnection() {
+function buildMockConnection(initialState = 'Connected') {
   const handlers: Record<string, (...args: unknown[]) => void> = {};
+  let _state = initialState;
   const conn = {
     on: vi.fn((event: string, handler: (...args: unknown[]) => void) => {
       handlers[event] = handler;
     }),
     invoke: vi.fn().mockResolvedValue(undefined),
-    start: vi.fn().mockResolvedValue(undefined),
+    start: vi.fn().mockImplementation(() => { _state = 'Connected'; return Promise.resolve(); }),
     stop: vi.fn().mockResolvedValue(undefined),
     onreconnected: vi.fn(),
     onclose: vi.fn(),
-    state: 'Connected',
+    get state() { return _state; },
     _trigger: (event: string, ...args: unknown[]) => handlers[event]?.(...args),
   };
   return conn as unknown as HubConnection & { _trigger: (event: string, ...args: unknown[]) => void };
@@ -94,5 +95,40 @@ describe('PresenceService', () => {
     await service.joinDialog('dialog-123');
     await service.leaveDialog('dialog-123');
     expect(mockConn.invoke).toHaveBeenCalledWith('LeaveDialog', 'dialog-123');
+  });
+});
+
+describe('PresenceService – startup race (joinRoom before connect)', () => {
+  let svc: PresenceService;
+  let conn: ReturnType<typeof buildMockConnection>;
+
+  beforeEach(() => {
+    conn = buildMockConnection('Disconnected');
+    TestBed.configureTestingModule({
+      providers: [
+        PresenceService,
+        { provide: HUB_CONNECTION_FACTORY, useValue: vi.fn().mockReturnValue(conn) },
+        {
+          provide: AuthSessionService,
+          useValue: { accessToken: vi.fn().mockReturnValue('t'), clearSession: vi.fn() },
+        },
+      ],
+    });
+    svc = TestBed.inject(PresenceService);
+  });
+
+  afterEach(async () => {
+    await svc.disconnect();
+  });
+
+  it('JoinRoom is invoked after connect() when joinRoom was called before the connection started', async () => {
+    // service has no connection yet — joinRoom should silently queue the room
+    await svc.joinRoom('room-race');
+    expect(conn.invoke).not.toHaveBeenCalledWith('JoinRoom', 'room-race');
+
+    // connect() calls start() which sets state to Connected, then rejoinAllRooms() fires
+    await svc.connect();
+
+    expect(conn.invoke).toHaveBeenCalledWith('JoinRoom', 'room-race');
   });
 });

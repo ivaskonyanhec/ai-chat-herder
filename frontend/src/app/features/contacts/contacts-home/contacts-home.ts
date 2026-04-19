@@ -1,17 +1,19 @@
-import { Component, inject, signal } from '@angular/core';
+import { NgOptimizedImage } from '@angular/common';
+import { Component, computed, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { finalize } from 'rxjs';
+import { finalize, forkJoin } from 'rxjs';
 import { AuthSessionService } from '../../../core/auth/auth-session.service';
 import { FriendsApiService } from '../../../core/friends/friends-api.service';
 import { DialogsApiService } from '../../../core/dialogs/dialogs-api.service';
 import { BlocksApiService } from '../../../core/blocks/blocks-api.service';
-import type { FriendDto } from '../../../core/friends/friends.models';
+import type { FriendDto, FriendRequestDto } from '../../../core/friends/friends.models';
 import type { BlockDto } from '../../../core/blocks/blocks.models';
 
 @Component({
   selector: 'app-contacts-home',
   standalone: true,
-  imports: [],
+  imports: [FormsModule, NgOptimizedImage],
   templateUrl: './contacts-home.html',
   styleUrl: './contacts-home.scss',
 })
@@ -28,12 +30,42 @@ export class ContactsHomeComponent {
   readonly errorMessage = signal('');
   readonly friends = signal<FriendDto[]>([]);
   readonly blockedUsers = signal<BlockDto[]>([]);
+  readonly requests = signal<FriendRequestDto[]>([]);
+  readonly searchText = signal('');
+  readonly newRequestUsername = signal('');
+  readonly newRequestMessage = signal('');
+  readonly requestStatusMessage = signal('');
   readonly removingId = signal<string | null>(null);
   readonly openingChatId = signal<string | null>(null);
   readonly unblockingId = signal<string | null>(null);
+  readonly processingRequestId = signal<string | null>(null);
+  readonly sendingRequest = signal(false);
+
+  readonly incomingRequests = computed(() => {
+    const userId = this.user()?.id;
+    if (!userId) return [];
+    return this.requests().filter(request => request.receiverId === userId);
+  });
+
+  readonly outgoingRequests = computed(() => {
+    const userId = this.user()?.id;
+    return userId ? this.requests().filter(request => request.senderId === userId) : [];
+  });
+
+  readonly filteredFriends = computed(() => {
+    const query = this.normalizedSearch();
+    if (!query) return this.friends();
+    return this.friends().filter(friend => friend.username.toLowerCase().includes(query));
+  });
+
+  readonly filteredBlockedUsers = computed(() => {
+    const query = this.normalizedSearch();
+    if (!query) return this.blockedUsers();
+    return this.blockedUsers().filter(blocked => blocked.blockedUsername.toLowerCase().includes(query));
+  });
 
   constructor() {
-    this.loadFriends();
+    this.loadInitialData();
   }
 
   switchView(v: 'friends' | 'blocked'): void {
@@ -77,12 +109,80 @@ export class ContactsHomeComponent {
       });
   }
 
+  acceptRequest(id: string): void {
+    if (this.processingRequestId()) return;
+    this.processingRequestId.set(id);
+    this.friendsApi.acceptFriendRequest(id)
+      .pipe(finalize(() => this.processingRequestId.set(null)))
+      .subscribe({
+        next: () => {
+          this.requests.update(list => list.filter(request => request.id !== id));
+          this.loadFriends();
+        },
+        error: () => this.errorMessage.set('Unable to accept the request right now.'),
+      });
+  }
+
+  rejectRequest(id: string): void {
+    if (this.processingRequestId()) return;
+    this.processingRequestId.set(id);
+    this.friendsApi.rejectFriendRequest(id)
+      .pipe(finalize(() => this.processingRequestId.set(null)))
+      .subscribe({
+        next: () => this.requests.update(list => list.filter(request => request.id !== id)),
+        error: () => this.errorMessage.set('Unable to decline the request right now.'),
+      });
+  }
+
+  sendFriendRequest(): void {
+    if (this.sendingRequest()) return;
+    const username = this.newRequestUsername().trim().replace(/^@+/, '');
+    const message = this.newRequestMessage().trim();
+    this.errorMessage.set('');
+    this.requestStatusMessage.set('');
+
+    if (!username) {
+      this.errorMessage.set('Enter a username to send a request.');
+      return;
+    }
+
+    this.sendingRequest.set(true);
+    this.friendsApi.sendFriendRequest(username, message || undefined)
+      .pipe(finalize(() => this.sendingRequest.set(false)))
+      .subscribe({
+        next: () => {
+          this.newRequestUsername.set('');
+          this.newRequestMessage.set('');
+          this.requestStatusMessage.set('Friend request sent.');
+        },
+        error: () => this.errorMessage.set('Unable to send friend request right now.'),
+      });
+  }
+
+  formatDate(iso: string): string {
+    return new Date(iso).toLocaleDateString();
+  }
+
   private loadFriends(): void {
-    this.isLoading.set(true);
     this.friendsApi.getFriends()
-      .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: friends => this.friends.set(friends),
+        error: () => this.errorMessage.set('Unable to load contacts.'),
+      });
+  }
+
+  private loadInitialData(): void {
+    this.isLoading.set(true);
+    forkJoin({
+      friends: this.friendsApi.getFriends(),
+      requests: this.friendsApi.getFriendRequests(),
+    })
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: ({ friends, requests }) => {
+          this.friends.set(friends);
+          this.requests.set(requests);
+        },
         error: () => this.errorMessage.set('Unable to load contacts.'),
       });
   }
@@ -95,5 +195,9 @@ export class ContactsHomeComponent {
         next: blocked => this.blockedUsers.set(blocked),
         error: () => this.errorMessage.set('Unable to load blocked users.'),
       });
+  }
+
+  private normalizedSearch(): string {
+    return this.searchText().trim().toLowerCase();
   }
 }

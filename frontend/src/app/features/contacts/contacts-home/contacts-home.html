@@ -7,7 +7,8 @@
         <div class="lg:col-span-8 space-y-6">
           <div class="flex items-end justify-between">
             <h1 class="text-2xl font-extrabold tracking-tight text-on-surface">Directory &amp; Connections</h1>
-            <span class="text-[10px] text-outline tracking-wider uppercase font-medium">84 Members Online</span>
+            <span class="text-[10px] text-outline tracking-wider uppercase font-medium">{{ friends().length }}
+              Connections</span>
           </div>
 
           <!-- View Toggle -->
@@ -17,28 +18,36 @@
                     [class.text-on-primary]="view() === 'friends'"
                     [class.bg-surface-container-low]="view() !== 'friends'"
                     [class.text-on-surface-variant]="view() !== 'friends'"
-                    (click)="switchView('friends')">Friends</button>
+                    (click)="switchView('friends')">Friends
+            </button>
             <button class="px-4 py-1.5 text-xs font-bold rounded-lg transition-colors"
                     [class.bg-primary]="view() === 'blocked'"
                     [class.text-on-primary]="view() === 'blocked'"
                     [class.bg-surface-container-low]="view() !== 'blocked'"
                     [class.text-on-surface-variant]="view() !== 'blocked'"
-                    (click)="switchView('blocked')">Blocked</button>
+                    (click)="switchView('blocked')">Blocked
+            </button>
           </div>
 
           <!-- Search Component -->
           <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
             <div class="relative flex items-center gap-4">
               <div class="flex-1 relative">
-                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">search</span>
+                <span
+                  class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">search</span>
                 <input
                   class="w-full bg-surface-container-low border-none rounded-lg pl-12 pr-4 py-4 text-sm focus:ring-1 focus:ring-primary/30 transition-all"
-                  placeholder="Search members by username or professional role..."
+                  [ngModel]="searchText()"
+                  (ngModelChange)="searchText.set($event)"
+                  placeholder="Search loaded contacts by username..."
                   type="text"
                 />
               </div>
-              <button class="bg-secondary-container text-on-secondary-container px-6 py-4 rounded-lg font-semibold text-sm hover:bg-secondary-fixed transition-colors">
-                Find Professionals
+              <button
+                class="bg-secondary-container text-on-secondary-container px-6 py-4 rounded-lg font-semibold text-sm hover:bg-secondary-fixed transition-colors"
+                type="button"
+                (click)="newRequestUsername.set(searchText())">
+                Invite Match
               </button>
             </div>
           </div>
@@ -49,18 +58,22 @@
               <span class="material-symbols-outlined text-2xl text-outline animate-spin">progress_activity</span>
             </div>
           } @else if (errorMessage()) {
-            <p class="text-error text-sm bg-error-container/20 border border-error/20 rounded-xl px-4 py-3">{{ errorMessage() }}</p>
+            <p
+              class="text-error text-sm bg-error-container/20 border border-error/20 rounded-xl px-4 py-3">{{ errorMessage() }}</p>
           } @else if (view() === 'friends') {
-            @if (friends().length === 0) {
-              <div class="text-center py-8 text-on-surface-variant text-sm">No connections yet. Send a friend request to connect.</div>
+            @if (filteredFriends().length === 0) {
+              <div class="text-center py-8 text-on-surface-variant text-sm">No connections yet. Send a friend request to
+                connect.
+              </div>
             } @else {
               <div class="grid grid-cols-2 gap-4">
-                @for (friend of friends(); track friend.userId) {
-                  <div class="group relative bg-surface-container-lowest rounded-xl p-4 border border-outline-variant/10 hover:shadow-sm transition-shadow">
+                @for (friend of filteredFriends(); track friend.userId) {
+                  <div
+                    class="group relative bg-surface-container-lowest rounded-xl p-4 border border-outline-variant/10 hover:shadow-sm transition-shadow">
                     <div class="flex items-center gap-3 mb-3">
                       <div class="w-10 h-10 rounded-full bg-surface-container overflow-hidden shrink-0">
                         @if (friend.avatarUrl) {
-                          <img [src]="friend.avatarUrl" class="w-full h-full object-cover" alt="" />
+                          <img [src]="friend.avatarUrl" class="w-full h-full object-cover" alt=""/>
                         } @else {
                           <div class="w-full h-full flex items-center justify-center">
                             <span class="material-symbols-outlined text-on-surface-variant" style="font-size:1.25rem">person</span>
@@ -75,27 +88,32 @@
                       <button
                         class="flex-1 py-1.5 bg-primary text-on-primary text-xs font-bold rounded-lg hover:opacity-90 transition-colors disabled:opacity-50"
                         [disabled]="openingChatId() === friend.userId"
-                        (click)="openChat(friend.userId)">Chat</button>
+                        (click)="openChat(friend.userId)">Chat
+                      </button>
                       <button
                         class="flex-1 py-1.5 bg-error-container text-on-error-container text-xs font-bold rounded-lg hover:opacity-90 transition-colors disabled:opacity-50"
                         [disabled]="removingId() === friend.userId"
-                        (click)="removeFriend(friend.userId)">Remove</button>
+                        (click)="removeFriend(friend.userId)">Remove
+                      </button>
                     </div>
                   </div>
                 }
               </div>
             }
           } @else {
-            @if (blockedUsers().length === 0) {
+            @if (filteredBlockedUsers().length === 0) {
               <div class="text-center py-8 text-on-surface-variant text-sm">No blocked users.</div>
             } @else {
               <div class="grid grid-cols-2 gap-4">
-                @for (blocked of blockedUsers(); track blocked.blockedUserId) {
-                  <div class="group relative bg-surface-container-lowest rounded-xl p-4 border border-outline-variant/10 hover:shadow-sm transition-shadow">
+                @for (blocked of filteredBlockedUsers(); track blocked.blockedUserId) {
+                  <div
+                    class="group relative bg-surface-container-lowest rounded-xl p-4 border border-outline-variant/10 hover:shadow-sm transition-shadow">
                     <div class="flex items-center gap-3 mb-3">
                       <div class="w-10 h-10 rounded-full bg-surface-container overflow-hidden shrink-0">
                         @if (blocked.blockedAvatarUrl) {
-                          <img [src]="blocked.blockedAvatarUrl" class="w-full h-full object-cover" alt="" />
+                          <img [ngSrc]="blocked.blockedAvatarUrl" class="w-full h-full object-cover" alt="blocked user"
+                               width="40"
+                               height="40"/>
                         } @else {
                           <div class="w-full h-full flex items-center justify-center">
                             <span class="material-symbols-outlined text-on-surface-variant" style="font-size:1.25rem">person</span>
@@ -110,7 +128,8 @@
                       <button
                         class="flex-1 py-1.5 bg-surface-container text-on-surface text-xs font-bold rounded-lg hover:bg-surface-container-high transition-colors disabled:opacity-50"
                         [disabled]="unblockingId() === blocked.blockedUserId"
-                        (click)="unblockUser(blocked.blockedUserId)">Unblock</button>
+                        (click)="unblockUser(blocked.blockedUserId)">Unblock
+                      </button>
                     </div>
                   </div>
                 }
@@ -125,75 +144,94 @@
           <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/10 shadow-sm">
             <div class="flex items-center justify-between mb-4">
               <h2 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Pending Requests</h2>
-              <span class="bg-primary-container text-on-primary-container text-[10px] px-2 py-0.5 rounded-full font-bold">2 NEW</span>
+              <span
+                class="bg-primary-container text-on-primary-container text-[10px] px-2 py-0.5 rounded-full font-bold">{{ incomingRequests().length }}
+                NEW</span>
             </div>
             <div class="space-y-4">
-              <!-- Request 1 -->
-              <div class="flex items-start gap-3 pb-4 border-b border-surface-container">
-                <img
-                  class="w-10 h-10 rounded-full object-cover flex-shrink-0"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuClsnVkruST2NDJhI5rcpiYPwWber4x7Jz9398gtuMDypO_-t80dOjUCtagQZ3_rKdsR506JaFw1By9Q3Pa3mRQQ-shQ4dxNiqLmwz2D6Gma6cgC76uqJa39ch63g_mYkrzpS1A9iLkyIoNSoH6QIQQhWaeaRCo0pPn60Ont56Za6eDp2sCyMG3muEEm6DdFch67Hk7kNatMD8WWP90AI3l8kJUxn9DCruQEJG0rwLCawXdnjBOSj0EH54SVvfnU5EcMhh2_IL3c3E"
-                  alt="Diana Prince"
-                />
-                <div class="flex-1">
-                  <div class="flex justify-between">
-                    <span class="text-xs font-bold text-on-surface">Diana Prince</span>
-                    <span class="text-[10px] text-outline">2h ago</span>
+              @if (incomingRequests().length === 0) {
+                <p class="text-xs text-on-surface-variant">No incoming friend requests.</p>
+              } @else {
+                @for (request of incomingRequests(); track request.id) {
+                  <div class="flex items-start gap-3 pb-4 border-b border-surface-container last:border-b-0 last:pb-0">
+                    <div class="w-10 h-10 rounded-full bg-surface-container overflow-hidden shrink-0">
+                      @if (request.senderAvatarUrl) {
+                        <img [ngSrc]="request.senderAvatarUrl" class="w-full h-full object-cover" alt="request sender"
+                             width="40"
+                             height="40"/>
+                      } @else {
+                        <div class="w-full h-full flex items-center justify-center">
+                          <span class="material-symbols-outlined text-on-surface-variant" style="font-size:1.25rem">person</span>
+                        </div>
+                      }
+                    </div>
+                    <div class="flex-1">
+                      <div class="flex justify-between gap-3">
+                        <span class="text-xs font-bold text-on-surface truncate">{{ request.senderUsername }}</span>
+                        <span class="text-[10px] text-outline shrink-0">{{ formatDate(request.createdAt) }}</span>
+                      </div>
+                      @if (request.message) {
+                        <p class="text-xs text-outline italic mt-1 line-clamp-2">{{ request.message }}</p>
+                      }
+                      <div class="flex gap-2 mt-3">
+                        <button
+                          class="flex-1 bg-primary text-white text-[10px] font-bold py-1.5 rounded hover:bg-primary-dim transition-colors disabled:opacity-50"
+                          [disabled]="processingRequestId() === request.id"
+                          (click)="acceptRequest(request.id)">
+                          Accept
+                        </button>
+                        <button
+                          class="flex-1 bg-surface-container-high text-on-surface text-[10px] font-bold py-1.5 rounded hover:bg-surface-container-highest transition-colors disabled:opacity-50"
+                          [disabled]="processingRequestId() === request.id"
+                          (click)="rejectRequest(request.id)">
+                          Decline
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                  <p class="text-xs text-outline italic mt-1 line-clamp-2">"Would love to discuss the upcoming Tokyo project details with you."</p>
-                  <div class="flex gap-2 mt-3">
-                    <button class="flex-1 bg-primary text-white text-[10px] font-bold py-1.5 rounded hover:bg-primary-dim transition-colors">Accept</button>
-                    <button class="flex-1 bg-surface-container-high text-on-surface text-[10px] font-bold py-1.5 rounded hover:bg-surface-container-highest transition-colors">Decline</button>
-                  </div>
-                </div>
-              </div>
-              <!-- Request 2 -->
-              <div class="flex items-start gap-3">
-                <img
-                  class="w-10 h-10 rounded-full object-cover flex-shrink-0"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuCil5H_Q1ownu7nRqzd2gLzdjo4l_4Uufg-dSlKyotNJXBLH4weH1T0Rt_YPBGFJjmkLFnvRg9e7mj_7bwIKINf0vkm6cW6KSD4yq8UBQaH6PnMhcyRiWMT6ejnuyQHJh_H10o-bu34pS47-pbKgfj1Zv1ZWl5sRqoBknuXPrVEXzzs6BGJ95GUrcdJQPpKne-FR9UWfftvWdjl5sGNK0oqpeyAr3VfsEAPyRyiVjMeUMVQIh9OO5SNWriw-Nb2Bsqwtcgs57CVUTo"
-                  alt="Kenji Ito"
-                />
-                <div class="flex-1">
-                  <div class="flex justify-between">
-                    <span class="text-xs font-bold text-on-surface">Kenji Ito</span>
-                    <span class="text-[10px] text-outline">1d ago</span>
-                  </div>
-                  <div class="flex gap-2 mt-3">
-                    <button class="flex-1 bg-primary text-white text-[10px] font-bold py-1.5 rounded hover:bg-primary-dim transition-colors">Accept</button>
-                    <button class="flex-1 bg-surface-container-high text-on-surface text-[10px] font-bold py-1.5 rounded hover:bg-surface-container-highest transition-colors">Decline</button>
-                  </div>
-                </div>
-              </div>
+                }
+              }
             </div>
           </div>
 
           <!-- Send Invitation Form -->
           <div class="bg-surface-container p-6 rounded-xl border border-outline-variant/10">
-            <h2 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-4">Send New Invitation</h2>
-            <form class="space-y-4">
+            <h2 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-4">Send New
+              Invitation</h2>
+            <form class="space-y-4" (ngSubmit)="sendFriendRequest()">
               <div class="space-y-1">
                 <label class="text-[10px] font-bold text-outline uppercase tracking-wider">Username</label>
                 <input
                   class="w-full bg-surface-container-lowest border-none rounded p-3 text-xs focus:ring-1 focus:ring-primary/20"
+                  [ngModel]="newRequestUsername()"
+                  (ngModelChange)="newRequestUsername.set($event)"
+                  name="newRequestUsername"
                   placeholder="&#64;handle"
                   type="text"
                 />
               </div>
               <div class="space-y-1">
-                <label class="text-[10px] font-bold text-outline uppercase tracking-wider">Personalized Message (Optional)</label>
+                <label class="text-[10px] font-bold text-outline uppercase tracking-wider">Personalized Message
+                  (Optional)</label>
                 <textarea
                   class="w-full bg-surface-container-lowest border-none rounded p-3 text-xs focus:ring-1 focus:ring-primary/20 resize-none"
+                  [ngModel]="newRequestMessage()"
+                  (ngModelChange)="newRequestMessage.set($event)"
+                  name="newRequestMessage"
                   placeholder="Explain why you'd like to connect..."
                   rows="3"
                 ></textarea>
               </div>
+              @if (requestStatusMessage()) {
+                <p class="text-xs text-primary font-semibold">{{ requestStatusMessage() }}</p>
+              }
               <button
-                class="w-full bg-primary text-white text-xs font-bold py-3 rounded-lg flex items-center justify-center gap-2 hover:bg-primary-dim transition-all active:scale-[0.98]"
-                type="button"
+                class="w-full bg-primary text-white text-xs font-bold py-3 rounded-lg flex items-center justify-center gap-2 hover:bg-primary-dim transition-all active:scale-[0.98] disabled:opacity-50"
+                type="submit"
+                [disabled]="sendingRequest()"
               >
                 <span class="material-symbols-outlined text-[18px]">person_add</span>
-                <span>Send Request</span>
+                <span>{{ sendingRequest() ? 'Sending...' : 'Send Request' }}</span>
               </button>
             </form>
           </div>
@@ -204,8 +242,12 @@
               <span class="material-symbols-outlined text-[18px]">gpp_maybe</span>
               <span>Workspace Security</span>
             </h2>
-            <p class="text-[11px] text-on-error-container mb-4">Manage restricted access or remove unauthorized users from your private view.</p>
-            <button class="w-full py-2 border border-error-container text-error text-[10px] font-bold uppercase tracking-widest rounded hover:bg-error hover:text-white transition-all">
+            <p class="text-[11px] text-on-error-container mb-4">Manage restricted access or remove unauthorized users
+              from your private view.</p>
+            <button
+              class="w-full py-2 border border-error-container text-error text-[10px] font-bold uppercase tracking-widest rounded hover:bg-error hover:text-white transition-all"
+              type="button"
+              (click)="switchView('blocked')">
               View Blocked List
             </button>
           </div>
