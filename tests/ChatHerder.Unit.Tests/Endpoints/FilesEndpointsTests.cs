@@ -230,6 +230,32 @@ public sealed class FilesEndpointsTests
         var statusCode = result.GetType().GetProperty("StatusCode")?.GetValue(result);
         Assert.True(statusCode is null || (int)statusCode == 200, $"Expected 200 or null, got {statusCode}");
     }
+
+    [Fact]
+    public async Task GetFile_Returns403_WhenCallerIsNotUploaderOfOrphanAttachment()
+    {
+        await using var db = BuildContext();
+        var uploader = new User { Username = "u", Email = "u@x.com", PasswordHash = "x" };
+        var stranger = new User { Username = "s", Email = "s@x.com", PasswordHash = "x" };
+        db.Users.AddRange(uploader, stranger);
+        var orphan = new Attachment
+        {
+            // No MessageId or PersonalDialogMessageId — this is an unlinked orphan
+            UploadedByUserId = uploader.Id,
+            StoragePath = "orphan/file.txt",
+            FileName = "file.txt",
+            ContentType = "text/plain",
+            SizeBytes = 10,
+        };
+        db.Attachments.Add(orphan);
+        await db.SaveChangesAsync();
+        var storage = Substitute.For<IFileStorage>();
+
+        var result = await FilesEndpointsHelper.GetFile(orphan.Id, Principal(stranger.Id), db, storage, CancellationToken.None);
+
+        var statusCode = result.GetType().GetProperty("StatusCode")?.GetValue(result);
+        Assert.Equal(403, statusCode);
+    }
 }
 
 internal static class FilesEndpointsHelper
