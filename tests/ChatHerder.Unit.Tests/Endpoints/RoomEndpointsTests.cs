@@ -149,6 +149,7 @@ public sealed class RoomEndpointsTests
         Assert.Equal(204, GetStatusCode(result));
         Assert.Equal(1, await db.RoomBans.CountAsync());
         Assert.Equal(0, await db.RoomMemberships.CountAsync(m => m.UserId == targetId));
+        hubClients.DidNotReceive().Client(Arg.Any<string>());
         await clientProxy.DidNotReceive().SendCoreAsync(
             Arg.Any<string>(), Arg.Any<object[]>(), Arg.Any<CancellationToken>());
     }

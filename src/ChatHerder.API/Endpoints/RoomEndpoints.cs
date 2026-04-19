@@ -394,6 +394,7 @@ public static class RoomEndpoints
         if (targetMembership.Role == MemberRole.Owner)
             return Results.BadRequest(new { error = "Cannot ban the room owner." });
 
+        await using var tx = await db.Database.BeginTransactionAsync(ct);
         db.RoomBans.Add(new RoomBan
         {
             RoomId = id,
@@ -401,9 +402,9 @@ public static class RoomEndpoints
             BannedByUserId = callerId,
             Reason = req.Reason,
         });
-        await db.SaveChangesAsync(ct);    // Persists ban INSERT first
+        await db.SaveChangesAsync(ct);
         await db.RoomMemberships.Where(m => m.RoomId == id && m.UserId == userId).ExecuteDeleteAsync(ct);
-        // No second SaveChangesAsync needed — ExecuteDeleteAsync auto-commits
+        await tx.CommitAsync(ct);
 
         var connIds = await presence.GetConnectionIdsAsync(userId, ct);
         foreach (var connId in connIds)
