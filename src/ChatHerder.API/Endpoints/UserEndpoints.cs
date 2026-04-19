@@ -9,16 +9,17 @@ public static class UserEndpoints
 {
     public static RouteGroupBuilder MapUserEndpoints(this RouteGroupBuilder group)
     {
-        group.MapGet("/me",                 GetMe)          .RequireAuthorization();
-        group.MapPatch("/me",               PatchMe)        .RequireAuthorization();
-        group.MapGet("/by-username/{name}", GetByUsername)  .RequireAuthorization();
+        group.MapGet("/me", GetMe).RequireAuthorization();
+        group.MapPatch("/me", PatchMe).RequireAuthorization();
+        group.MapGet("/by-username/{name}", GetByUsername).RequireAuthorization();
         return group;
     }
 
     internal static Task<IResult> GetMeInternal(ClaimsPrincipal p, AppDbContext db, CancellationToken ct)
         => GetMe(p, db, ct);
 
-    internal static Task<IResult> PatchMeInternal(UpdateMeRequest req, ClaimsPrincipal p, AppDbContext db, CancellationToken ct)
+    internal static Task<IResult> PatchMeInternal(UpdateMeRequest req, ClaimsPrincipal p, AppDbContext db,
+        CancellationToken ct)
         => PatchMe(req, p, db, ct);
 
     private static async Task<IResult> GetMe(

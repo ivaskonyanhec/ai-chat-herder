@@ -1,5 +1,3 @@
-using Microsoft.AspNetCore.Hosting;
-
 namespace ChatHerder.API.OpenApi;
 
 internal static class SwaggerEnvironment

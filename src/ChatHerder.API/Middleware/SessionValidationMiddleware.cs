@@ -11,7 +11,7 @@ public sealed class SessionValidationMiddleware(RequestDelegate next, IConnectio
     {
         if (context.User.Identity?.IsAuthenticated == true)
         {
-            var userId    = context.User.FindFirstValue("user_id");
+            var userId = context.User.FindFirstValue("user_id");
             var sessionId = context.User.FindFirstValue("session_id");
 
             if (userId is not null && sessionId is not null)
@@ -25,6 +25,7 @@ public sealed class SessionValidationMiddleware(RequestDelegate next, IConnectio
                 }
             }
         }
+
         await next(context);
     }
 }
