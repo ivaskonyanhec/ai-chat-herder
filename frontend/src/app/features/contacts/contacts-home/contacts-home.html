@@ -10,6 +10,22 @@
             <span class="text-[10px] text-outline tracking-wider uppercase font-medium">84 Members Online</span>
           </div>
 
+          <!-- View Toggle -->
+          <div class="flex gap-2 mb-4">
+            <button class="px-4 py-1.5 text-xs font-bold rounded-lg transition-colors"
+                    [class.bg-primary]="view() === 'friends'"
+                    [class.text-on-primary]="view() === 'friends'"
+                    [class.bg-surface-container-low]="view() !== 'friends'"
+                    [class.text-on-surface-variant]="view() !== 'friends'"
+                    (click)="switchView('friends')">Friends</button>
+            <button class="px-4 py-1.5 text-xs font-bold rounded-lg transition-colors"
+                    [class.bg-primary]="view() === 'blocked'"
+                    [class.text-on-primary]="view() === 'blocked'"
+                    [class.bg-surface-container-low]="view() !== 'blocked'"
+                    [class.text-on-surface-variant]="view() !== 'blocked'"
+                    (click)="switchView('blocked')">Blocked</button>
+          </div>
+
           <!-- Search Component -->
           <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
             <div class="relative flex items-center gap-4">
@@ -34,41 +50,72 @@
             </div>
           } @else if (errorMessage()) {
             <p class="text-error text-sm bg-error-container/20 border border-error/20 rounded-xl px-4 py-3">{{ errorMessage() }}</p>
-          } @else if (friends().length === 0) {
-            <div class="text-center py-8 text-on-surface-variant text-sm">No connections yet. Send a friend request to connect.</div>
+          } @else if (view() === 'friends') {
+            @if (friends().length === 0) {
+              <div class="text-center py-8 text-on-surface-variant text-sm">No connections yet. Send a friend request to connect.</div>
+            } @else {
+              <div class="grid grid-cols-2 gap-4">
+                @for (friend of friends(); track friend.userId) {
+                  <div class="group relative bg-surface-container-lowest rounded-xl p-4 border border-outline-variant/10 hover:shadow-sm transition-shadow">
+                    <div class="flex items-center gap-3 mb-3">
+                      <div class="w-10 h-10 rounded-full bg-surface-container overflow-hidden shrink-0">
+                        @if (friend.avatarUrl) {
+                          <img [src]="friend.avatarUrl" class="w-full h-full object-cover" alt="" />
+                        } @else {
+                          <div class="w-full h-full flex items-center justify-center">
+                            <span class="material-symbols-outlined text-on-surface-variant" style="font-size:1.25rem">person</span>
+                          </div>
+                        }
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <p class="font-bold text-on-surface text-sm truncate">{{ friend.username }}</p>
+                      </div>
+                    </div>
+                    <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        class="flex-1 py-1.5 bg-primary text-on-primary text-xs font-bold rounded-lg hover:opacity-90 transition-colors disabled:opacity-50"
+                        [disabled]="openingChatId() === friend.userId"
+                        (click)="openChat(friend.userId)">Chat</button>
+                      <button
+                        class="flex-1 py-1.5 bg-error-container text-on-error-container text-xs font-bold rounded-lg hover:opacity-90 transition-colors disabled:opacity-50"
+                        [disabled]="removingId() === friend.userId"
+                        (click)="removeFriend(friend.userId)">Remove</button>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
           } @else {
-            <div class="grid grid-cols-2 gap-4">
-              @for (friend of friends(); track friend.userId) {
-                <div class="group relative bg-surface-container-lowest rounded-xl p-4 border border-outline-variant/10 hover:shadow-sm transition-shadow">
-                  <div class="flex items-center gap-3 mb-3">
-                    <div class="w-10 h-10 rounded-full bg-surface-container overflow-hidden shrink-0">
-                      @if (friend.avatarUrl) {
-                        <img [src]="friend.avatarUrl" class="w-full h-full object-cover" alt="" />
-                      } @else {
-                        <div class="w-full h-full flex items-center justify-center">
-                          <span class="material-symbols-outlined text-on-surface-variant" style="font-size:1.25rem">person</span>
-                        </div>
-                      }
+            @if (blockedUsers().length === 0) {
+              <div class="text-center py-8 text-on-surface-variant text-sm">No blocked users.</div>
+            } @else {
+              <div class="grid grid-cols-2 gap-4">
+                @for (blocked of blockedUsers(); track blocked.blockedUserId) {
+                  <div class="group relative bg-surface-container-lowest rounded-xl p-4 border border-outline-variant/10 hover:shadow-sm transition-shadow">
+                    <div class="flex items-center gap-3 mb-3">
+                      <div class="w-10 h-10 rounded-full bg-surface-container overflow-hidden shrink-0">
+                        @if (blocked.blockedAvatarUrl) {
+                          <img [src]="blocked.blockedAvatarUrl" class="w-full h-full object-cover" alt="" />
+                        } @else {
+                          <div class="w-full h-full flex items-center justify-center">
+                            <span class="material-symbols-outlined text-on-surface-variant" style="font-size:1.25rem">person</span>
+                          </div>
+                        }
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <p class="font-bold text-on-surface text-sm truncate">{{ blocked.blockedUsername }}</p>
+                      </div>
                     </div>
-                    <div class="flex-1 min-w-0">
-                      <p class="font-bold text-on-surface text-sm truncate">{{ friend.username }}</p>
+                    <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        class="flex-1 py-1.5 bg-surface-container text-on-surface text-xs font-bold rounded-lg hover:bg-surface-container-high transition-colors disabled:opacity-50"
+                        [disabled]="unblockingId() === blocked.blockedUserId"
+                        (click)="unblockUser(blocked.blockedUserId)">Unblock</button>
                     </div>
                   </div>
-                  <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      class="flex-1 py-1.5 bg-primary text-on-primary text-xs font-bold rounded-lg hover:bg-primary-dim transition-colors disabled:opacity-50"
-                      [disabled]="openingChatId() === friend.userId"
-                      (click)="openChat(friend.userId)"
-                    >Chat</button>
-                    <button
-                      class="flex-1 py-1.5 bg-error-container text-on-error-container text-xs font-bold rounded-lg hover:bg-error hover:text-on-error transition-colors disabled:opacity-50"
-                      [disabled]="removingId() === friend.userId"
-                      (click)="removeFriend(friend.userId)"
-                    >Remove</button>
-                  </div>
-                </div>
-              }
-            </div>
+                }
+              </div>
+            }
           }
         </div>
 
