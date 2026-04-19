@@ -19,8 +19,30 @@ test.describe('UAT: Real-time messaging UX', () => {
     await ctx.dispose();
   });
 
-  test.skip('recipient receives message in browser UI within 3 seconds', async () => {
-    // BLOCKED: current room UI does not render live ChatService events.
+  test('recipient sees message in browser UI within 3 seconds of sender posting via hub', async ({
+    userA,
+    userB,
+    userAPage,
+    api,
+  }) => {
+    // userA opens room in browser; userB sends via hub; userA's UI must render it within 3 seconds
+    const room = await createPublicRoomWithMembers(api, userA, [userB]);
+    const message = `rt-browser-${Date.now()}`;
+
+    // Navigate userA to the room BEFORE userB sends so the SignalR event can arrive live
+    await userAPage.goto(`/app/rooms/${room.id}`);
+    await expect(userAPage.locator('[data-testid="chat-area"]')).toBeVisible({ timeout: 10_000 });
+
+    // userB sends via hub (simulates a real-time send from another browser tab)
+    const chat = await createHubConnection('/hubs/chat', userB.accessToken);
+    await chat.invoke('SendMessage', room.id, message, null, null);
+    await chat.stop();
+
+    // The [data-testid="message-text"] elements are rendered per-message in the chat-area.
+    // Wait up to 3 seconds for one matching the sent content — confirming live delivery.
+    await expect(
+      userAPage.locator('[data-testid="chat-area"] [data-testid="message-text"]').filter({ hasText: message }),
+    ).toBeVisible({ timeout: 3_000 });
   });
 
   test.skip('quoted replies behave correctly in browser UI', async () => {
