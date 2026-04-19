@@ -2,7 +2,6 @@ using ChatHerder.Application.DTOs;
 using ChatHerder.Application.Ports;
 using ChatHerder.Application.Services;
 using NSubstitute;
-using System.Text.Json.Nodes;
 
 namespace ChatHerder.Unit.Tests.Services;
 
@@ -16,7 +15,7 @@ public sealed class ActivityLoggerServiceTests
         var evt = new ActivityEvent(
             UserId: Guid.NewGuid(),
             EventType: "user.connected",
-            Payload: JsonNode.Parse("{\"roomId\":\"abc\"}")!,
+            Payload: "{\"roomId\":\"abc\"}",
             IpAddress: "1.2.3.4",
             OccurredAt: DateTime.UtcNow);
 
