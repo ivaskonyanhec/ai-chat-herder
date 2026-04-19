@@ -1,9 +1,11 @@
 using System.Security.Claims;
+using ChatHerder.API.Hubs;
 using ChatHerder.Application.DTOs;
 using ChatHerder.Application.Ports;
 using ChatHerder.Domain.Entities;
 using ChatHerder.Domain.Enums;
 using ChatHerder.Infrastructure.Persistence;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace ChatHerder.API.Endpoints;
@@ -37,6 +39,13 @@ public static class RoomEndpoints
 
     internal static Task<IResult> JoinRoomInternal(Guid id, ClaimsPrincipal p, AppDbContext db, CancellationToken ct)
         => JoinRoom(id, p, db, ct);
+
+    internal static Task<IResult> BanMemberInternal(
+        Guid id, Guid userId, BanMemberRequest req,
+        ClaimsPrincipal principal, AppDbContext db,
+        IHubContext<PresenceHub> presenceHub, IPresenceStore presence,
+        CancellationToken ct)
+        => BanMember(id, userId, req, principal, db, presenceHub, presence, ct);
 
     private static async Task<IResult> GetPublicCatalog(
         AppDbContext db,
@@ -370,6 +379,8 @@ public static class RoomEndpoints
         BanMemberRequest req,
         ClaimsPrincipal principal,
         AppDbContext db,
+        IHubContext<PresenceHub> presenceHub,
+        IPresenceStore presence,
         CancellationToken ct)
     {
         if (!Guid.TryParse(principal.FindFirstValue("user_id"), out var callerId))
@@ -392,6 +403,11 @@ public static class RoomEndpoints
         });
         await db.RoomMemberships.Where(m => m.RoomId == id && m.UserId == userId).ExecuteDeleteAsync(ct);
         await db.SaveChangesAsync(ct);
+
+        var connIds = await presence.GetConnectionIdsAsync(userId, ct);
+        foreach (var connId in connIds)
+            await presenceHub.Clients.Client(connId)
+                .SendAsync("RemovedFromRoom", new { roomId = id }, cancellationToken: ct);
 
         return Results.NoContent();
     }
