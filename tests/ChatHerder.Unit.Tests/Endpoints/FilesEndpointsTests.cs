@@ -108,6 +108,19 @@ public sealed class FilesEndpointsTests
     }
 
     [Fact]
+    public async Task GetFile_Returns401_WhenNoClaim()
+    {
+        await using var db = BuildContext();
+        var storage = Substitute.For<IFileStorage>();
+        var principal = new ClaimsPrincipal(new ClaimsIdentity());
+
+        var result = await FilesEndpointsHelper.GetFile(Guid.NewGuid(), principal, db, storage, CancellationToken.None);
+
+        var statusCode = result.GetType().GetProperty("StatusCode")?.GetValue(result);
+        Assert.Equal(401, statusCode);
+    }
+
+    [Fact]
     public async Task GetFile_Returns404_WhenAttachmentNotFound()
     {
         await using var db = BuildContext();
