@@ -90,7 +90,7 @@ public sealed class RoomEndpointsTests
         await db.SaveChangesAsync();
 
         var presence    = Substitute.For<IPresenceStore>();
-        presence.GetConnectionIdsAsync(targetId).Returns(new[] { "conn-banned" });
+        presence.GetConnectionIdsAsync(targetId, Arg.Any<CancellationToken>()).Returns(new[] { "conn-banned" });
 
         var presenceHub = Substitute.For<IHubContext<PresenceHub>>();
         var hubClients  = Substitute.For<IHubClients>();
@@ -111,6 +111,46 @@ public sealed class RoomEndpointsTests
         hubClients.Received(1).Client("conn-banned");
         await clientProxy.Received(1).SendCoreAsync(
             "RemovedFromRoom", Arg.Any<object[]>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task BanMember_DoesNotSendSignalR_WhenBannedUserHasNoConnections()
+    {
+        await using var db = BuildSqliteContext();
+
+        var ownerId  = Guid.NewGuid();
+        var targetId = Guid.NewGuid();
+        db.Users.AddRange(
+            new User { Id = ownerId,  Username = "owner2",  Email = "o2@x.com", PasswordHash = "x" },
+            new User { Id = targetId, Username = "target2", Email = "t2@x.com", PasswordHash = "x" });
+        var room = new Room { OwnerId = ownerId, Name = "r2", Visibility = RoomVisibility.Public };
+        db.Rooms.Add(room);
+        db.RoomMemberships.AddRange(
+            new RoomMembership { RoomId = room.Id, UserId = ownerId,  Role = MemberRole.Owner  },
+            new RoomMembership { RoomId = room.Id, UserId = targetId, Role = MemberRole.Member });
+        await db.SaveChangesAsync();
+
+        var presence    = Substitute.For<IPresenceStore>();
+        presence.GetConnectionIdsAsync(targetId, Arg.Any<CancellationToken>()).Returns(Array.Empty<string>());
+
+        var presenceHub = Substitute.For<IHubContext<PresenceHub>>();
+        var hubClients  = Substitute.For<IHubClients>();
+        presenceHub.Clients.Returns(hubClients);
+        var clientProxy = Substitute.For<ISingleClientProxy>();
+        hubClients.Client(Arg.Any<string>()).Returns(clientProxy);
+
+        var result = await RoomEndpointsHelper.BanMember(
+            room.Id, targetId,
+            new BanMemberRequest("no-conn ban"),
+            MakePrincipal(ownerId),
+            db, presenceHub, presence,
+            CancellationToken.None);
+
+        Assert.Equal(204, GetStatusCode(result));
+        Assert.Equal(1, await db.RoomBans.CountAsync());
+        Assert.Equal(0, await db.RoomMemberships.CountAsync(m => m.UserId == targetId));
+        await clientProxy.DidNotReceive().SendCoreAsync(
+            Arg.Any<string>(), Arg.Any<object[]>(), Arg.Any<CancellationToken>());
     }
 
     private static int GetStatusCode(IResult r)

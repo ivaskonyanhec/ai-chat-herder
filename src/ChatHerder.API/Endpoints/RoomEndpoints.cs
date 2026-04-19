@@ -401,8 +401,9 @@ public static class RoomEndpoints
             BannedByUserId = callerId,
             Reason = req.Reason,
         });
+        await db.SaveChangesAsync(ct);    // Persists ban INSERT first
         await db.RoomMemberships.Where(m => m.RoomId == id && m.UserId == userId).ExecuteDeleteAsync(ct);
-        await db.SaveChangesAsync(ct);
+        // No second SaveChangesAsync needed — ExecuteDeleteAsync auto-commits
 
         var connIds = await presence.GetConnectionIdsAsync(userId, ct);
         foreach (var connId in connIds)
