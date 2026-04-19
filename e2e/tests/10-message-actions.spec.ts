@@ -2,12 +2,19 @@ import { test, expect } from '../fixtures/test-fixtures';
 import { createPublicRoomWithMembers } from '../helpers/room.helpers';
 import { createHubConnection } from '../helpers/signalr.helpers';
 
+interface MessageDto {
+  id: string;
+  content: string | null;
+  isDeleted?: boolean;
+  replyToMessage?: { id: string } | null;
+}
+
 test.describe('Room message actions', () => {
   test('author can edit their own message and the response carries editedAt', async ({ api, userA, userB }) => {
     const room = await createPublicRoomWithMembers(api, userA, [userB]);
     const chat = await createHubConnection('/hubs/chat', userA.accessToken);
     const original = `edit-original-${Date.now()}`;
-    const updated  = `edit-updated-${Date.now()}`;
+    const updated  = `edit-updated-v2`;
 
     await chat.invoke('SendMessage', room.id, original, null, null);
     await chat.stop();
@@ -16,8 +23,8 @@ test.describe('Room message actions', () => {
     const history  = await ownerCtx.get(`/api/rooms/${room.id}/messages`);
     expect(history.status(), await history.text()).toBe(200);
     const messages = await history.json();
-    const msg = messages.find((m: { content: string | null }) => m.content === original);
-    expect(msg?.id).toBeTruthy();
+    const msg = messages.find((m: MessageDto) => m.content === original);
+    if (!msg) throw new Error(`Message not found in history`);
 
     const edit = await ownerCtx.patch(`/api/messages/${msg.id}`, {
       data: { content: updated },
@@ -40,8 +47,8 @@ test.describe('Room message actions', () => {
     const authorCtx = await api.authContext(userA.accessToken);
     const history   = await authorCtx.get(`/api/rooms/${room.id}/messages`);
     const messages  = await history.json();
-    const msg = messages.find((m: { content: string | null }) => m.content === content);
-    expect(msg?.id).toBeTruthy();
+    const msg = messages.find((m: MessageDto) => m.content === content);
+    if (!msg) throw new Error(`Message not found in history`);
 
     const del = await authorCtx.delete(`/api/messages/${msg.id}`);
     expect(del.status(), await del.text()).toBe(204);
@@ -65,10 +72,10 @@ test.describe('Room message actions', () => {
 
     const ownerCtx = await api.authContext(userA.accessToken);
     const history  = await ownerCtx.get(`/api/rooms/${room.id}/messages`);
-    await ownerCtx.dispose();
     const messages = await history.json();
-    const msg = messages.find((m: { content: string | null }) => m.content === content);
-    expect(msg?.id).toBeTruthy();
+    await ownerCtx.dispose();
+    const msg = messages.find((m: MessageDto) => m.content === content);
+    if (!msg) throw new Error(`Message not found in history`);
 
     const memberCtx = await api.authContext(userB.accessToken);
     const attempt   = await memberCtx.patch(`/api/messages/${msg.id}`, {
@@ -90,8 +97,8 @@ test.describe('Room message actions', () => {
     const ctx       = await api.authContext(userA.accessToken);
     const history   = await ctx.get(`/api/rooms/${room.id}/messages`);
     const messages  = await history.json();
-    const parentMsg = messages.find((m: { content: string | null }) => m.content === original);
-    expect(parentMsg?.id).toBeTruthy();
+    const parentMsg = messages.find((m: MessageDto) => m.content === original);
+    if (!parentMsg) throw new Error(`Parent message not found in history`);
 
     await chatB.invoke('SendMessage', room.id, reply, parentMsg.id, null);
     await chatA.stop();
@@ -99,7 +106,7 @@ test.describe('Room message actions', () => {
 
     const after    = await ctx.get(`/api/rooms/${room.id}/messages`);
     const messages2 = await after.json();
-    const replyMsg  = messages2.find((m: { content: string | null }) => m.content === reply);
+    const replyMsg  = messages2.find((m: MessageDto) => m.content === reply);
     expect(replyMsg).toMatchObject({
       content: reply,
       replyToMessage: expect.objectContaining({ id: parentMsg.id }),
