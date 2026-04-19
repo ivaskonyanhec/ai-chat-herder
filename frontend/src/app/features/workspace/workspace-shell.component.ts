@@ -31,6 +31,12 @@ export class WorkspaceShellComponent implements OnInit, OnDestroy {
   readonly myRooms = signal<RoomDto[]>([]);
   readonly unreadCounts = this.unread.unreadCounts;
 
+  readonly isCreatingRoom = signal(false);
+  readonly newRoomName = signal('');
+  readonly newRoomVisibility = signal<'Public' | 'Private'>('Public');
+  readonly isCreatingRoomPending = signal(false);
+  readonly createRoomError = signal('');
+
   ngOnInit(): void {
     void this.presence.connect();
     void this.chat.connect();
@@ -60,6 +66,36 @@ export class WorkspaceShellComponent implements OnInit, OnDestroy {
 
   getUnreadCount(contextType: string, contextId: string): number {
     return this.unread.getCount(contextType, contextId);
+  }
+
+  openCreateRoom(): void {
+    this.isCreatingRoom.set(true);
+    this.newRoomName.set('');
+    this.newRoomVisibility.set('Public');
+    this.createRoomError.set('');
+  }
+
+  cancelCreateRoom(): void {
+    this.isCreatingRoom.set(false);
+  }
+
+  submitCreateRoom(): void {
+    const name = this.newRoomName().trim();
+    if (!name || this.isCreatingRoomPending()) return;
+    this.isCreatingRoomPending.set(true);
+    this.createRoomError.set('');
+    this.roomsApi.createRoom({ name, description: null, visibility: this.newRoomVisibility() }).subscribe({
+      next: room => {
+        this.myRooms.update(rooms => [...rooms, room]);
+        this.isCreatingRoom.set(false);
+        this.isCreatingRoomPending.set(false);
+        void this.router.navigate(['/app/rooms', room.id]);
+      },
+      error: () => {
+        this.createRoomError.set('Failed to create room. Try again.');
+        this.isCreatingRoomPending.set(false);
+      },
+    });
   }
 
   private bootstrapData(): void {

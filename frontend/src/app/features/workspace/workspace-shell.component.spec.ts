@@ -48,7 +48,13 @@ function buildProviders(overrides: {
       { provide: PresenceService, useValue: presenceService },
       { provide: ChatService, useValue: chatService },
       { provide: NotificationsApiService, useValue: { getUnreadCounts: vi.fn().mockReturnValue(of([])) } },
-      { provide: RoomsApiService, useValue: { getMyRooms: vi.fn().mockReturnValue(of([])) } },
+      {
+        provide: RoomsApiService,
+        useValue: {
+          getMyRooms: vi.fn().mockReturnValue(of([])),
+          createRoom: vi.fn().mockReturnValue(of({ id: 'new-room-1', name: 'Test Room', description: null, visibility: 'Public', ownerId: 'u1', createdAt: '', memberCount: 1, callerRole: 'Owner' })),
+        },
+      },
       UnreadService,
     ],
     authApi,
@@ -143,5 +149,66 @@ describe('WorkspaceShellComponent', () => {
     const fixture = TestBed.createComponent(WorkspaceShellComponent);
     fixture.detectChanges();
     expect(fixture.componentInstance.getUnreadCount('room', 'some-id')).toBe(0);
+  });
+
+  it('openCreateRoom() shows the form panel and resets fields', () => {
+    const { providers } = buildProviders();
+    TestBed.configureTestingModule({ imports: [WorkspaceShellComponent], providers });
+    const fixture = TestBed.createComponent(WorkspaceShellComponent);
+    fixture.detectChanges();
+    const comp = fixture.componentInstance;
+
+    comp.newRoomName.set('leftover');
+    comp.createRoomError.set('old error');
+    comp.openCreateRoom();
+
+    expect(comp.isCreatingRoom()).toBe(true);
+    expect(comp.newRoomName()).toBe('');
+    expect(comp.newRoomVisibility()).toBe('Public');
+    expect(comp.createRoomError()).toBe('');
+  });
+
+  it('submitCreateRoom() calls createRoom API and navigates to the new room', async () => {
+    const { providers } = buildProviders();
+    await TestBed.configureTestingModule({ imports: [WorkspaceShellComponent], providers }).compileComponents();
+    const fixture = TestBed.createComponent(WorkspaceShellComponent);
+    fixture.detectChanges();
+    const comp = fixture.componentInstance;
+    const router = TestBed.inject(Router);
+    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    const roomsApi = TestBed.inject(RoomsApiService);
+
+    comp.openCreateRoom();
+    comp.newRoomName.set('My New Room');
+    comp.newRoomVisibility.set('Private');
+    comp.submitCreateRoom();
+
+    expect(roomsApi.createRoom).toHaveBeenCalledWith({ name: 'My New Room', description: null, visibility: 'Private' });
+    await fixture.whenStable();
+    expect(comp.isCreatingRoom()).toBe(false);
+    expect(navigateSpy).toHaveBeenCalledWith(['/app/rooms', 'new-room-1']);
+  });
+
+  it('submitCreateRoom() sets createRoomError when API fails', async () => {
+    const roomsApiWithError = {
+      getMyRooms: vi.fn().mockReturnValue(of([])),
+      createRoom: vi.fn().mockReturnValue(throwError(() => new Error('server error'))),
+    };
+    const { providers } = buildProviders();
+    const providersWithError = providers.map(p =>
+      'provide' in p && p.provide === RoomsApiService ? { provide: RoomsApiService, useValue: roomsApiWithError } : p,
+    );
+    await TestBed.configureTestingModule({ imports: [WorkspaceShellComponent], providers: providersWithError }).compileComponents();
+    const fixture = TestBed.createComponent(WorkspaceShellComponent);
+    fixture.detectChanges();
+    const comp = fixture.componentInstance;
+
+    comp.openCreateRoom();
+    comp.newRoomName.set('bad room');
+    comp.submitCreateRoom();
+
+    await fixture.whenStable();
+    expect(comp.createRoomError()).toBe('Failed to create room. Try again.');
+    expect(comp.isCreatingRoomPending()).toBe(false);
   });
 });
