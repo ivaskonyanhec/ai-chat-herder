@@ -163,7 +163,27 @@ test.describe('Room chat', () => {
     ).toBeVisible({ timeout: 3_000 });
   });
 
-  test.skip('reply/reference flow shows quoted message UI', async () => {
-    // BLOCKED: no browser-visible reply controls or reply quote test IDs are wired yet.
+  test('reply/reference flow shows quoted message UI', async ({ userA, userB, userAPage, api }) => {
+    const room = await createPublicRoomWithMembers(api, userA, [userB]);
+    const originalContent = `original-${Date.now()}`;
+    const replyContent = `reply-${Date.now()}`;
+
+    const chatB = await createHubConnection('/hubs/chat', userB.accessToken);
+    await chatB.invoke('SendMessage', room.id, originalContent, null, null);
+
+    const ctx = await api.authContext(userA.accessToken);
+    const msgs: Array<{ id: string; content: string }> = await (await ctx.get(`/api/rooms/${room.id}/messages`)).json();
+    const original = msgs.find(m => m.content === originalContent);
+    if (!original) throw new Error('Original message not in history');
+
+    // userA opens room; userB sends reply in real-time
+    await userAPage.goto(`/app/rooms/${room.id}`);
+    await expect(userAPage.locator('[data-testid="chat-area"]')).toBeVisible({ timeout: 10_000 });
+
+    await chatB.invoke('SendMessage', room.id, replyContent, original.id, null);
+    await chatB.stop();
+    await ctx.dispose();
+
+    await expect(userAPage.locator('[data-testid="reply-quote"]')).toBeVisible({ timeout: 5_000 });
   });
 });

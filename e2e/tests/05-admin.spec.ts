@@ -172,12 +172,40 @@ test.describe('Room moderation', () => {
     await memberCtx.dispose();
   });
 
-  test.skip('removing a user from room UI is treated as a ban', async () => {
-    // BLOCKED: management UI is static and has no remove-member action wired to the ban endpoint.
+  test('removing a user from room UI is treated as a ban', async ({
+    userA, userB, userAPage, api,
+  }) => {
+    const room = await createPublicRoomWithMembers(api, userA, [userB]);
+
+    // Owner navigates to manage-room
+    await userAPage.goto(`/app/rooms/${room.id}/manage`);
+    await expect(userAPage.locator(`[data-testid="member-row-${userB.id}"]`)).toBeVisible({ timeout: 10_000 });
+
+    // Click the Ban button — revealed on hover; Playwright clicks even when opacity-0
+    await userAPage.locator(`[data-testid="ban-member-${userB.id}"]`).click();
+
+    // Verify via API that userB is now banned and cannot access the room
+    const bannedCtx = await api.authContext(userB.accessToken);
+    await expect
+      .poll(() => bannedCtx.get(`/api/rooms/${room.id}/members`).then(r => r.status()), { timeout: 5_000 })
+      .toBe(403);
+    await bannedCtx.dispose();
   });
 
-  test.skip('banned user is removed from room browser UI immediately', async () => {
-    // BLOCKED: BanMember endpoint persists the ban but does not broadcast RemovedFromRoom to active connections yet.
+  test('banned user is removed from room browser UI immediately', async ({
+    userA, userB, userBPage, api,
+  }) => {
+    const room = await createPublicRoomWithMembers(api, userA, [userB]);
+
+    // userB opens the room in their browser
+    await userBPage.goto(`/app/rooms/${room.id}`);
+    await expect(userBPage.locator('[data-testid="chat-area"]')).toBeVisible({ timeout: 10_000 });
+
+    // Owner bans userB via API — RemovedFromRoom is broadcast to userB's active hub connections
+    await api.banMember(room.id, userB.id, userA.accessToken);
+
+    // room-chat.ts listens for removedFromRoom and navigates to /app
+    await expect(userBPage).toHaveURL(/\/app$/, { timeout: 8_000 });
   });
 
   // Covered in e2e/tests/04-attachments.spec.ts by the "banned room user loses access" file test.

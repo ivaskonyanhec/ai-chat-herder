@@ -13,7 +13,19 @@ test.describe('UAT: Moderation UX', () => {
     await bannedCtx.dispose();
   });
 
-  test.skip('banned user is removed from the visible room UI immediately', async () => {
-    // BLOCKED: ban endpoint does not broadcast RemovedFromRoom and management modal is not wired.
+  test('banned user is removed from the visible room UI immediately', async ({
+    userA, userB, userBPage, api,
+  }) => {
+    const room = await createPublicRoomWithMembers(api, userA, [userB]);
+
+    // userB navigates to room in browser
+    await userBPage.goto(`/app/rooms/${room.id}`);
+    await expect(userBPage.locator('[data-testid="chat-area"]')).toBeVisible({ timeout: 10_000 });
+
+    // Admin (userA) bans userB via API — PresenceHub broadcasts RemovedFromRoom to userB's connection
+    await api.banMember(room.id, userB.id, userA.accessToken);
+
+    // room-chat.ts reacts to removedFromRoom signal by navigating to /app
+    await expect(userBPage).toHaveURL(/\/app$/, { timeout: 8_000 });
   });
 });

@@ -241,6 +241,52 @@ public sealed class PresenceHubTests
     }
 
     [Fact]
+    public async Task OnDisconnectedAsync_BroadcastsOffline_WithNonCancelledToken_EvenWhenAbortTokenIsCancelled()
+    {
+        // Regression test for: Context.ConnectionAborted is already cancelled when OnDisconnectedAsync
+        // runs (transport tear-down). Passing it to SendAsync silently drops the offline event in
+        // production. Fix: hub lifecycle broadcasts must use CancellationToken.None, not ct.
+        var userId = Guid.NewGuid();
+        var store  = Substitute.For<IPresenceStore>();
+        store.GetTabCountAsync(userId).Returns(0L);  // last tab closed — should trigger offline broadcast
+
+        var chatCtx = Substitute.For<IHubContext<ChatHub>>();
+        chatCtx.Groups.Returns(Substitute.For<IGroupManager>());
+
+        var hub = new PresenceHub(store, chatCtx, BuildDb());
+
+        var ctx = Substitute.For<HubCallerContext>();
+        ctx.ConnectionId.Returns("conn-1");
+        ctx.User.Returns(new ClaimsPrincipal(new ClaimsIdentity([
+            new Claim("user_id",    userId.ToString()),
+            new Claim("session_id", Guid.NewGuid().ToString()),
+        ], "Test")));
+        ctx.Items.Returns(new Dictionary<object, object?>());
+        ctx.Features.Returns(Substitute.For<IFeatureCollection>());
+
+        // Cancel the abort token before calling OnDisconnectedAsync — simulates transport tear-down
+        using var cts = new CancellationTokenSource();
+        await cts.CancelAsync();
+        ctx.ConnectionAborted.Returns(cts.Token);
+
+        hub.Context = ctx;
+
+        var allProxy = Substitute.For<IClientProxy>();
+        var clients  = Substitute.For<IHubCallerClients>();
+        clients.All.Returns(allProxy);
+        hub.Clients = clients;
+        hub.Groups  = Substitute.For<IGroupManager>();
+
+        await hub.OnDisconnectedAsync(null);
+
+        // SendAsync must be called with CancellationToken.None (not the cancelled abort token)
+        await allProxy.Received(1).SendCoreAsync(
+            "UserStatusChanged",
+            Arg.Any<object[]>(),
+            Arg.Is<CancellationToken>(t => !t.IsCancellationRequested));
+    }
+
+    [Fact]
     public async Task OnDisconnectedAsync_CleansUpDialogGroups()
     {
         var userId   = Guid.NewGuid();

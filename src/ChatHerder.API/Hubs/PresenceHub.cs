@@ -25,7 +25,7 @@ public sealed class PresenceHub(IPresenceStore presence, IHubContext<ChatHub> ch
         await presence.SetStatusAsync(userId, "online", ct);
 
         if (previousStatus != "online")
-            await Clients.All.SendAsync("UserStatusChanged", new { userId, status = "online" }, ct);
+            await Clients.All.SendAsync("UserStatusChanged", new { userId, status = "online" }, CancellationToken.None);
 
         await base.OnConnectedAsync();
     }
@@ -44,7 +44,7 @@ public sealed class PresenceHub(IPresenceStore presence, IHubContext<ChatHub> ch
                 await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"room:{roomId}", CancellationToken.None);
                 await chatHub.Groups.RemoveFromGroupAsync(Context.ConnectionId, $"room:{roomId}", CancellationToken.None);
                 await Clients.OthersInGroup($"room:{roomId}")
-                    .SendAsync("MemberLeft", new { roomId, userId }, ct);
+                    .SendAsync("MemberLeft", new { roomId, userId }, CancellationToken.None);
             }
         }
 
@@ -59,12 +59,12 @@ public sealed class PresenceHub(IPresenceStore presence, IHubContext<ChatHub> ch
         {
             await presence.SetStatusAsync(userId, "offline", ct);
             await presence.RemoveFromActiveUsersAsync(userId, ct);
-            await Clients.All.SendAsync("UserStatusChanged", new { userId, status = "offline" }, ct);
+            await Clients.All.SendAsync("UserStatusChanged", new { userId, status = "offline" }, CancellationToken.None);
         }
         else if (await presence.IsAllTabsAfkAsync(userId, ct))
         {
             await presence.SetStatusAsync(userId, "afk", ct);
-            await Clients.All.SendAsync("UserStatusChanged", new { userId, status = "afk" }, ct);
+            await Clients.All.SendAsync("UserStatusChanged", new { userId, status = "afk" }, CancellationToken.None);
         }
 
         await base.OnDisconnectedAsync(exception);

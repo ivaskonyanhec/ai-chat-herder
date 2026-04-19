@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, computed, effect, inject, signal, untracked } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import { Button } from 'primeng/button';
 import { Textarea } from 'primeng/textarea';
@@ -24,6 +24,7 @@ import type { AttachmentDto } from '../../../core/files/files.models';
 })
 export class RoomChatComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly authSession = inject(AuthSessionService);
   private readonly roomsApi = inject(RoomsApiService);
   private readonly chat = inject(ChatService);
@@ -94,6 +95,12 @@ export class RoomChatComponent implements OnInit, OnDestroy {
       const event = this.presence.memberLeft();
       if (!event || event.roomId !== this.roomId()) return;
       this.members.update(list => list.filter(m => m.userId !== event.userId));
+    });
+
+    effect(() => {
+      const event = this.presence.removedFromRoom();
+      if (!event || event.roomId !== this.roomId()) return;
+      void this.router.navigate(['/app']);
     });
   }
 

@@ -45,7 +45,31 @@ test.describe('UAT: Real-time messaging UX', () => {
     ).toBeVisible({ timeout: 3_000 });
   });
 
-  test.skip('quoted replies behave correctly in browser UI', async () => {
-    // BLOCKED: no reply/quote controls are wired in the room UI.
+  test('quoted replies behave correctly in browser UI', async ({ userA, userB, userAPage, api }) => {
+    const room = await createPublicRoomWithMembers(api, userA, [userB]);
+    const originalContent = `original-${Date.now()}`;
+    const replyContent = `reply-${Date.now()}`;
+
+    // userB sends the original message via hub
+    const chat = await createHubConnection('/hubs/chat', userB.accessToken);
+    await chat.invoke('SendMessage', room.id, originalContent, null, null);
+
+    // Fetch the message ID so we can reply to it
+    const ctx = await api.authContext(userA.accessToken);
+    const msgs: Array<{ id: string; content: string }> = await (await ctx.get(`/api/rooms/${room.id}/messages`)).json();
+    const original = msgs.find(m => m.content === originalContent);
+    if (!original) throw new Error('Original message not found in history');
+
+    // userA navigates to room in browser
+    await userAPage.goto(`/app/rooms/${room.id}`);
+    await expect(userAPage.locator('[data-testid="chat-area"]')).toBeVisible({ timeout: 10_000 });
+
+    // userB sends a reply referencing the original message
+    await chat.invoke('SendMessage', room.id, replyContent, original.id, null);
+    await chat.stop();
+    await ctx.dispose();
+
+    // The reply-quote block must appear in userA's browser within 5 seconds
+    await expect(userAPage.locator('[data-testid="reply-quote"]')).toBeVisible({ timeout: 5_000 });
   });
 });

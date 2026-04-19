@@ -35,6 +35,8 @@ public sealed class DialogsEndpointsTests
         var user1 = new User { Username = "alice", Email = "alice@test.com", PasswordHash = "x" };
         var user2 = new User { Username = "bob",   Email = "bob@test.com",   PasswordHash = "x" };
         db.Users.AddRange(user1, user2);
+        var (f1, f2) = user1.Id < user2.Id ? (user1.Id, user2.Id) : (user2.Id, user1.Id);
+        db.Friendships.Add(new Friendship { User1Id = f1, User2Id = f2 });
         await db.SaveChangesAsync();
 
         var result = await DialogsEndpointsHelper.CreateDialog(
@@ -55,6 +57,7 @@ public sealed class DialogsEndpointsTests
         var user2 = new User { Username = "bob",   Email = "bob@test.com",   PasswordHash = "x" };
         db.Users.AddRange(user1, user2);
         var (u1, u2) = user1.Id < user2.Id ? (user1.Id, user2.Id) : (user2.Id, user1.Id);
+        db.Friendships.Add(new Friendship { User1Id = u1, User2Id = u2 });
         db.PersonalDialogs.Add(new PersonalDialog { User1Id = u1, User2Id = u2 });
         await db.SaveChangesAsync();
 

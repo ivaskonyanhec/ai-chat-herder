@@ -56,6 +56,7 @@ function buildProviders(snapshotOverride?: RoomMembersSnapshotEvent | null) {
           roomMembersSnapshot: snapshotSignal.asReadonly(),
           memberJoined: signal(null).asReadonly(),
           memberLeft: signal(null).asReadonly(),
+          removedFromRoom: signal(null).asReadonly(),
           presenceMap: signal(new Map<string, 'online' | 'afk' | 'offline'>()).asReadonly(),
         },
       },

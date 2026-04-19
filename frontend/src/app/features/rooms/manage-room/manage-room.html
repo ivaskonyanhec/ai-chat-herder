@@ -100,7 +100,8 @@
             <p class="text-center text-on-surface-variant text-sm py-8">No members.</p>
           } @else {
             @for (member of members(); track member.userId) {
-              <div class="flex items-center justify-between p-4 bg-surface-container-low/50 hover:bg-surface-container-low rounded-xl transition-colors group">
+              <div class="flex items-center justify-between p-4 bg-surface-container-low/50 hover:bg-surface-container-low rounded-xl transition-colors group"
+                   [attr.data-testid]="'member-row-' + member.userId">
                 <div class="flex items-center gap-3">
                   <div class="relative">
                     @if (member.avatarUrl) {
@@ -138,6 +139,7 @@
                   }
                   @if (member.role !== 'Owner' && (room()?.callerRole === 'Owner' || room()?.callerRole === 'Admin')) {
                     <button class="px-3 py-1.5 text-xs font-semibold text-outline hover:bg-surface-variant rounded-md transition-colors"
+                            [attr.data-testid]="'ban-member-' + member.userId"
                             (click)="banMember(member.userId)">Ban</button>
                   }
                 </div>

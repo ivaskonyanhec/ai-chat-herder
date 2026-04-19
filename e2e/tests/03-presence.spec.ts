@@ -104,7 +104,25 @@ test.describe('Presence Engine', () => {
     await observer.stop();
   });
 
-  test.skip('presence dots update in the room member list UI', async () => {
-    // BLOCKED: room member list is currently static and lacks member-status-{userId} bindings.
+  test('presence dots update in the room member list UI', async ({ userA, userB, userAPage, api }) => {
+    const room = await api.createRoom(userA.accessToken, { visibility: 'Public' });
+    await api.joinRoom(room.id, userB.accessToken);
+
+    // userB connects to presence hub — goes online
+    const presenceB = await createHubConnection('/hubs/presence', userB.accessToken);
+
+    // userA navigates to room — joins room group and receives RoomMembersSnapshot
+    await userAPage.goto(`/app/rooms/${room.id}`);
+    await expect(userAPage.locator('[data-testid="chat-area"]')).toBeVisible({ timeout: 10_000 });
+
+    const statusDot = userAPage.locator(`[data-testid="member-status-${userB.id}"]`);
+    await expect(statusDot).toBeVisible({ timeout: 5_000 });
+    await expect(statusDot).toHaveClass(/bg-status-online/, { timeout: 5_000 });
+
+    // userB goes AFK — status dot should update live via UserStatusChanged event
+    await presenceB.invoke('SetAfk');
+    await expect(statusDot).toHaveClass(/bg-status-afk/, { timeout: 5_000 });
+
+    await presenceB.stop();
   });
 });

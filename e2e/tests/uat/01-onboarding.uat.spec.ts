@@ -20,7 +20,11 @@ test.describe('UAT: Onboarding and identity', () => {
     await ctx.dispose();
   });
 
-  test.skip('username cannot be changed through profile UI', async () => {
-    // BLOCKED: profile settings page is static and has no immutable-username validation path.
+  test('username cannot be changed through profile UI', async ({ userAPage }) => {
+    await userAPage.goto('/app/profile');
+    // Username input is always disabled — editing is not supported
+    const usernameInput = userAPage.locator('input[disabled]').filter({ hasText: /.*/ }).first();
+    await expect(usernameInput).toBeVisible({ timeout: 10_000 });
+    await expect(usernameInput).toBeDisabled();
   });
 });
