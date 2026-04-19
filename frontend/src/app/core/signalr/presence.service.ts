@@ -15,6 +15,7 @@ import type {
   AddedToRoomEvent,
   UserStatusChangedEvent,
   UnreadCountChangedEvent,
+  RoomInvitationReceivedEvent,
 } from './hub.models';
 
 const HEARTBEAT_INTERVAL_MS = 30_000;
@@ -46,6 +47,8 @@ export class PresenceService {
   private readonly _memberLeft = signal<MemberLeftEvent | null>(null);
   private readonly _removedFromRoom = signal<RemovedFromRoomEvent | null>(null);
   private readonly _addedToRoom = signal<AddedToRoomEvent | null>(null);
+  private readonly _invitationReceived = signal<RoomInvitationReceivedEvent | null>(null);
+  readonly invitationReceived = this._invitationReceived.asReadonly();
 
   readonly connected = this._connected.asReadonly();
   readonly presenceMap = this._presenceMap.asReadonly();
@@ -161,6 +164,10 @@ export class PresenceService {
 
     conn.on('AddedToRoom', (e: AddedToRoomEvent) => {
       this._addedToRoom.set(e);
+    });
+
+    conn.on('RoomInvitationReceived', (e: RoomInvitationReceivedEvent) => {
+      this._invitationReceived.set(e);
     });
 
     conn.on('UnreadCountChanged', (e: UnreadCountChangedEvent) => {
