@@ -26,7 +26,10 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
 # Run as the non-root user built into official .NET container images.
-RUN mkdir -p /app/uploads \
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl libgssapi-krb5-2 \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /app/uploads \
     && chown -R $APP_UID:$APP_UID /app
 
 COPY --from=build --chown=$APP_UID:$APP_UID /app/publish .

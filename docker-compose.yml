@@ -75,11 +75,11 @@ services:
       ASPNETCORE_URLS: http://+:8080
 
       # Connection strings use container-name DNS — never "localhost" (AGENT.md §3.3)
-      ConnectionStrings__DefaultConnection: >-
+      ConnectionStrings__Default: >-
         Host=postgres;Port=5432;Database=${POSTGRES_DB};
         Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};
         Include Error Detail=true
-      ConnectionStrings__Redis: >-
+      Redis__ConnectionString: >-
         redis,password=${REDIS_PASSWORD},abortConnect=false
 
       # RabbitMQ — topic exchange for activity events (AGENT.md §4)
@@ -116,8 +116,8 @@ services:
   # ── Frontend (Angular 21 + Nginx) ─────────────────────────────────────────────
   frontend:
     build:
-      context: frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: frontend/Dockerfile
     restart: unless-stopped
     ports:
       - "80:80"     # Primary production port
@@ -127,7 +127,7 @@ services:
     networks:
       - chatnet
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost/api/health > /dev/null 2>&1 || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- --header 'Host: localhost' http://127.0.0.1/api/health > /dev/null 2>&1 || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 10
