@@ -1,8 +1,11 @@
 using System.Security.Claims;
+using ChatHerder.API.Hubs;
 using ChatHerder.Application.DTOs;
+using ChatHerder.Application.Ports;
 using ChatHerder.Domain.Entities;
 using ChatHerder.Domain.Enums;
 using ChatHerder.Infrastructure.Persistence;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace ChatHerder.API.Endpoints;
@@ -12,7 +15,7 @@ public static class RoomInvitationEndpoints
     public static RouteGroupBuilder MapRoomInvitationEndpoints(this RouteGroupBuilder group)
     {
         group.MapGet("/rooms/{roomId:guid}/invitations",  GetRoomInvitations).RequireAuthorization();
-        group.MapPost("/rooms/{roomId:guid}/invitations", SendInvitation)    .RequireAuthorization();
+        group.MapPost("/rooms/{roomId:guid}/invitations", (Guid roomId, InviteUserRequest req, ClaimsPrincipal principal, AppDbContext db, IHubContext<PresenceHub> hub, IPresenceStore presence, CancellationToken ct) => SendInvitation(roomId, req, principal, db, hub, presence, ct)).RequireAuthorization();
         group.MapGet("/invitations",                      GetMyInvitations)  .RequireAuthorization();
         group.MapPost("/invitations/{id:guid}/accept",    AcceptInvitation)  .RequireAuthorization();
         group.MapPost("/invitations/{id:guid}/reject",    RejectInvitation)  .RequireAuthorization();
@@ -55,6 +58,8 @@ public static class RoomInvitationEndpoints
         InviteUserRequest req,
         ClaimsPrincipal principal,
         AppDbContext db,
+        IHubContext<PresenceHub> presenceHub,
+        IPresenceStore presence,
         CancellationToken ct)
     {
         if (!Guid.TryParse(principal.FindFirstValue("user_id"), out var callerId))
@@ -79,17 +84,30 @@ public static class RoomInvitationEndpoints
         if (await db.RoomBans.AnyAsync(b => b.RoomId == roomId && b.BannedUserId == invitee.Id && b.RevokedAt == null, ct))
             return Results.Problem("User is banned from this room.", statusCode: 403);
 
-        db.RoomInvitations.Add(new RoomInvitation
+        var invitation = new RoomInvitation
         {
             RoomId          = roomId,
             InvitedByUserId = callerId,
             InvitedUserId   = invitee.Id,
             Status          = InvitationStatus.Pending,
-        });
+        };
+        db.RoomInvitations.Add(invitation);
         await db.SaveChangesAsync(ct);
+
+        var connIds = await presence.GetConnectionIdsAsync(invitee.Id, ct);
+        foreach (var connId in connIds)
+            await presenceHub.Clients.Client(connId)
+                .SendAsync("RoomInvitationReceived",
+                    new { invitationId = invitation.Id, roomId, roomName = room.Name, fromUserId = callerId },
+                    cancellationToken: ct);
 
         return Results.NoContent();
     }
+
+    internal static Task<IResult> SendInvitationInternal(
+        Guid roomId, InviteUserRequest req, ClaimsPrincipal principal, AppDbContext db,
+        IHubContext<PresenceHub> presenceHub, IPresenceStore presence, CancellationToken ct)
+        => SendInvitation(roomId, req, principal, db, presenceHub, presence, ct);
 
     private static async Task<IResult> GetMyInvitations(
         ClaimsPrincipal principal,
