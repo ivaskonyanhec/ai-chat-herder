@@ -1,12 +1,12 @@
 # Playwright E2E runner — headless Chromium in Docker.
 # Build context: project root (e2e/ subdirectory is copied in).
-FROM mcr.microsoft.com/playwright:v1.49.0-noble
+FROM mcr.microsoft.com/playwright:v1.59.1-noble
 
 WORKDIR /e2e
 
-# Install Node dependencies first (cached layer on package.json changes).
-COPY e2e/package.json ./
-RUN npm install
+# Install Node dependencies first (cached layer on package-lock.json changes).
+COPY e2e/package.json e2e/package-lock.json ./
+RUN npm ci
 
 # Copy test sources.
 COPY e2e/ ./
