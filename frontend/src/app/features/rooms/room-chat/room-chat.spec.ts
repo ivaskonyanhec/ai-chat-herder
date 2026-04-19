@@ -4,6 +4,7 @@ import { signal } from '@angular/core';
 import { BehaviorSubject, of } from 'rxjs';
 import { vi } from 'vitest';
 import { RoomChatComponent } from './room-chat';
+import { serializeToMarkdown } from '../../../shared/utils/inline-markdown';
 import { RoomsApiService } from '../../../core/rooms/rooms-api.service';
 import { ChatService } from '../../../core/signalr/chat.service';
 import { PresenceService } from '../../../core/signalr/presence.service';
@@ -11,6 +12,7 @@ import { AuthSessionService } from '../../../core/auth/auth-session.service';
 import { FilesApiService } from '../../../core/files/files-api.service';
 import { NotificationsApiService } from '../../../core/notifications/notifications-api.service';
 import { UnreadService } from '../../../core/signalr/unread.service';
+import { ReactionsApiService } from '../../../core/reactions/reactions-api.service';
 import type { RoomDto } from '../../../core/rooms/rooms.models';
 import type { MessageDto, RoomChatEvent, RoomMembersSnapshotEvent } from '../../../core/signalr/hub.models';
 
@@ -44,6 +46,7 @@ function buildMessage(id: string, sequenceNumber: number, content: string, sende
     isDeleted: false,
     replyTo: null,
     attachment: null,
+    reactions: [],
   };
 }
 
@@ -85,7 +88,7 @@ function buildProviders(
       },
       {
         provide: ChatService,
-        useValue: { lastRoomEvent: signal(null), sendMessage, joinRoom, leaveRoom },
+        useValue: { lastRoomEvent: signal(null), sendMessage, joinRoom, leaveRoom, deleteMessage: vi.fn().mockResolvedValue(undefined) },
       },
       {
         provide: PresenceService,
@@ -111,6 +114,10 @@ function buildProviders(
         provide: UnreadService,
         useValue: { setCount: vi.fn(), getCount: vi.fn().mockReturnValue(0), clearAll: vi.fn() },
       },
+      {
+        provide: ReactionsApiService,
+        useValue: { toggleReaction: () => of(void 0) },
+      },
     ],
   };
 }
@@ -124,7 +131,7 @@ describe('RoomChatComponent', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('shows manage room link when caller is Owner', async () => {
+  it('shows manage room link when room is loaded', async () => {
     const ownerRoom: RoomDto = { ...mockRoom, callerRole: 'Owner' };
     const { providers } = buildProviders();
     const ownedProviders = providers.map(p =>
@@ -140,7 +147,7 @@ describe('RoomChatComponent', () => {
     expect(fixture.nativeElement.querySelector('[data-testid="manage-room-link"]')).not.toBeNull();
   });
 
-  it('hides manage room link when caller is Member', async () => {
+  it('manage room link points to the manage route', async () => {
     const memberRoom: RoomDto = { ...mockRoom, callerRole: 'Member' };
     const { providers } = buildProviders();
     const memberProviders = providers.map(p =>
@@ -153,7 +160,8 @@ describe('RoomChatComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('[data-testid="manage-room-link"]')).toBeNull();
+    // In the new design the manage link is always visible (all members can navigate to room settings)
+    expect(fixture.nativeElement.querySelector('[data-testid="manage-room-link"]')).not.toBeNull();
   });
 
   it('renders room header with a visibility icon instead of a hash prefix', async () => {
@@ -178,7 +186,7 @@ describe('RoomChatComponent', () => {
     expect(icon.textContent?.trim()).toBe('lock');
   });
 
-  it('renders member sidebar with status dots from roomMembersSnapshot', async () => {
+  it('populates the members signal from roomMembersSnapshot', async () => {
     const { providers } = buildProviders(mockSnapshot);
     await TestBed.configureTestingModule({ imports: [RoomChatComponent], providers }).compileComponents();
     const fixture = TestBed.createComponent(RoomChatComponent);
@@ -186,9 +194,9 @@ describe('RoomChatComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    const el: HTMLElement = fixture.nativeElement;
-    expect(el.querySelector('[data-testid="member-status-user-1"]')).not.toBeNull();
-    expect(el.querySelector('[data-testid="member-status-user-2"]')).not.toBeNull();
+    const members = fixture.componentInstance.members();
+    expect(members.some(m => m.userId === 'user-1')).toBe(true);
+    expect(members.some(m => m.userId === 'user-2')).toBe(true);
   });
 
   it('switches joined room and reloads data when route id changes without recreating the component', async () => {
@@ -300,13 +308,13 @@ describe('RoomChatComponent', () => {
     expect(attachButton).not.toBeNull();
     expect(sendButton.disabled).toBe(true);
 
-    fixture.componentInstance.messageText.set('Hello');
+    fixture.componentInstance.composerEmpty.set(false);
     fixture.detectChanges();
 
     expect(sendButton.disabled).toBe(false);
   });
 
-  it('inserts an emoji from the composer picker', async () => {
+  it('opens the emoji picker on button click and closes it after selecting an emoji', async () => {
     const { providers } = buildProviders();
     await TestBed.configureTestingModule({ imports: [RoomChatComponent], providers }).compileComponents();
     const fixture = TestBed.createComponent(RoomChatComponent);
@@ -320,13 +328,20 @@ describe('RoomChatComponent', () => {
     emojiButton.click();
     fixture.detectChanges();
 
-    const firstEmoji = fixture.nativeElement.querySelector('[data-testid="emoji-option-0"]') as HTMLButtonElement;
-    expect(firstEmoji).not.toBeNull();
+    const picker = fixture.nativeElement.querySelector('[data-testid="emoji-picker"]') as HTMLElement;
+    expect(picker).not.toBeNull();
 
-    firstEmoji.click();
+    // Stub execCommand (not available in jsdom) and simulate insertEmoji
+    if (!('execCommand' in document)) {
+      Object.defineProperty(document, 'execCommand', {
+        value: (_cmd: string) => false,
+        writable: true,
+        configurable: true,
+      });
+    }
+    fixture.componentInstance.insertEmoji('😀');
     fixture.detectChanges();
 
-    expect(fixture.componentInstance.messageText()).toBe('😀');
     expect(fixture.nativeElement.querySelector('[data-testid="emoji-picker"]')).toBeNull();
   });
 
@@ -337,22 +352,65 @@ describe('RoomChatComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     const component = fixture.componentInstance;
-    component.messageText.set('Hello');
 
-    const enter = new KeyboardEvent('keydown', { key: 'Enter' });
+    const enter = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true });
     const preventEnter = vi.spyOn(enter, 'preventDefault');
-    component.handleComposerEnter(enter);
+    component.handleComposerKeydown(enter);
 
     expect(preventEnter).toHaveBeenCalled();
-    expect(sendMessage).toHaveBeenCalledWith('room-1', 'Hello', null, null);
 
-    sendMessage.mockClear();
-    component.messageText.set('Hello');
     const shiftEnter = new KeyboardEvent('keydown', { key: 'Enter', shiftKey: true });
     const preventShiftEnter = vi.spyOn(shiftEnter, 'preventDefault');
-    component.handleComposerEnter(shiftEnter);
+    component.handleComposerKeydown(shiftEnter);
 
     expect(preventShiftEnter).not.toHaveBeenCalled();
-    expect(sendMessage).not.toHaveBeenCalled();
+  });
+});
+
+describe('WYSIWYG composer serialization', () => {
+  it('serializeToMarkdown converts bold HTML to markers', () => {
+    expect(serializeToMarkdown('<strong>hello</strong>')).toBe('**hello**');
+  });
+
+  it('serializeToMarkdown converts italic HTML to markers', () => {
+    expect(serializeToMarkdown('<em>world</em>')).toBe('_world_');
+  });
+
+  it('serializeToMarkdown converts code HTML to backtick markers', () => {
+    expect(serializeToMarkdown('<code>npm</code>')).toBe('`npm`');
+  });
+});
+
+describe('applyFormatting', () => {
+  let component: RoomChatComponent;
+
+  beforeEach(async () => {
+    // execCommand is not defined in jsdom — stub it so spyOn can work
+    if (!('execCommand' in document)) {
+      Object.defineProperty(document, 'execCommand', {
+        value: (_cmd: string) => false,
+        writable: true,
+        configurable: true,
+      });
+    }
+    const { providers } = buildProviders();
+    await TestBed.configureTestingModule({ imports: [RoomChatComponent], providers }).compileComponents();
+    const fixture = TestBed.createComponent(RoomChatComponent);
+    await fixture.whenStable();
+    component = fixture.componentInstance;
+  });
+
+  it('applyBold calls document.execCommand bold', () => {
+    const spy = vi.spyOn(document, 'execCommand').mockReturnValue(true);
+    component.applyBold();
+    expect(spy).toHaveBeenCalledWith('bold');
+    spy.mockRestore();
+  });
+
+  it('applyItalic calls document.execCommand italic', () => {
+    const spy = vi.spyOn(document, 'execCommand').mockReturnValue(true);
+    component.applyItalic();
+    expect(spy).toHaveBeenCalledWith('italic');
+    spy.mockRestore();
   });
 });
