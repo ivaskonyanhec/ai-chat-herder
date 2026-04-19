@@ -1,5 +1,6 @@
 import { test, expect } from '../fixtures/test-fixtures';
 import { createPublicRoomWithMembers } from '../helpers/room.helpers';
+import { createHubConnection } from '../helpers/signalr.helpers';
 
 test.describe('Room moderation', () => {
   test('room creator is automatically owner and can see their role through members API', async ({ userA, api }) => {
@@ -54,6 +55,109 @@ test.describe('Room moderation', () => {
     await memberCtx.dispose();
   });
 
+  test('owner can view ban details, unban a member, and the member can rejoin', async ({ userA, userB, api }) => {
+    const room = await createPublicRoomWithMembers(api, userA, [userB]);
+    const reason = `e2e-unban-${Date.now()}`;
+
+    await api.banMember(room.id, userB.id, userA.accessToken, reason);
+
+    const bans = await api.getRoomBans(room.id, userA.accessToken);
+    expect(bans).toContainEqual(
+      expect.objectContaining({
+        bannedUserId: userB.id,
+        bannedUsername: userB.username,
+        bannedByUserId: userA.id,
+        bannedByUsername: userA.username,
+        reason,
+      }),
+    );
+
+    await api.unbanMember(room.id, userB.id, userA.accessToken);
+    await api.joinPublicRoom(room.id, userB.accessToken);
+
+    const members = await api.getMembers(room.id, userA.accessToken);
+    expect(members.map(m => m.userId)).toContain(userB.id);
+  });
+
+  test('owner can remove admin status and demoted user loses admin permissions', async ({ api }) => {
+    const owner = await api.register();
+    const admin = await api.register();
+    const member = await api.register();
+    const room = await createPublicRoomWithMembers(api, owner, [admin, member]);
+
+    await api.makeAdmin(room.id, admin.id, owner.accessToken);
+    await api.removeAdmin(room.id, admin.id, owner.accessToken);
+
+    const members = await api.getMembers(room.id, owner.accessToken);
+    expect(members).toContainEqual(
+      expect.objectContaining({
+        userId: admin.id,
+        role: 'Member',
+      }),
+    );
+
+    const demotedCtx = await api.authContext(admin.accessToken);
+    const banAttempt = await demotedCtx.post(`/api/rooms/${room.id}/members/${member.id}/ban`, {
+      data: { reason: 'demoted user attempt' },
+    });
+    expect(banAttempt.status()).toBe(403);
+    await demotedCtx.dispose();
+  });
+
+  test('room admin can delete another user message', async ({ api }) => {
+    const owner = await api.register();
+    const admin = await api.register();
+    const member = await api.register();
+    const room = await createPublicRoomWithMembers(api, owner, [admin, member]);
+    await api.makeAdmin(room.id, admin.id, owner.accessToken);
+
+    const chat = await createHubConnection('/hubs/chat', member.accessToken);
+    const content = `admin-delete-${Date.now()}`;
+    await chat.invoke('SendMessage', room.id, content, null, null);
+    await chat.stop();
+
+    const ownerCtx = await api.authContext(owner.accessToken);
+    const history = await ownerCtx.get(`/api/rooms/${room.id}/messages`);
+    expect(history.status(), await history.text()).toBe(200);
+    const messages = await history.json();
+    const message = messages.find((m: { content: string | null }) => m.content === content);
+    expect(message?.id).toBeTruthy();
+    await ownerCtx.dispose();
+
+    const adminCtx = await api.authContext(admin.accessToken);
+    const deletion = await adminCtx.delete(`/api/rooms/${room.id}/messages/${message.id}`);
+    expect(deletion.status(), await deletion.text()).toBe(204);
+    await adminCtx.dispose();
+
+    const afterDeleteCtx = await api.authContext(owner.accessToken);
+    const afterDelete = await afterDeleteCtx.get(`/api/rooms/${room.id}/messages`);
+    const remaining = await afterDelete.json();
+    expect(remaining.map((m: { id: string }) => m.id)).not.toContain(message.id);
+    await afterDeleteCtx.dispose();
+  });
+
+  test('owner deletes a room and linked messages/files are no longer accessible', async ({ api, userA, userB }) => {
+    const room = await createPublicRoomWithMembers(api, userA, [userB]);
+    const attachment = await api.uploadFile(
+      userA.accessToken,
+      { name: 'delete-room.txt', mimeType: 'text/plain', buffer: Buffer.from('delete with room') },
+    );
+    const chat = await createHubConnection('/hubs/chat', userA.accessToken);
+
+    await chat.invoke('SendMessage', room.id, 'delete room attachment', null, attachment.id);
+    await chat.stop();
+
+    const ownerCtx = await api.authContext(userA.accessToken);
+    expect((await ownerCtx.delete(`/api/rooms/${room.id}`)).status()).toBe(204);
+    expect((await ownerCtx.get(`/api/rooms/${room.id}`)).status()).toBe(404);
+    await ownerCtx.dispose();
+
+    const memberCtx = await api.authContext(userB.accessToken);
+    expect((await memberCtx.get(`/api/rooms/${room.id}/messages`)).status()).toBe(403);
+    expect((await memberCtx.get(`/api/files/${attachment.id}`)).status()).toBe(404);
+    await memberCtx.dispose();
+  });
+
   test.skip('removing a user from room UI is treated as a ban', async () => {
     // BLOCKED: management UI is static and has no remove-member action wired to the ban endpoint.
   });
@@ -62,7 +166,5 @@ test.describe('Room moderation', () => {
     // BLOCKED: BanMember endpoint persists the ban but does not broadcast RemovedFromRoom to active connections yet.
   });
 
-  test.skip('banned user loses room file access', async () => {
-    // BLOCKED: attachment download endpoint is not mapped, so file access revocation cannot be verified.
-  });
+  // Covered in e2e/tests/04-attachments.spec.ts by the "banned room user loses access" file test.
 });

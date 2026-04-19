@@ -6,6 +6,8 @@ import { App } from './app';
 import { routes } from './app.routes';
 import { AuthApiService } from './core/auth/auth-api.service';
 import { AuthSessionService } from './core/auth/auth-session.service';
+import { NotificationsApiService } from './core/notifications/notifications-api.service';
+import { RoomsApiService } from './core/rooms/rooms-api.service';
 import { SessionsApiService } from './core/session/sessions-api.service';
 
 describe('app routes', () => {
@@ -67,6 +69,14 @@ function configureRouterTestBed(): Router {
     getSessions: vi.fn().mockReturnValue(of([])),
     revokeSession: vi.fn().mockReturnValue(of(void 0)),
   };
+  const notificationsApi = {
+    getUnreadCounts: vi.fn().mockReturnValue(of([])),
+  };
+  const roomsApi = {
+    getMyRooms: vi.fn().mockReturnValue(of([])),
+    getPublicCatalog: vi.fn().mockReturnValue(of([])),
+    joinRoom: vi.fn().mockReturnValue(of(void 0)),
+  };
 
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
@@ -76,6 +86,8 @@ function configureRouterTestBed(): Router {
       { provide: AuthSessionService, useValue: authSession },
       { provide: AuthApiService, useValue: authApi },
       { provide: SessionsApiService, useValue: sessionsApi },
+      { provide: NotificationsApiService, useValue: notificationsApi },
+      { provide: RoomsApiService, useValue: roomsApi },
     ],
   });
 

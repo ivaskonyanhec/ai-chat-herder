@@ -26,6 +26,14 @@ export interface RoomMemberDto {
   presenceStatus: string;
 }
 
+export interface RoomBanDto {
+  bannedUserId: string;
+  bannedUsername: string;
+  bannedByUserId: string;
+  bannedByUsername: string;
+  reason: string | null;
+}
+
 export interface FriendRequestDto {
   id: string;
   senderId: string;
@@ -61,6 +69,33 @@ export interface DialogMessageDto {
   sender: { id: string; username: string };
   editedAt: string | null;
   isDeleted: boolean;
+  attachment: AttachmentDto | null;
+}
+
+export interface AttachmentDto {
+  id: string;
+  fileName: string;
+  contentType: string;
+  sizeBytes: number;
+  comment: string | null;
+}
+
+export interface UnreadContextDto {
+  contextType: 'room' | 'dialog' | string;
+  contextId: string;
+  count: number;
+}
+
+export interface PlatformBanDto {
+  id: string;
+  userId: string;
+  username: string;
+  issuedByAdminId: string;
+  issuedByAdminUsername: string;
+  reason: string;
+  createdAt: string;
+  expiresAt: string | null;
+  revokedAt: string | null;
 }
 
 export class ApiHelpers {
@@ -149,6 +184,29 @@ export class ApiHelpers {
   async makeAdmin(roomId: string, userId: string, ownerToken: string): Promise<void> {
     const ctx = await this.authContext(ownerToken);
     const res = await ctx.post(`/api/rooms/${roomId}/members/${userId}/make-admin`);
+    expect(res.status(), await res.text()).toBe(204);
+    await ctx.dispose();
+  }
+
+  async removeAdmin(roomId: string, userId: string, adminToken: string): Promise<void> {
+    const ctx = await this.authContext(adminToken);
+    const res = await ctx.delete(`/api/rooms/${roomId}/members/${userId}/admin`);
+    expect(res.status(), await res.text()).toBe(204);
+    await ctx.dispose();
+  }
+
+  async getRoomBans(roomId: string, accessToken: string): Promise<RoomBanDto[]> {
+    const ctx = await this.authContext(accessToken);
+    const res = await ctx.get(`/api/rooms/${roomId}/bans`);
+    expect(res.status(), await res.text()).toBe(200);
+    const bans = await res.json();
+    await ctx.dispose();
+    return bans;
+  }
+
+  async unbanMember(roomId: string, userId: string, adminToken: string): Promise<void> {
+    const ctx = await this.authContext(adminToken);
+    const res = await ctx.delete(`/api/rooms/${roomId}/bans/${userId}`);
     expect(res.status(), await res.text()).toBe(204);
     await ctx.dispose();
   }
@@ -248,6 +306,84 @@ export class ApiHelpers {
     const blocks = await res.json();
     await ctx.dispose();
     return blocks;
+  }
+
+  async unblockUser(accessToken: string, userId: string): Promise<void> {
+    const ctx = await this.authContext(accessToken);
+    const res = await ctx.delete(`/api/blocks/${userId}`);
+    expect(res.status(), await res.text()).toBe(204);
+    await ctx.dispose();
+  }
+
+  async uploadFile(
+    accessToken: string,
+    file: { name: string; mimeType: string; buffer: Buffer },
+    comment?: string,
+  ): Promise<AttachmentDto> {
+    const ctx = await this.authContext(accessToken);
+    const res = await ctx.post('/api/files/upload', {
+      multipart: {
+        file,
+        ...(comment ? { comment } : {}),
+      },
+    });
+    expect(res.status(), await res.text()).toBe(201);
+    const attachment = await res.json();
+    await ctx.dispose();
+    return attachment;
+  }
+
+  async getUnreadCounts(accessToken: string): Promise<UnreadContextDto[]> {
+    const ctx = await this.authContext(accessToken);
+    const res = await ctx.get('/api/unread');
+    expect(res.status(), await res.text()).toBe(200);
+    const counts = await res.json();
+    await ctx.dispose();
+    return counts;
+  }
+
+  async getUnreadCount(accessToken: string, contextType: 'room' | 'dialog', contextId: string): Promise<number> {
+    const counts = await this.getUnreadCounts(accessToken);
+    return counts.find(c => c.contextType === contextType && c.contextId === contextId)?.count ?? 0;
+  }
+
+  async markRoomRead(accessToken: string, roomId: string): Promise<void> {
+    const ctx = await this.authContext(accessToken);
+    const res = await ctx.post(`/api/rooms/${roomId}/read`);
+    expect(res.status(), await res.text()).toBe(204);
+    await ctx.dispose();
+  }
+
+  async markDialogRead(accessToken: string, dialogId: string): Promise<void> {
+    const ctx = await this.authContext(accessToken);
+    const res = await ctx.post(`/api/dialogs/${dialogId}/read`);
+    expect(res.status(), await res.text()).toBe(204);
+    await ctx.dispose();
+  }
+
+  async issuePlatformBan(adminToken: string, username: string, reason: string, durationHours?: number): Promise<void> {
+    const ctx = await this.authContext(adminToken);
+    const res = await ctx.post('/api/admin/bans', {
+      data: { username, reason, durationHours },
+    });
+    expect(res.status(), await res.text()).toBe(204);
+    await ctx.dispose();
+  }
+
+  async revokePlatformBan(adminToken: string, userId: string): Promise<void> {
+    const ctx = await this.authContext(adminToken);
+    const res = await ctx.delete(`/api/admin/bans/${userId}`);
+    expect(res.status(), await res.text()).toBe(204);
+    await ctx.dispose();
+  }
+
+  async getPlatformBans(adminToken: string): Promise<PlatformBanDto[]> {
+    const ctx = await this.authContext(adminToken);
+    const res = await ctx.get('/api/admin/bans');
+    expect(res.status(), await res.text()).toBe(200);
+    const bans = await res.json();
+    await ctx.dispose();
+    return bans;
   }
 
   async context(): Promise<APIRequestContext> {

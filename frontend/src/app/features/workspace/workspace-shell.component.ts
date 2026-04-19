@@ -22,13 +22,14 @@ export class WorkspaceShellComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly presence = inject(PresenceService);
   private readonly chat = inject(ChatService);
-  readonly unread = inject(UnreadService);
+  private readonly unread = inject(UnreadService);
   private readonly notificationsApi = inject(NotificationsApiService);
   private readonly roomsApi = inject(RoomsApiService);
 
   readonly user = this.authSession.user;
   readonly logoutError = signal('');
   readonly myRooms = signal<RoomDto[]>([]);
+  readonly unreadCounts = this.unread.unreadCounts;
 
   ngOnInit(): void {
     void this.presence.connect();
@@ -55,6 +56,10 @@ export class WorkspaceShellComponent implements OnInit, OnDestroy {
         this.logoutError.set('Unable to sign out right now. Try again in a moment.');
       },
     });
+  }
+
+  getUnreadCount(contextType: string, contextId: string): number {
+    return this.unread.getCount(contextType, contextId);
   }
 
   private bootstrapData(): void {

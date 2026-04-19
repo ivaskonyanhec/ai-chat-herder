@@ -1,0 +1,164 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend-unit:
+    name: Backend Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore ChatHerder.sln
+
+      - name: Run backend unit tests
+        run: >
+          dotnet test tests/ChatHerder.Unit.Tests/ChatHerder.Unit.Tests.csproj
+          --configuration Release
+          --no-restore
+          --logger "trx;LogFileName=backend-unit.trx"
+          --results-directory TestResults/backend-unit
+          --verbosity normal
+
+      - name: Report backend unit results
+        if: always()
+        run: |
+          echo "Backend unit test results:"
+          find TestResults/backend-unit -maxdepth 2 -type f -print || true
+          {
+            echo "### Backend Unit Tests"
+            echo ""
+            echo "- Job status: ${{ job.status }}"
+            echo "- Results directory: \`TestResults/backend-unit\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload backend unit results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-unit-test-results
+          path: TestResults/backend-unit
+          if-no-files-found: ignore
+
+  frontend-unit:
+    name: Frontend Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run frontend unit tests
+        working-directory: frontend
+        run: npm test -- --watch=false
+
+      - name: Report frontend unit results
+        if: always()
+        run: |
+          echo "Frontend unit test job status: ${{ job.status }}"
+          {
+            echo "### Frontend Unit Tests"
+            echo ""
+            echo "- Job status: ${{ job.status }}"
+            echo "- Command: \`npm test -- --watch=false\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  e2e-uat:
+    name: E2E/UAT Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create CI environment file
+        run: |
+          cat > .env <<'EOF'
+          ASPNETCORE_ENVIRONMENT=Development
+          POSTGRES_DB=chatherder_ci
+          POSTGRES_USER=chatherder
+          POSTGRES_PASSWORD=ci_postgres_password
+          REDIS_PASSWORD=ci_redis_password
+          RABBITMQ_USER=chatherder
+          RABBITMQ_PASSWORD=ci_rabbitmq_password
+          RABBITMQ_VHOST=chatherder
+          JWT_SECRET_KEY=ci_secret_key_for_github_actions_only_64_chars_minimum_value_1234567890
+          JWT_ISSUER=ChatHerder
+          JWT_AUDIENCE=ChatHerderClient
+          SMTP_HOST=localhost
+          SMTP_PORT=1025
+          SMTP_USERNAME=ci
+          SMTP_PASSWORD=ci
+          SMTP_FROM_ADDRESS=noreply@example.com
+          BASE_URL=http://frontend
+          E2E_REPORT_DIR=./e2e-reports
+          EOF
+
+      - name: Run Dockerized E2E/UAT suite
+        run: docker compose --profile e2e up --build --exit-code-from e2e e2e
+
+      - name: Report E2E/UAT results
+        if: always()
+        run: |
+          echo "E2E/UAT test results:"
+          if [ -f e2e-reports/latest/summary.md ]; then
+            cat e2e-reports/latest/summary.md
+            {
+              echo "### E2E/UAT Tests"
+              echo ""
+              cat e2e-reports/latest/summary.md
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "No E2E/UAT summary was generated."
+            {
+              echo "### E2E/UAT Tests"
+              echo ""
+              echo "- Job status: ${{ job.status }}"
+              echo "- No E2E/UAT summary was generated."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload E2E/UAT reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-uat-reports
+          path: e2e-reports
+          if-no-files-found: ignore
+
+      - name: Stop Docker Compose stack
+        if: always()
+        run: docker compose --profile e2e down --volumes --remove-orphans

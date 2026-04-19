@@ -1,7 +1,10 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const reportDir = process.env.E2E_REPORT_DIR ?? '../e2e-reports/latest';
+
 export default defineConfig({
   testDir: './tests',
+  outputDir: `${reportDir}/artifacts`,
   timeout: 30_000,
   expect: { timeout: 5_000 },
 
@@ -12,8 +15,9 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
 
   reporter: [
-    ['html', { outputFolder: '../e2e-reports', open: 'never' }],
-    ['json', { outputFile: '../e2e-reports/results.json' }],
+    ['html', { outputFolder: `${reportDir}/html`, open: 'never' }],
+    ['json', { outputFile: `${reportDir}/results.json` }],
+    ['junit', { outputFile: `${reportDir}/junit.xml` }],
     ['list'],
   ],
 

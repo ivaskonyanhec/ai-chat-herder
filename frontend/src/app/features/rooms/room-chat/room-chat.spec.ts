@@ -8,6 +8,7 @@ import { ChatService } from '../../../core/signalr/chat.service';
 import { PresenceService } from '../../../core/signalr/presence.service';
 import { AuthSessionService } from '../../../core/auth/auth-session.service';
 import { FilesApiService } from '../../../core/files/files-api.service';
+import { NotificationsApiService } from '../../../core/notifications/notifications-api.service';
 import type { RoomDto } from '../../../core/rooms/rooms.models';
 
 describe('RoomChatComponent', () => {
@@ -64,6 +65,12 @@ describe('RoomChatComponent', () => {
             uploadFile: () => of(),
             downloadFile: () => {},
             getFileUrl: () => '',
+          },
+        },
+        {
+          provide: NotificationsApiService,
+          useValue: {
+            markRoomRead: () => of(void 0),
           },
         },
       ],

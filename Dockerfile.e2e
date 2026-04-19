@@ -17,5 +17,6 @@ RUN mkdir -p /e2e-reports
 # BASE_URL must point to the frontend service (e.g. http://frontend inside Docker).
 ENV BASE_URL=http://frontend
 
-# Run all test files with HTML, JSON, and console-list reporters.
-CMD ["npx", "playwright", "test"]
+# Run typecheck + all E2E/UAT tests and write agent-readable reports.
+ENV E2E_REPORTS_ROOT=/e2e-reports
+CMD ["npm", "run", "test:all"]

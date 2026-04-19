@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { Signal, signal } from '@angular/core';
+import { Component, Signal, signal } from '@angular/core';
 import { provideRouter, Router } from '@angular/router';
 import { throwError, of } from 'rxjs';
 import { vi } from 'vitest';
@@ -15,6 +15,9 @@ import { RoomsApiService } from '../../core/rooms/rooms-api.service';
 type HubStub = { connect: ReturnType<typeof vi.fn>; disconnect: ReturnType<typeof vi.fn> };
 type AuthSessionStub = { user: Signal<null>; accessToken?: Signal<null>; clearSession: ReturnType<typeof vi.fn> };
 type AuthApiStub = { logout: ReturnType<typeof vi.fn> };
+
+@Component({ standalone: true, template: '' })
+class EmptyAuthComponent {}
 
 function buildProviders(overrides: {
   authApi?: AuthApiStub;
@@ -39,7 +42,7 @@ function buildProviders(overrides: {
 
   return {
     providers: [
-      provideRouter([]),
+      provideRouter([{ path: 'auth', component: EmptyAuthComponent }]),
       { provide: AuthApiService, useValue: authApi },
       { provide: AuthSessionService, useValue: authSession },
       { provide: PresenceService, useValue: presenceService },
@@ -79,7 +82,7 @@ describe('WorkspaceShellComponent', () => {
     const { providers } = buildProviders({ authApi, authSession });
     TestBed.configureTestingModule({ imports: [WorkspaceShellComponent], providers });
     const fixture = TestBed.createComponent(WorkspaceShellComponent);
-    const navigateByUrl = vi.spyOn(TestBed.inject(Router), 'navigateByUrl');
+    const navigateByUrl = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
     fixture.componentInstance.logout();
     expect(authSession.clearSession).not.toHaveBeenCalled();
     expect(navigateByUrl).not.toHaveBeenCalled();
@@ -132,5 +135,13 @@ describe('WorkspaceShellComponent', () => {
     fixture.destroy();
     expect((presenceService as { disconnect: ReturnType<typeof vi.fn> }).disconnect).toHaveBeenCalledTimes(1);
     expect((chatService as { disconnect: ReturnType<typeof vi.fn> }).disconnect).toHaveBeenCalledTimes(1);
+  });
+
+  it('getUnreadCount() returns 0 when no unread data', () => {
+    const { providers } = buildProviders();
+    TestBed.configureTestingModule({ imports: [WorkspaceShellComponent], providers });
+    const fixture = TestBed.createComponent(WorkspaceShellComponent);
+    fixture.detectChanges();
+    expect(fixture.componentInstance.getUnreadCount('room', 'some-id')).toBe(0);
   });
 });

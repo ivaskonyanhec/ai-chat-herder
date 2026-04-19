@@ -53,9 +53,19 @@
             <span class="material-symbols-outlined text-sm">keyboard_arrow_down</span>
           </div>
           <div class="pl-9 space-y-1">
-            <div class="p-2 bg-surface-container-lowest text-on-surface font-bold rounded-lg cursor-pointer text-sm">#engineering-room</div>
-            <div class="p-2 text-on-surface-variant hover:text-on-surface cursor-pointer text-sm">#design-ops</div>
-            <div class="p-2 text-on-surface-variant hover:text-on-surface cursor-pointer text-sm">#product-roadmap</div>
+            @for (room of myRooms(); track room.id) {
+              <a [routerLink]="['/app/rooms', room.id]"
+                 routerLinkActive="bg-surface-container-lowest text-on-surface font-bold"
+                 class="flex items-center justify-between p-2 text-on-surface-variant hover:text-on-surface cursor-pointer text-sm rounded-lg">
+                <span class="truncate">#{{ room.name }}</span>
+                @let count = getUnreadCount('room', room.id);
+                @if (count > 0) {
+                  <span class="ml-1 shrink-0 min-w-[1.25rem] h-5 px-1 bg-primary text-on-primary text-[10px] font-black rounded-full flex items-center justify-center">{{ count }}</span>
+                }
+              </a>
+            } @empty {
+              <div class="p-2 text-on-surface-variant text-sm italic">No rooms yet</div>
+            }
           </div>
         </div>
 

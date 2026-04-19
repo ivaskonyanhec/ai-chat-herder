@@ -1,5 +1,10 @@
 # AI Chat Herder
 
+[![CI](https://github.com/ivaskonyanhec/ai-chat-herder/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ivaskonyanhec/ai-chat-herder/actions/workflows/ci.yml)
+![.NET 10](https://img.shields.io/badge/.NET-10-512BD4)
+![Angular 21](https://img.shields.io/badge/Angular-21-DD0031)
+![E2E/UAT Playwright](https://img.shields.io/badge/E2E%2FUAT-Playwright-2EAD33)
+
 AI Chat Herder is a classic web-based real-time chat application built around public/private rooms, direct messages, friends, file sharing, moderation, persistent history, unread notifications, and multi-tab presence.
 
 The project targets moderate scale: 300 simultaneous users, up to 1,000 participants per room, and a typical user profile of roughly 20 rooms and 50 contacts.
@@ -32,7 +37,7 @@ Useful status documents:
 | Frontend | Angular 21, Signals, Standalone Components, Tailwind CSS, PrimeNG |
 | E2E/UAT | Playwright + TypeScript |
 | Load testing | k6 + SignalR WebSocket helpers |
-| Runtime | Docker Compose |
+| Runtime | Podman Compose locally; Docker Compose in GitHub Actions |
 
 ## Repository Layout
 
@@ -55,12 +60,12 @@ Useful status documents:
 └── requirements.md
 ```
 
-## Quick Start With Docker
+## Quick Start With Podman
 
 Prerequisites:
 
-- Docker Engine 25+
-- Docker Compose V2
+- Podman 5+
+- `podman compose` support, or the `podman-compose` compatibility package
 - At least 4 GB free RAM
 - At least 3 GB free disk space
 
@@ -71,8 +76,8 @@ cp .env.template .env
 Fill in every `<CHANGE_ME>` value in `.env`, then start the stack:
 
 ```bash
-docker compose up --build -d
-docker compose ps
+podman compose up --build -d
+podman compose ps
 ```
 
 The app is served through the frontend container:
@@ -83,7 +88,8 @@ The app is served through the frontend container:
 
 Backend traffic is routed through the frontend Nginx proxy via `/api/*` and `/hubs/*`; the backend container is not published directly to the host.
 
-For detailed Docker operations, see `DOCKER_SETUP.md`.
+The Compose file is Docker-compatible for CI, but local commands in this README use Podman.
+For detailed container operations, see `DOCKER_SETUP.md`.
 
 ## Local Development
 
@@ -107,6 +113,8 @@ The Angular dev server uses `frontend/proxy.config.json` for API and SignalR pro
 
 ## Tests
 
+GitHub Actions runs the .NET unit suite, Angular unit suite, and Dockerized E2E/UAT suite on every push to `main`.
+
 .NET tests:
 
 ```bash
@@ -123,24 +131,28 @@ npm test
 E2E/UAT tests:
 
 ```bash
-docker compose up --build -d
-cd e2e
-npm install
-BASE_URL=http://localhost npm test
+podman compose up --build -d
+npm --prefix e2e install
+BASE_URL=http://localhost npm --prefix e2e run test:all
 ```
 
-Dockerized E2E run:
+Podman E2E run:
 
 ```bash
-docker compose --profile e2e up --build e2e
+podman compose --profile e2e up --build e2e
 ```
 
-Reports are written to `./e2e-reports/index.html`.
+Reports are organized for agent handoff under `./e2e-reports`:
+
+- `latest/summary.md` and `latest/manifest.json` are the first triage files.
+- `latest/results.json`, `latest/junit.xml`, and `latest/html/index.html` contain detailed results.
+- `latest/artifacts/` contains retained traces, videos, and screenshots.
+- `runs/e2e-uat-YYYYMMDDTHHMMSSZ/` archives each historical run.
 
 Load test:
 
 ```bash
-docker compose run load-tester
+podman compose run load-tester
 ```
 
 The load harness lives in `tests/load/` and currently targets authenticated SignalR messaging/presence flows.

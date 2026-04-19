@@ -71,6 +71,18 @@ test.describe('Friends, blocks, and direct messages', () => {
     await blockedCtx.dispose();
   });
 
+  test('blocked users page lists blocks and can unblock a user', async ({ api, userA, userB, userAPage }) => {
+    await api.blockUser(userA.accessToken, userB.id);
+
+    await userAPage.goto('/app/blocks');
+    await expect(userAPage.getByText(userB.username)).toBeVisible({ timeout: 10_000 });
+
+    await userAPage.locator(`[data-testid="unblock-${userB.id}"]`).click();
+
+    await expect(userAPage.getByText('No blocked users.')).toBeVisible({ timeout: 10_000 });
+    expect((await api.getBlocks(userA.accessToken)).map(b => b.blockedUserId)).not.toContain(userB.id);
+  });
+
   test('direct messages persist to dialog history and support author edit/delete endpoints', async ({ api, userA, userB }) => {
     await becomeFriends(api, userA.accessToken, userB.accessToken, userB.username, userA.id);
     const dialog = await api.createDialog(userA.accessToken, userB.id);
