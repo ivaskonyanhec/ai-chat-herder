@@ -100,7 +100,7 @@
                     <div class="border-l-2 border-current/30 pl-2 mb-1 opacity-70"
                          data-testid="reply-quote">
                       <p class="text-[10px] font-bold">{{ msg.replyTo.sender.username }}</p>
-                      <p class="text-xs truncate max-w-[14rem]">{{ msg.replyTo.content }}</p>
+                      <p class="text-xs truncate max-w-[14rem]" [innerHTML]="renderContent(msg.replyTo.content)"></p>
                     </div>
                   }
                   <p [innerHTML]="renderContent(msg.content)"></p>
