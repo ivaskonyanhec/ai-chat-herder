@@ -1,12 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-
-export interface UnreadContextDto {
-  contextType: string;
-  contextId: string;
-  count: number;
-}
+import type { UnreadContextDto } from './notifications.models';
 
 @Injectable({ providedIn: 'root' })
 export class NotificationsApiService {
