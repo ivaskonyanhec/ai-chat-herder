@@ -28,6 +28,7 @@
             class="w-full flex items-center gap-3 p-4 hover:bg-surface-container-lowest transition-colors text-left"
             [class.bg-surface-container-lowest]="selectedDialog()?.id === dialog.id"
             [class.shadow-sm]="selectedDialog()?.id === dialog.id"
+            [attr.data-testid]="'dialog-item-' + dialog.id"
             (click)="selectDialog(dialog)"
           >
             <div class="w-10 h-10 rounded-full bg-surface-container-high overflow-hidden shrink-0 flex items-center justify-center">
@@ -164,6 +165,7 @@
           </button>
           <button
             class="px-4 py-3 bg-primary text-on-primary text-sm font-bold rounded-xl hover:bg-primary-dim transition-colors disabled:opacity-50"
+            data-testid="dm-send-btn"
             [disabled]="isSending() || (!messageText().trim() && !pendingAttachment()) || selectedDialog()!.isFrozen"
             (click)="sendMessage()"
           >
