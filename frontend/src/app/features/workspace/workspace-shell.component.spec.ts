@@ -13,6 +13,7 @@ import { NotificationsApiService } from '../../core/notifications/notifications-
 import { RoomsApiService } from '../../core/rooms/rooms-api.service';
 import { FriendsApiService } from '../../core/friends/friends-api.service';
 import type { RoomDto } from '../../core/rooms/rooms.models';
+import type { RoomInvitationReceivedEvent } from '../../core/signalr/hub.models';
 import { InvitationsApiService } from '../../core/invitations/invitations-api.service';
 
 type HubStub = { connect: ReturnType<typeof vi.fn>; disconnect: ReturnType<typeof vi.fn>; presenceMap?: unknown; addedToRoom?: unknown; invitationReceived?: unknown };
@@ -344,6 +345,54 @@ describe('WorkspaceShellComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     expect(fixture.componentInstance.pendingInvitationCount()).toBe(2);
+  });
+
+  it('increments pendingInvitationCount when invitationReceived signal fires', async () => {
+    const invitationReceivedSig = signal<RoomInvitationReceivedEvent | null>(null);
+    const customPresence: HubStub = {
+      connect: vi.fn().mockResolvedValue(undefined),
+      disconnect: vi.fn().mockResolvedValue(undefined),
+      presenceMap: signal(new Map()).asReadonly(),
+      addedToRoom: signal(null).asReadonly(),
+      invitationReceived: invitationReceivedSig.asReadonly(),
+    };
+    const { providers } = buildProviders({ presenceService: customPresence });
+    TestBed.configureTestingModule({ imports: [WorkspaceShellComponent], providers });
+    const fixture = TestBed.createComponent(WorkspaceShellComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(fixture.componentInstance.pendingInvitationCount()).toBe(0);
+    invitationReceivedSig.set({ invitationId: 'x', roomId: 'r', roomName: 'Room', fromUserId: 'u' });
+    TestBed.flushEffects();
+    expect(fixture.componentInstance.pendingInvitationCount()).toBe(1);
+  });
+
+  it('resets pendingInvitationCount to 0 when navigating to /app/invitations', async () => {
+    const { providers } = buildProviders();
+    // Replace the default provideRouter (index 0) with one that includes /app/invitations
+    const providersWithRoute = [
+      provideRouter([
+        { path: 'auth', component: EmptyAuthComponent },
+        { path: 'app/invitations', component: EmptyAuthComponent },
+      ]),
+      ...providers.slice(1),
+    ];
+    TestBed.configureTestingModule({ imports: [WorkspaceShellComponent], providers: providersWithRoute });
+    const fixture = TestBed.createComponent(WorkspaceShellComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    fixture.componentInstance.pendingInvitationCount.set(5);
+    fixture.detectChanges();
+    expect(fixture.componentInstance.pendingInvitationCount()).toBe(5);
+
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/app/invitations');
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(fixture.componentInstance.pendingInvitationCount()).toBe(0);
   });
 
   it('filters publicRooms by searchQuery', async () => {

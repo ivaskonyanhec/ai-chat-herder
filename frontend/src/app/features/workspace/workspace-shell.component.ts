@@ -1,4 +1,4 @@
-import { Component, DestroyRef, OnInit, OnDestroy, computed, effect, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, OnDestroy, computed, effect, inject, signal, untracked } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter } from 'rxjs';
@@ -65,7 +65,7 @@ export class WorkspaceShellComponent implements OnInit, OnDestroy {
     });
     effect(() => {
       if (this.presence.invitationReceived()) {
-        this.pendingInvitationCount.update(n => n + 1);
+        untracked(() => this.pendingInvitationCount.update(n => n + 1));
       }
     });
   }
@@ -87,7 +87,7 @@ export class WorkspaceShellComponent implements OnInit, OnDestroy {
       )
       .subscribe(event => {
         this.loadRooms();
-        if (event.urlAfterRedirects === '/app/invitations') {
+        if (event.urlAfterRedirects.startsWith('/app/invitations')) {
           this.pendingInvitationCount.set(0);
         }
       });
