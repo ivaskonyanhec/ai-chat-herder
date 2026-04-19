@@ -77,14 +77,14 @@
           <form class="space-y-6" [formGroup]="loginForm" (ngSubmit)="submitLogin()">
             <div class="space-y-1">
               <label class="text-xs font-bold uppercase tracking-widest text-on-surface-variant" for="login-email">Email Address</label>
-              <div class="relative group">
-                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-sm transition-colors group-focus-within:text-primary">mail</span>
+              <div class="flex items-center gap-3 bg-surface-container-low rounded-lg px-4 py-3 border-b-2 border-transparent focus-within:border-primary transition-all group">
+                <span class="material-symbols-outlined text-outline transition-colors group-focus-within:text-primary shrink-0" style="font-size:18px">mail</span>
                 <input
                   pInputText
                   [invalid]="loginFieldHasError('email')"
                   id="login-email"
                   data-testid="login-email"
-                  class="w-full pl-10 pr-4 py-3 bg-surface-container-low border-none focus:ring-0 rounded-lg text-sm placeholder:text-outline/50 border-b-2 border-transparent focus:border-primary transition-all"
+                  class="flex-1 bg-transparent border-none focus:ring-0 text-sm placeholder:text-outline/50 outline-none p-0"
                   type="email"
                   formControlName="email"
                   placeholder="name@firm.com"
@@ -99,14 +99,14 @@
                 <label class="text-xs font-bold uppercase tracking-widest text-on-surface-variant" for="login-password">Password</label>
                 <a class="text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary-dim transition-colors" href="#">Forgot password?</a>
               </div>
-              <div class="relative group">
-                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-sm transition-colors group-focus-within:text-primary">lock</span>
+              <div class="flex items-center gap-3 bg-surface-container-low rounded-lg px-4 py-3 border-b-2 border-transparent focus-within:border-primary transition-all group">
+                <span class="material-symbols-outlined text-outline transition-colors group-focus-within:text-primary shrink-0" style="font-size:18px">lock</span>
                 <input
                   pInputText
                   [invalid]="loginFieldHasError('password')"
                   id="login-password"
                   data-testid="login-password"
-                  class="w-full pl-10 pr-4 py-3 bg-surface-container-low border-none focus:ring-0 rounded-lg text-sm placeholder:text-outline/50 border-b-2 border-transparent focus:border-primary transition-all"
+                  class="flex-1 bg-transparent border-none focus:ring-0 text-sm placeholder:text-outline/50 outline-none p-0"
                   type="password"
                   formControlName="password"
                   placeholder="••••••••"

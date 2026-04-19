@@ -274,14 +274,19 @@ Format: `[Timestamp] | Task | Reasoning | Changes`
 // Current (WRONG):
 const res = await ctx.delete(`/api/rooms/${roomId}/members/${userId}`);
 ```
+
 AGENT.md §9 specifies the ban operation as:
+
 ```
 POST   /rooms/{id}/members/{userId}/ban    [admin]
 ```
+
 There is **no** `DELETE /rooms/{id}/members/{userId}` in the spec. The comment on line 86 fabricates this endpoint. The correct call is:
+
 ```ts
 const res = await ctx.post(`/api/rooms/${roomId}/members/${userId}/ban`);
 ```
+
 **Impact:** The ban test (`05-admin.spec.ts`) and the non-member file access test (`04-attachments.spec.ts`) call a non-existent endpoint, meaning ban state is never actually set — the file-access 403 and the "banned user cannot rejoin" tests are structurally void.
 
 ---
@@ -292,14 +297,19 @@ const res = await ctx.post(`/api/rooms/${roomId}/members/${userId}/ban`);
 // Current (WRONG):
 await promoteCtx.post(`/api/rooms/${room.id}/admins/${userB.id}`);
 ```
+
 AGENT.md §9 specifies:
+
 ```
 POST   /rooms/{id}/members/{userId}/make-admin    [owner]
 ```
+
 Correct call:
+
 ```ts
 await promoteCtx.post(`/api/rooms/${room.id}/members/${userB.id}/make-admin`);
 ```
+
 **Impact:** The "owner cannot be banned by admin" test never actually promotes User B to admin — the scenario under test never occurs, making this test meaningless.
 
 ---
@@ -307,10 +317,12 @@ await promoteCtx.post(`/api/rooms/${room.id}/members/${userB.id}/make-admin`);
 #### MEDIUM — `__presenceHub` optional-chaining silently swallows missing implementation (`e2e/tests/03-presence.spec.ts:66`, `:73`)
 
 Lines 66 and 73 use `?.invoke(...)` optional chaining:
+
 ```ts
-await (window as any).__presenceHub?.invoke('SetAfk');   // line 66
-await (window as any).__presenceHub?.invoke('SetActive'); // line 73
+await (window as any).__presenceHub?.invoke("SetAfk"); // line 66
+await (window as any).__presenceHub?.invoke("SetActive"); // line 73
 ```
+
 If `PresenceService` has not yet exposed `__presenceHub` in dev mode, these calls silently become no-ops. The `data-status` assertions that follow will then pass trivially (status never changes) rather than failing loudly. Only the first AFK test (line 45) correctly throws. All three presence tests must use the same throwing guard pattern as line 45.
 
 ---
@@ -321,6 +333,7 @@ If `PresenceService` has not yet exposed `__presenceHub` in dev mode, these call
 COPY e2e/package.json e2e/package-lock.json ./
 RUN npm ci --prefer-offline
 ```
+
 `e2e/package-lock.json` does not exist in the repository (`ls e2e/` confirms only `package.json`). `npm ci` requires a lockfile. The Docker image will fail to build. Fix: run `npm install` locally to generate `package-lock.json` and commit it, or switch to `npm install --prefer-offline` in the Dockerfile (weaker reproducibility guarantee).
 
 ---
@@ -328,11 +341,13 @@ RUN npm ci --prefer-offline
 #### LOW — Nginx config missing security response headers (`frontend/nginx.conf`)
 
 The proxy config sets no HTTP security headers. At minimum, add to the `server {}` block:
+
 ```nginx
 add_header X-Frame-Options "SAMEORIGIN" always;
 add_header X-Content-Type-Options "nosniff" always;
 add_header Referrer-Policy "strict-origin-when-cross-origin" always;
 ```
+
 `X-Content-Type-Options: nosniff` is particularly important given the app serves binary file attachments (`application/octet-stream`) through Nginx — without it, browsers may sniff MIME type and execute content as script.
 
 ---
@@ -390,6 +405,7 @@ Log states `ChatHerder.sln` was created. The actual file on disk is `ChatHerder.
 The scaffold sets `AllowedHosts` to wildcard. Per AGENT.md §7 (Security Model), host filtering must be explicit from day one. Wildcard must not be committed — set `"AllowedHosts": "localhost"` for dev and document the production override in `appsettings.Production.json`.
 
 **Required actions before resubmit:**
+
 1. Run `ng new chat-herder --standalone --routing --style scss --ssr false` inside `frontend/`, commit all generated files, add `frontend/public/tokens.css` from `designs/tokens.css`.
 2. Create `src/ChatHerder.Domain/Common/Result.cs` with the discriminated-union Result pattern.
 3. Add `<ProjectReference>` items to all `.csproj` files per Clean Architecture dependency rules.
@@ -402,20 +418,17 @@ The scaffold sets `AllowedHosts` to wildcard. Per AGENT.md §7 (Security Model),
 
 `[2026-04-18 T61-QA]` | **[QA] T61 Phase 1 Verification** | QA: SDET | Three smoke tests: (1) `dotnet build ChatHerder.sln` → 0 errors, 0 warnings; (2) `GET /api/health` on running API → `{"status":"healthy","timestamp":"…"}` HTTP 200; (3) `tsc --noEmit` on Angular project → 0 TypeScript errors. All PASS. | **[VERIFIED]**
 
-
 `[2026-04-18 T62]` | **[BUILD] Phase 2 — Domain entities, Application port interfaces, EF Core AppDbContext, InitialSchema migration** | Phase 1 scaffold [VERIFIED]; next logical step is all domain entities required by every future endpoint — without them no use-case or endpoint can be written | Files created: `src/ChatHerder.Domain/Enums/` (5 enums: RoomVisibility, MemberRole, InvitationStatus, FriendRequestStatus, ContextType), `src/ChatHerder.Domain/Entities/` (18 entity classes), `src/ChatHerder.Application/Ports/` (IFileStorage, IMessageBus, IEmailSender), `src/ChatHerder.Infrastructure/Persistence/AppDbContext.cs` (fluent config, 12 unique indexes, jsonb, composite PK), `src/ChatHerder.Infrastructure/Migrations/` (InitialSchema); Modified: `src/ChatHerder.API/Program.cs` (AddDbContext + MigrateAsync), `src/ChatHerder.API/appsettings.json` (ConnectionStrings with REPLACE_VIA_ENV sentinel). Auditor conditions applied: password placeholder replaced with REPLACE_VIA_ENV sentinel; ContextType Redis casing tracked for Phase 3. | **[BUILD]**
 
 `[2026-04-18 T62-AUDIT]` | **[AUDIT] T62 Phase 2 Review** | Auditor: Security Architect & Code Quality Expert | All 12 checklist items PASS: zero Domain NuGet deps, correct layer references, nullable clean, ContextSequences POCO, 3 ban types separate, User1Id<User2Id comments, all 7 critical indexes, jsonb, IConfiguration connection string, MigrateAsync, postgres hostname. Two MEDIUM conditions resolved pre-QA: (1) `Password=changeme` → `Password=REPLACE_VIA_ENV`; (2) AllowedHosts kept as `localhost` (Phase 1 security decision maintained — Auditor's `*` recommendation rejected as it reintroduces Defect 5). Phase 3 note: ContextType enum string casing ("Room"/"Dialog") must be `.ToLowerInvariant()` when constructing Redis keys. | **[APPROVED]**
 
 `[2026-04-18 T62-QA]` | **[QA] T62 Phase 2 Verification** | QA: SDET | 7/7 tests pass: dotnet build 0 errors 0 warnings; 18 entity files present; 3 port interfaces present; 3 migration files present; all 7 critical unique indexes in generated SQL; ContextSequences composite PK + jsonb confirmed; Domain zero NuGet deps. Advisory: dotnet-ef tools v9.0.0 vs runtime v10.0.6 — non-fatal, no correctness impact, update recommended. | **[VERIFIED]**
 
-
 ---
 
 `[2026-04-18 T63]` | **[BUILD] Phase 3 — JWT authentication, Argon2id password hashing, Redis session gate, full middleware, auth endpoints** | Phase 2 [VERIFIED]; domain entities + schema exist; authentication is the gate every subsequent endpoint depends on — no protected endpoint can be built until `[Authorize]` is fully wired with real JWT validation and Redis session revocation | Files to create: `src/ChatHerder.Application/Ports/ISessionStore.cs`, `IPasswordHasher.cs`, `IJwtTokenService.cs`, `src/ChatHerder.Application/DTOs/AuthDtos.cs`; `src/ChatHerder.Infrastructure/Security/JwtSettings.cs`, `ArgonPasswordHasher.cs`, `JwtTokenService.cs`; `src/ChatHerder.Infrastructure/Cache/RedisSessionStore.cs`; `src/ChatHerder.Infrastructure/Email/SmtpEmailSender.cs`; `src/ChatHerder.Infrastructure/InfrastructureExtensions.cs`; `src/ChatHerder.API/Endpoints/AuthEndpoints.cs` (8 routes), `SessionsEndpoints.cs` (3 routes); Files to modify: `src/ChatHerder.API/Middleware/BanCheckMiddleware.cs` (full impl), `SessionValidationMiddleware.cs` (full impl), `Program.cs` (JWT wiring + AddInfrastructure + endpoint groups), `appsettings.json` (Redis + Jwt sections). | **[BUILD]**
 
 `[2026-04-18 T63-FIX]` | **[FIX] T63 Auditor BLOCKING — Login timing side-channel** | Auditor item 14 FAIL: `||` short-circuit meant Argon2id was skipped for unknown emails (<1ms vs ~100ms), enabling user enumeration | Added `SentinelHash` constant (`"AAAAAAAAAAAAAAAAAAAAAA==.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="`) to `AuthEndpoints`. Login now sets `hashToVerify = user?.PasswordHash ?? SentinelHash` and calls `hasher.Verify` unconditionally — full Argon2id runs for both missing and wrong-password paths. Commit: `d0b50b6`. Also updated AGENT.md §3.1 + §21 (TDD mandate) and CLAUDE.md per user requirement. Commit: `f10dfcd`. | **[FIXED]**
-
 
 ---
 
@@ -509,7 +522,7 @@ The scaffold sets `AllowedHosts` to wildcard. Per AGENT.md §7 (Security Model),
 
 `[2026-04-18 T100]` | **Fix Phase 4c review issues** | ChatService null-token guard, WorkspaceShellComponent OnDestroy, PresenceService onclose signal, UnreadService.clearAll on logout | frontend/src/app/core/signalr/chat.service.ts, presence.service.ts, workspace-shell.component.ts, workspace-shell.component.spec.ts
 
-`[2026-04-18 T101]` | **Phase 4c complete — Angular SignalR hub clients** | Implemented full SignalR client layer: @microsoft/signalr installed; hub.models.ts (verified against server source — corrected presenceStatus field, RemovedFromRoomEvent shape, DialogMessageDto.sender); HubConnectionFactory InjectionToken; UnreadService (signal-based unread map); PresenceService (AFK tracking 60s/5s/1s, heartbeat 30s, onreconnected room re-join, onclose signal, __presenceHub devMode); ChatService (all 10 hub invocations, 8 event handlers, null-token guard); WorkspaceShellComponent wired (OnInit connect, OnDestroy disconnect, clearAll on logout). Commits: 659f8f9 → 8c2244c. Tests: 44/44 passing. | frontend/src/app/core/signalr/, frontend/src/app/features/workspace/workspace-shell.component.ts
+`[2026-04-18 T101]` | **Phase 4c complete — Angular SignalR hub clients** | Implemented full SignalR client layer: @microsoft/signalr installed; hub.models.ts (verified against server source — corrected presenceStatus field, RemovedFromRoomEvent shape, DialogMessageDto.sender); HubConnectionFactory InjectionToken; UnreadService (signal-based unread map); PresenceService (AFK tracking 60s/5s/1s, heartbeat 30s, onreconnected room re-join, onclose signal, \_\_presenceHub devMode); ChatService (all 10 hub invocations, 8 event handlers, null-token guard); WorkspaceShellComponent wired (OnInit connect, OnDestroy disconnect, clearAll on logout). Commits: 659f8f9 → 8c2244c. Tests: 44/44 passing. | frontend/src/app/core/signalr/, frontend/src/app/features/workspace/workspace-shell.component.ts
 
 `[2026-04-18 T102]` | **[STATUS] Project progress assessment — ~45–50% complete** | Manual audit of all T1–T100 log entries cross-referenced against requirements.md to establish current completion state | **Architecture/Design:** 100% — all decisions locked (T1–T58), AGENT.md/CLAUDE.md/ARCHITECTURE.md authoritative. **Backend:** Auth+sessions VERIFIED (T61–T63, ~95%); REST endpoints Phase 4a exist but no AUDIT/VERIFIED pass (T79–T81, ~65%); SignalR hubs built but no VERIFIED (T82–T84, ~65%); `DialogEndpoints.cs` missing — DM REST gap (~10%); file upload endpoint unconfirmed (~20%); integration tests BLOCKED by Docker daemon unavailability (~15%). **Frontend:** Auth page + sessions screen VERIFIED (~90%/~85%); all other 9+ screens are pixel-accurate static mockups only — NOT wired to real data (~25%); SignalR services (PresenceService/ChatService/UnreadService) implemented and wired into WorkspaceShellComponent (T94–T100, ~80%). **E2E:** 44 tests typecheck; run BLOCKED by Docker (~20%). **Jabber/XMPP:** 0% — explicitly gated. **Critical gap:** no Angular component beyond auth/sessions reads from the API or reacts to hub events. Next phase must wire each feature screen to live data.
 
@@ -543,7 +556,7 @@ The scaffold sets `AllowedHosts` to wildcard. Per AGENT.md §7 (Security Model),
 
 `[2026-04-19 T116]` | **[Phase 4f T1] Extend IFileStorage with OpenReadAsync + implement LocalFileStorage** | TDD: wrote failing test (RED — CS0234/CS0246 compile errors), then implemented. Added `OpenReadAsync(string storagePath, CancellationToken ct = default) → Task<Stream>` to `IFileStorage`. Created `LocalFileStorage` (primary-constructor, `IConfiguration`-based `Storage:BasePath`) in `ChatHerder.Infrastructure.Storage` namespace with `SaveAsync` (GUID-subfolder, directory auto-create), `DeleteAsync` (no-op when absent), and `OpenReadAsync` (File.OpenRead). 4/4 unit tests GREEN; full solution build 0 errors. | Files: `src/ChatHerder.Application/Ports/IFileStorage.cs`, `src/ChatHerder.Infrastructure/Storage/LocalFileStorage.cs`, `tests/ChatHerder.Unit.Tests/Infrastructure/LocalFileStorageTests.cs`. | **[BUILD]**
 
-`[2026-04-19 T117]` | **[Phase 4f T2] POST /files/upload endpoint with size limits** | TDD: wrote failing test (RED — `FilesEndpoints` type not found, CS0234), then implemented. Created `FilesEndpoints.cs` in `ChatHerder.API.Endpoints` namespace with: `MapFilesEndpoints` (POST /upload with `DisableAntiforgery()` + GET /{id} stub), `UploadFileInternal`/`GetFileInternal` internal wrappers for testability, and `UploadFile` handler enforcing image/* → 3 MB / all others → 20 MB size limits (HTTP 413), 401 on missing user_id claim, 400 on null file, 201 with `AttachmentDto` on success. `GetFile` stub returns 501 (implemented in Task 3). 5/5 upload tests GREEN; full suite 67/67 GREEN, 0 regressions. | Files: `src/ChatHerder.API/Endpoints/FilesEndpoints.cs`, `tests/ChatHerder.Unit.Tests/Endpoints/FilesEndpointsTests.cs`. | **[BUILD]**
+`[2026-04-19 T117]` | **[Phase 4f T2] POST /files/upload endpoint with size limits** | TDD: wrote failing test (RED — `FilesEndpoints` type not found, CS0234), then implemented. Created `FilesEndpoints.cs` in `ChatHerder.API.Endpoints` namespace with: `MapFilesEndpoints` (POST /upload with `DisableAntiforgery()` + GET /{id} stub), `UploadFileInternal`/`GetFileInternal` internal wrappers for testability, and `UploadFile` handler enforcing image/\* → 3 MB / all others → 20 MB size limits (HTTP 413), 401 on missing user_id claim, 400 on null file, 201 with `AttachmentDto` on success. `GetFile` stub returns 501 (implemented in Task 3). 5/5 upload tests GREEN; full suite 67/67 GREEN, 0 regressions. | Files: `src/ChatHerder.API/Endpoints/FilesEndpoints.cs`, `tests/ChatHerder.Unit.Tests/Endpoints/FilesEndpointsTests.cs`. | **[BUILD]**
 
 `[2026-04-19 T118]` | **[QA][Codex] Add E2E coverage for Phase 4f file endpoints** | New implementation mapped `/api/files/upload` and `/api/files/{id}` with LocalFileStorage and authorization. Added Playwright API/SignalR tests for file upload/download, image upload, direct URL authorization for rooms and dialogs, size limits, filename/comment preservation, and banned-user file access denial without changing production code; converted stale UAT file-security skips into executable tests. Updated QA matrix from 28 COVERED / 20 PARTIAL / 18 BLOCKED to 34 COVERED / 19 PARTIAL / 13 BLOCKED. Verification: `cd e2e && npm run typecheck` passed; `npx playwright test --list` found 61 tests in 12 files. Full execution still requires the Docker/app stack. | e2e/helpers/api.helpers.ts, e2e/tests/04-attachments.spec.ts, e2e/tests/uat/05-file-security.uat.spec.ts, docs/TEST_COVERAGE_MATRIX.md, docs/QA_SELF_AUDIT.md, DEVELOPMENT_LOG.md | **[QA]**
 
@@ -600,6 +613,7 @@ The scaffold sets `AllowedHosts` to wildcard. Per AGENT.md §7 (Security Model),
 `[2026-04-19 T144]` | **[AUDIT][Cloned agent 2] Full Project Readiness Assessment — 68% Production-Ready** | Performed comprehensive codebase + spec audit across all phases, subsystems, tests, and infrastructure. Verified file-by-file against ARCHITECTURE.md, AGENT.md §9, and DEVELOPMENT_LOG.md. **Overall: ~68% production-ready.** Full findings below.
 
 **Phase status:**
+
 - ✅ DONE (10/15): Phase 1 (scaffold), 2 (domain/EF), 3 (auth/sessions), 4a (REST endpoints — all 59/59 routes), 4b (SignalR hubs), 4c (Angular SignalR clients), 4d (Angular REST wiring), 4e (friends/blocks/DMs social), 4f (file storage + orphan cleanup), 4i (RabbitMQ + ActivityConsumer)
 - 🟡 PARTIAL (3/15): 4g (admin — backend 100%, ManageRoomComponent 50%, PlatformBansComponent 20%/template-only), 4h (blocks+unread — UnreadService complete, sidebar badge display missing/T75), 4j (account deletion — soft-delete+cascade 100%, owned-room file cleanup + ForceDisconnect missing/~60%)
 - ❌ BLOCKED (1/15): 4k (integration+E2E execution — Docker/Podman daemon unavailable)
@@ -620,6 +634,7 @@ The scaffold sets `AllowedHosts` to wildcard. Per AGENT.md §7 (Security Model),
 | CI/DevOps | 90% | GitHub Actions, docker-compose, env.example; Podman runtime untested |
 
 **Critical remaining work (ordered by impact):**
+
 1. **Phase 4j** — Owned-room cascade delete (messages + files via IFileStorage.DeleteAsync) + ForceDisconnect broadcast via IHubContext in `AuthEndpoints.cs` (~3h)
 2. **T75** — Sidebar unread badge `@if` element in `workspace-shell.component.html` (1h)
 3. **ManageRoomComponent** — `deleteRoom()` handler + navigation in `manage-room.ts` (1h)
@@ -628,7 +643,7 @@ The scaffold sets `AllowedHosts` to wildcard. Per AGENT.md §7 (Security Model),
 6. **Room chat E2E selectors** — Add `data-testid="message-{id}"` in `room-chat.html` (30min)
 7. **E2E execution** — Run all 69 Playwright tests vs live stack once Docker available (~2h incl. fixes)
 
-**Build + test snapshot:** .NET build 0 errors (1 nullable warning); 92/92 backend unit tests GREEN; 109/109 Angular unit tests GREEN; 69 E2E tests typecheck-only (not executed). **Estimated time to production: ~11 hours of implementation + E2E execution.** | Files inspected: ARCHITECTURE.md, AGENT.md, DEVELOPMENT_LOG.md, docs/TEST_COVERAGE_MATRIX.md, all src/ChatHerder.*/Endpoints/*.cs, all frontend/src/app/features/**/*.ts. No code changes made. | **[AUDIT]**
+**Build + test snapshot:** .NET build 0 errors (1 nullable warning); 92/92 backend unit tests GREEN; 109/109 Angular unit tests GREEN; 69 E2E tests typecheck-only (not executed). **Estimated time to production: ~11 hours of implementation + E2E execution.** | Files inspected: ARCHITECTURE.md, AGENT.md, DEVELOPMENT_LOG.md, docs/TEST_COVERAGE_MATRIX.md, all src/ChatHerder._/Endpoints/_.cs, all frontend/src/app/features/**/\*.ts. No code changes made. | **[AUDIT]\*\*
 
 `[2026-04-19 T145]` | **[OPS][Codex] Fix frontend container build context for design tokens** | Podman frontend image reached Angular production build and failed to resolve `../designs/tokens.css`. Root cause: `docker-compose.yml` used `frontend` as the build context, so the repository-level `designs/` directory was intentionally outside the Docker context even though `frontend/angular.json` references it as the canonical design-token source. Patch Compose/frontend Dockerfile to build from the repo root while keeping the Angular token import unchanged, then rerun Podman Compose with `env.example`. | `docker-compose.yml`, `frontend/Dockerfile`, `DEVELOPMENT_LOG.md` | **[OPS]**
 
@@ -679,6 +694,7 @@ The scaffold sets `AllowedHosts` to wildcard. Per AGENT.md §7 (Security Model),
 `[2026-04-19T11:32:16Z T167]` | **UI-Audit | Review Status: MISMATCH** | Issues found across 7 components — see recommendations below. | `workspace-shell.component.html`, `room-chat.html`, `direct-messages.html`, `contacts-home.html`, `platform-bans.html`, `rooms-home.component.html`, `profile-settings.html`, `tailwind.css` | **[UI-AUDIT]**
 
 Issues:
+
 1. **Avatar non-circularity [CRITICAL]** — `tailwind.css @theme inline` maps `rounded-full → var(--radius-xl) = 0.75rem (12px)`. Status dots (10px) still circle. Avatars ≥ 28px are rounded rectangles, not circles (12px < 14px = 50%).
 2. **DM bubble roundness violation [HIGH]** — `rounded-2xl` in `direct-messages.html:91,130` is unmapped in `@theme inline`, so Tailwind uses its default `1rem` — exceeds `--radius-lg` (0.5rem) max. Bubble aesthetic also conflicts with "Structured Clarity / not playful" principle (DESIGN.md §1).
 3. **Secondary/tertiary colors missing from @theme [HIGH]** — `bg-secondary-container`, `text-on-secondary-container` used in `contacts-home.html:40` but these tokens are absent from `tailwind.css @theme inline`. The utility classes generate no output — "Find Professionals" button likely renders with transparent background.
@@ -694,6 +710,7 @@ Issues:
 13. **Minor No-Line violations [LOW]** — Internal section dividers `border-b border-surface-container` inside `contacts-home.html:132,216` and `profile-settings.html:75,111` violate the No-Line Rule within cards (not just at zone boundaries).
 
 Recommendations:
+
 1. **Avatar circles**: Change `rounded-full` on avatar `<img>` / `<div>` elements to `[style.border-radius]="'50%'"` or add `rounded-full` override in `@theme inline` mapping to `9999px`. Status dots are unaffected.
 2. **DM bubbles**: Replace `rounded-2xl` with `rounded-xl` (maps to 0.5rem via remap) on both active and deleted message bubbles. Consider adopting a left-aligned structured row (like room-chat) instead of the consumer-bubble layout for design system consistency.
 3. **Secondary/tertiary in @theme**: Add `--color-secondary`, `--color-secondary-container`, `--color-on-secondary-container` (and tertiary equivalents) to the `@theme inline` block in `tailwind.css` using the same `var()` pattern.
@@ -712,6 +729,7 @@ Recommendations:
 `[2026-04-19T11:49:21Z T169]` | **UI-Audit Round 2 | Review Status: MISMATCH** | Second full-pass audit after T168 fixes. Confirmed T168 changes are in place (status dot tokens, rounded-full, secondary tokens, DM borders). New findings across 4 previously-unaudited templates. See recommendations below. | `manage-room.html`, `sessions-panel.html`, `friend-requests.html`, `room-chat.html`, `contacts-home.html`, `profile-settings.html`, `workspace-shell.component.html`, `tailwind.css` | **[UI-AUDIT]**
 
 T168 confirmation (all PASS):
+
 - room-chat.html: status dot w-2 h-2, border-surface-container-lowest, bg-status-online/afk ✅
 - room-chat.html: deleted message text-on-surface-variant ✅
 - direct-messages.html: all 5 structural borders removed, bg-surface-container-low on composer ✅
@@ -723,6 +741,7 @@ T168 confirmation (all PASS):
 New Issues:
 
 HIGH:
+
 1. manage-room.html:129 — Status dot uses [style.background-color] with hardcoded hex (#4caf50, #ffb300, #717c82). Bypasses design token system; not themeable. Fix: refactor to [class.bg-status-online]/[class.bg-status-afk]/[class.bg-outline] individual bindings (same pattern fixed in room-chat T168).
 2. manage-room.html:128 — Status dot w-3 h-3 (12px) vs spec 8px (--status-dot-size). Fix: w-2 h-2.
 3. manage-room.html:135 — bg-primary-fixed text-on-primary-fixed tokens not in tailwind.css @theme inline → Admin badge renders with no background. Same applies to contacts-home.html:40 hover:bg-secondary-fixed. Fix: add --color-primary-fixed, --color-on-primary-fixed, --color-secondary-fixed, --color-on-secondary-fixed and their -dim variants to @theme inline.
@@ -730,21 +749,12 @@ HIGH:
 5. sessions-panel.html:62 — No-Line Rule: divide-y divide-surface-container inserts 1px border-top between all session rows. Fix: replace with space-y-0 + individual row hover:bg-surface-container-low; rely on hover highlight and row padding for separation.
 6. sessions-panel.html:56 — No-Line Rule: border-b border-surface-container on "Other Active Connections" section header. Fix: add bg-surface-container to header div for tonal separation instead.
 
-MEDIUM:
-7. manage-room.html:11,22,33,44,57 — Active tab nav item uses [class.border-l-4] + [class.border-primary]. 4px drawn accent line contradicts the No-Line principle (active state should be indicated by background shift, not a border). [class.bg-surface-container-high] is already applied — the border is redundant. Fix: remove [class.border-l-4] and [class.border-primary] bindings from all 5 nav items; adjust pl-2/pl-3 to a consistent value since pl-2 is applied via border-l-4 offset.
-8. manage-room.html:70 — border-t border-surface-container on delete-room footer inside sidebar. Fix: replace with bg-surface-container-high tonal shift.
-9. manage-room.html:269 — border-t border-surface-container on members-tab footer. Fix: replace with bg-surface-container-low tonal shift.
-10. room-chat.html:105 — Composer div uses border-t border-outline-variant/10 (ghost border as structural separator). Should use bg-surface-container-low for tonal separation. Fix: replace border-t border-outline-variant/10 with bg-surface-container-low (keep existing bg-surface-container-lowest on class, or remove it and rely on the low surface).
-11. room-chat.html:117 — Composer textarea uses focus:outline-none (no visible focus indicator). DESIGN.md specifies border-bottom: 2px solid primary OR outline 1px solid rgba(84,95,115,0.5) on focus. Fix: add focus:border-b-2 focus:border-primary transition-colors and remove focus:outline-none.
-12. friend-requests.html:85 — No-Line Rule: border-b border-surface-container last:border-0 item dividers inside sent-requests list. Fix: remove border-b, use space-y-3 + row padding for separation.
+MEDIUM: 7. manage-room.html:11,22,33,44,57 — Active tab nav item uses [class.border-l-4] + [class.border-primary]. 4px drawn accent line contradicts the No-Line principle (active state should be indicated by background shift, not a border). [class.bg-surface-container-high] is already applied — the border is redundant. Fix: remove [class.border-l-4] and [class.border-primary] bindings from all 5 nav items; adjust pl-2/pl-3 to a consistent value since pl-2 is applied via border-l-4 offset. 8. manage-room.html:70 — border-t border-surface-container on delete-room footer inside sidebar. Fix: replace with bg-surface-container-high tonal shift. 9. manage-room.html:269 — border-t border-surface-container on members-tab footer. Fix: replace with bg-surface-container-low tonal shift. 10. room-chat.html:105 — Composer div uses border-t border-outline-variant/10 (ghost border as structural separator). Should use bg-surface-container-low for tonal separation. Fix: replace border-t border-outline-variant/10 with bg-surface-container-low (keep existing bg-surface-container-lowest on class, or remove it and rely on the low surface). 11. room-chat.html:117 — Composer textarea uses focus:outline-none (no visible focus indicator). DESIGN.md specifies border-bottom: 2px solid primary OR outline 1px solid rgba(84,95,115,0.5) on focus. Fix: add focus:border-b-2 focus:border-primary transition-colors and remove focus:outline-none. 12. friend-requests.html:85 — No-Line Rule: border-b border-surface-container last:border-0 item dividers inside sent-requests list. Fix: remove border-b, use space-y-3 + row padding for separation.
 
-LOW:
-13. contacts-home.html:132,216 + profile-settings.html:75,111 — Internal section dividers (border-b border-surface-container) inside cards/forms. Pre-existing, minor.
-14. contacts-home.html pending requests + friend-requests.html "Suggested for you" — Static hardcoded images/names (Diana Prince, Kenji Ito, David Kessler, Leah Thompson) not wired to API.
-15. room-chat.html — Message grouping not implemented (every message shows full avatar+name regardless of consecutive same-sender). DESIGN.md §7 requires suppressing repeat headers within a group.
-16. workspace-shell.html — No mobile sidebar collapse/hamburger on <aside class="w-72 shrink-0">.
+LOW: 13. contacts-home.html:132,216 + profile-settings.html:75,111 — Internal section dividers (border-b border-surface-container) inside cards/forms. Pre-existing, minor. 14. contacts-home.html pending requests + friend-requests.html "Suggested for you" — Static hardcoded images/names (Diana Prince, Kenji Ito, David Kessler, Leah Thompson) not wired to API. 15. room-chat.html — Message grouping not implemented (every message shows full avatar+name regardless of consecutive same-sender). DESIGN.md §7 requires suppressing repeat headers within a group. 16. workspace-shell.html — No mobile sidebar collapse/hamburger on <aside class="w-72 shrink-0">.
 
 Recommendations (priority order):
+
 1. Add missing fixed-palette tokens to tailwind.css @theme inline (primary-fixed, secondary-fixed families).
 2. Fix manage-room.html status dot: hardcoded hex → [class.bg-status-online/afk/outline] + w-2 h-2.
 3. Remove No-Line violations: manage-room sidebar border, manage-room footer borders, sessions section-header border, sessions divide-y, friend-requests item border-b.
@@ -763,13 +773,13 @@ Recommendations (priority order):
 
 **Results matrix:**
 
-| Suite | Result | Count |
-|---|---|---|
-| .NET unit | ✅ PASS | 100/100 |
-| .NET integration | ✅ PASS | 2/2 |
-| Angular unit | ✅ PASS | 114/114 |
-| E2E typecheck | ✅ PASS | 0 errors |
-| E2E Playwright | ⚠️ 1 FAIL | 75 pass · 8 skip · 1 fail |
+| Suite            | Result    | Count                     |
+| ---------------- | --------- | ------------------------- |
+| .NET unit        | ✅ PASS   | 100/100                   |
+| .NET integration | ✅ PASS   | 2/2                       |
+| Angular unit     | ✅ PASS   | 114/114                   |
+| E2E typecheck    | ✅ PASS   | 0 errors                  |
+| E2E Playwright   | ⚠️ 1 FAIL | 75 pass · 8 skip · 1 fail |
 
 ---
 
@@ -798,3 +808,5 @@ Recommendations (priority order):
 ---
 
 `[2026-04-19T14:46Z T179]` | **[OPS] Update agent memory with run commands and current project state** | Added `reference_run_commands.md` to `.claude/projects/…/memory/` with exact invocation for every test suite and compose profile rules. Updated `project_architecture_plan.md`: description, current state bullet (T167–T171 UI fixes summarised), task counter corrected, carry-forward open bugs preserved. | `.claude/projects/…/memory/reference_run_commands.md`, `project_architecture_plan.md`, `MEMORY.md` | **[DONE]**
+
+`[2026-04-19T15:00Z T180]` | **[UI] Fix icon/text overlap on login form inputs** | Email and password fields used `position:absolute` icon + `pl-10` input padding. Material Symbols icons don't reliably respect `text-sm` (14px) — rendered ~20px, eating into the padding and overlapping placeholder text. Replaced absolute-positioning pattern with a flex-row wrapper: `<div class="flex items-center gap-3 ...">` contains the icon (explicit `font-size:18px`) and a `flex-1 bg-transparent p-0` input. The wrapper carries the background, rounded corners, and `focus-within:border-primary` border. Icon and text are now always cleanly separated by the flex gap. | `frontend/src/app/features/auth/authentication-page.component.html` | **[VERIFIED]**
