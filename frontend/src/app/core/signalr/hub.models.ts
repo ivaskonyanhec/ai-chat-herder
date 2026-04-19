@@ -29,6 +29,12 @@ export interface AttachmentDto {
   comment: string | null;
 }
 
+export interface ReactionSummaryDto {
+  emoji: string;
+  count: number;
+  userIds: string[];
+}
+
 export interface MessageDto {
   id: string;
   sequenceNumber: number;
@@ -39,6 +45,7 @@ export interface MessageDto {
   isDeleted: boolean;
   replyTo: MessageDto | null;
   attachment: AttachmentDto | null;
+  reactions: ReactionSummaryDto[];
 }
 
 export interface DialogMessageDto {
@@ -51,6 +58,7 @@ export interface DialogMessageDto {
   isDeleted: boolean;
   replyTo: DialogMessageDto | null;
   attachment: AttachmentDto | null;
+  reactions: ReactionSummaryDto[];
 }
 
 // PresenceHub server→client event payloads
@@ -72,12 +80,14 @@ export interface UserTypingEvent { roomId: string; userId: string; isTyping: boo
 export interface DirectMessageDeletedEvent { messageId: string; dialogId: string; }
 export interface UserTypingInDialogEvent { dialogId: string; userId: string; isTyping: boolean; }
 export interface UnreadCountChangedEvent { contextType: 'room' | 'dialog'; contextId: string; count: number; }
+export interface ReactionToggledEvent { messageId: string; emoji: string; count: number; userIds: string[]; }
 
 // Union types for ChatService event signals
 export type RoomChatEvent =
   | { type: 'MessageReceived'; payload: MessageDto }
   | { type: 'MessageEdited'; payload: MessageDto }
-  | { type: 'MessageDeleted'; payload: MessageDeletedEvent };
+  | { type: 'MessageDeleted'; payload: MessageDeletedEvent }
+  | { type: 'ReactionToggled'; payload: ReactionToggledEvent };
 
 export type DmChatEvent =
   | { type: 'DirectMessageReceived'; payload: DialogMessageDto }

@@ -13,6 +13,7 @@ import type {
   UserTypingEvent,
   UserTypingInDialogEvent,
   UnreadCountChangedEvent,
+  ReactionToggledEvent,
   RoomChatEvent,
   DmChatEvent,
   TypingEvent,
@@ -142,6 +143,9 @@ export class ChatService {
     });
     conn.on('MessageDeleted', (payload: MessageDeletedEvent) => {
       this._lastRoomEvent.set({ type: 'MessageDeleted', payload });
+    });
+    conn.on('ReactionToggled', (payload: ReactionToggledEvent) => {
+      this._lastRoomEvent.set({ type: 'ReactionToggled', payload });
     });
 
     conn.on('DirectMessageReceived', (payload: DialogMessageDto) => {
