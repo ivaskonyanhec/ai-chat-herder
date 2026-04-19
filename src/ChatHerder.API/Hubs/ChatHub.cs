@@ -17,6 +17,48 @@ public sealed class ChatHub(AppDbContext db, IUnreadStore unread, IPresenceStore
 {
     private const int MaxMessageBytes = 3072;
 
+    // ── Group join/leave ───────────────────────────────────────────────────────
+
+    public async Task JoinRoom(Guid roomId)
+    {
+        var userId = GetUserId();
+        var ct     = Context.ConnectionAborted;
+
+        var isMember = await db.RoomMemberships.AnyAsync(
+            m => m.RoomId == roomId && m.UserId == userId, ct);
+        if (!isMember) return;
+
+        var isBanned = await db.RoomBans.AnyAsync(
+            b => b.RoomId == roomId && b.BannedUserId == userId && b.RevokedAt == null, ct);
+        if (isBanned) return;
+
+        await Groups.AddToGroupAsync(Context.ConnectionId, $"room:{roomId}", ct);
+    }
+
+    public async Task LeaveRoom(Guid roomId)
+    {
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"room:{roomId}",
+            Context.ConnectionAborted);
+    }
+
+    public async Task JoinDialog(Guid dialogId)
+    {
+        var userId = GetUserId();
+        var ct     = Context.ConnectionAborted;
+
+        var isParticipant = await db.PersonalDialogs.AnyAsync(
+            d => d.Id == dialogId && (d.User1Id == userId || d.User2Id == userId), ct);
+        if (!isParticipant) return;
+
+        await Groups.AddToGroupAsync(Context.ConnectionId, $"dialog:{dialogId}", ct);
+    }
+
+    public async Task LeaveDialog(Guid dialogId)
+    {
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"dialog:{dialogId}",
+            Context.ConnectionAborted);
+    }
+
     // ── Room messages ──────────────────────────────────────────────────────────
 
     public async Task SendMessage(Guid roomId, string content,

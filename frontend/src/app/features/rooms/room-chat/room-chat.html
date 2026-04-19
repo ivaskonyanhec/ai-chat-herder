@@ -102,7 +102,7 @@
     }
 
     <!-- Composer -->
-    <div class="border-t border-outline-variant/10 p-4 bg-surface-container-lowest">
+    <div class="p-4 bg-surface-container-low">
       <input type="file" #fileInput hidden (change)="onFileSelected($event)" />
       <div class="flex gap-3 items-end">
         <button type="button"
@@ -114,7 +114,7 @@
         <textarea
           pTextarea
           data-testid="message-input"
-          class="flex-1 resize-none bg-surface-container rounded-lg px-4 py-3 text-sm text-on-surface focus:outline-none min-h-[48px] max-h-32"
+          class="flex-1 resize-none bg-surface-container rounded-lg px-4 py-3 text-sm text-on-surface border-b-2 border-transparent focus:border-primary transition-colors min-h-[48px] max-h-32"
           rows="1"
           placeholder="Type a message…"
           [ngModel]="messageText()"

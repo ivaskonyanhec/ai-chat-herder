@@ -61,9 +61,13 @@ export class DirectMessagesComponent {
 
   selectDialog(dialog: DialogDto): void {
     const prev = this.selectedDialog();
-    if (prev) void this.presence.leaveDialog(prev.id);
+    if (prev) {
+      void this.presence.leaveDialog(prev.id);
+      void this.chat.leaveDialog(prev.id);
+    }
     this.selectedDialog.set(dialog);
     void this.presence.joinDialog(dialog.id);
+    void this.chat.joinDialog(dialog.id);
     this.loadMessages(dialog.id);
   }
 

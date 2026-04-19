@@ -23,6 +23,7 @@ export class ChatService {
   private readonly unread = inject(UnreadService);
 
   private connection: HubConnection | null = null;
+  private connectPromise: Promise<void> | null = null;
 
   private readonly _lastRoomEvent = signal<RoomChatEvent | null>(null);
   private readonly _lastDmEvent = signal<DmChatEvent | null>(null);
@@ -38,14 +39,37 @@ export class ChatService {
 
     this.connection = this.factory('/hubs/chat', () => this.authSession.accessToken() ?? '');
     this.registerHandlers(this.connection);
-    await this.connection.start();
+    this.connectPromise = this.connection.start();
+    await this.connectPromise;
+    this.connectPromise = null;
   }
 
   async disconnect(): Promise<void> {
     if (this.connection) {
       await this.connection.stop();
       this.connection = null;
+      this.connectPromise = null;
     }
+  }
+
+  async joinRoom(roomId: string): Promise<void> {
+    if (this.connectPromise) await this.connectPromise;
+    await this.connection?.invoke('JoinRoom', roomId);
+  }
+
+  async leaveRoom(roomId: string): Promise<void> {
+    if (this.connectPromise) await this.connectPromise;
+    await this.connection?.invoke('LeaveRoom', roomId);
+  }
+
+  async joinDialog(dialogId: string): Promise<void> {
+    if (this.connectPromise) await this.connectPromise;
+    await this.connection?.invoke('JoinDialog', dialogId);
+  }
+
+  async leaveDialog(dialogId: string): Promise<void> {
+    if (this.connectPromise) await this.connectPromise;
+    await this.connection?.invoke('LeaveDialog', dialogId);
   }
 
   async sendMessage(

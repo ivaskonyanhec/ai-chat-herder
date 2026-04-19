@@ -27,6 +27,18 @@
   --color-on-tertiary: var(--color-on-tertiary);
   --color-on-tertiary-container: var(--color-on-tertiary-container);
 
+  /* Primary fixed */
+  --color-primary-fixed: var(--color-primary-fixed);
+  --color-primary-fixed-dim: var(--color-primary-fixed-dim);
+  --color-on-primary-fixed: var(--color-on-primary-fixed);
+  --color-on-primary-fixed-variant: var(--color-on-primary-fixed-variant);
+
+  /* Secondary fixed */
+  --color-secondary-fixed: var(--color-secondary-fixed);
+  --color-secondary-fixed-dim: var(--color-secondary-fixed-dim);
+  --color-on-secondary-fixed: var(--color-on-secondary-fixed);
+  --color-on-secondary-fixed-variant: var(--color-on-secondary-fixed-variant);
+
   /* Inverse */
   --color-inverse-primary: var(--color-inverse-primary);
 

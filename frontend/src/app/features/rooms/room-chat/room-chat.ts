@@ -100,11 +100,14 @@ export class RoomChatComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     const id = this.roomId();
     void this.presence.joinRoom(id);
+    void this.chat.joinRoom(id);
     this.loadRoom(id);
   }
 
   ngOnDestroy(): void {
-    void this.presence.leaveRoom(this.roomId());
+    const id = this.roomId();
+    void this.presence.leaveRoom(id);
+    void this.chat.leaveRoom(id);
   }
 
   onFileSelected(event: Event): void {

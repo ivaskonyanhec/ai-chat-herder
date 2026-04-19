@@ -30,7 +30,7 @@ function buildTestBed(presenceOverride?: Partial<{ joinDialog: ReturnType<typeof
     providers: [
       { provide: AuthSessionService,      useValue: { user: signal(null) } },
       { provide: DialogsApiService,       useValue: { getDialogs: () => of([]), getMessages: () => of([]) } },
-      { provide: ChatService,             useValue: { lastDmEvent: signal(null) } },
+      { provide: ChatService,             useValue: { lastDmEvent: signal(null), joinDialog: vi.fn().mockResolvedValue(undefined), leaveDialog: vi.fn().mockResolvedValue(undefined) } },
       { provide: FilesApiService,         useValue: { uploadFile: () => of(), downloadFile: () => {} } },
       { provide: NotificationsApiService, useValue: { markDialogRead: () => of(void 0) } },
       { provide: UnreadService,           useValue: { setCount: vi.fn() } },

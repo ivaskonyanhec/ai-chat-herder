@@ -46,7 +46,7 @@ function buildProviders(snapshotOverride?: RoomMembersSnapshotEvent | null) {
       },
       {
         provide: ChatService,
-        useValue: { lastRoomEvent: signal(null), sendMessage: () => Promise.resolve() },
+        useValue: { lastRoomEvent: signal(null), sendMessage: () => Promise.resolve(), joinRoom: vi.fn().mockResolvedValue(undefined), leaveRoom: vi.fn().mockResolvedValue(undefined) },
       },
       {
         provide: PresenceService,

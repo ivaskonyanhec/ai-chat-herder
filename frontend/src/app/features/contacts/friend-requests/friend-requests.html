@@ -30,7 +30,7 @@
             <div class="text-center py-8 text-on-surface-variant text-sm">No pending incoming requests.</div>
           } @else {
             @for (req of incomingRequests(); track req.id) {
-              <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/10 p-5 flex flex-col gap-4">
+              <div class="bg-surface-container-lowest rounded-xl p-5 flex flex-col gap-4">
                 <div class="flex items-start gap-4">
                   <div class="w-12 h-12 rounded-full bg-surface-container overflow-hidden shrink-0">
                     @if (req.senderAvatarUrl) {
@@ -82,7 +82,7 @@
             <p class="text-xs text-on-surface-variant">No pending sent requests.</p>
           } @else {
             @for (req of outgoingRequests(); track req.id) {
-              <div class="flex items-center gap-3 py-2 border-b border-surface-container last:border-0">
+              <div class="flex items-center gap-3 py-3">
                 <div class="w-8 h-8 rounded-full bg-surface-container overflow-hidden shrink-0">
                   @if (req.senderAvatarUrl) {
                     <img [src]="req.senderAvatarUrl" class="w-full h-full object-cover" alt="" />
