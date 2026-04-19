@@ -24,6 +24,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<ReadMarker> ReadMarkers => Set<ReadMarker>();
     public DbSet<ContextSequences> ContextSequences => Set<ContextSequences>();
     public DbSet<ActivityLog> ActivityLogs => Set<ActivityLog>();
+    public DbSet<MessageReaction> MessageReactions => Set<MessageReaction>();
 
     protected override void OnModelCreating(ModelBuilder m)
     {
@@ -213,6 +214,17 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             e.HasIndex(al => al.EventType);
             e.Property(al => al.EventType).HasMaxLength(64).IsRequired();
             e.Property(al => al.Payload).HasColumnType("jsonb").IsRequired();
+        });
+
+        // ── MessageReactions ───────────────────────────────────────────────────
+        m.Entity<MessageReaction>(e =>
+        {
+            e.HasKey(r => r.Id);
+            e.HasIndex(r => new { r.MessageId, r.UserId, r.Emoji }).IsUnique();
+            e.HasIndex(r => r.MessageId);
+            e.Property(r => r.Emoji).HasMaxLength(16).IsRequired();
+            e.HasOne(r => r.Message).WithMany().HasForeignKey(r => r.MessageId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(r => r.User).WithMany().HasForeignKey(r => r.UserId).OnDelete(DeleteBehavior.Cascade);
         });
     }
 }
