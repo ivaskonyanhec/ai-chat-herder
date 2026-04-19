@@ -123,7 +123,8 @@ services:
       - "80:80"     # Primary production port
       - "4200:80"   # Also mapped to Angular's conventional dev port
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     networks:
       - chatnet
     healthcheck:
@@ -142,6 +143,7 @@ services:
       dockerfile: Dockerfile.e2e
     profiles:
       - e2e
+    restart: "no"
     environment:
       BASE_URL: http://frontend
       CI:       "true"
