@@ -86,7 +86,7 @@
         } @else {
           @for (msg of messages(); track msg.id) {
             @if (!msg.isDeleted) {
-              <div class="flex" [class.justify-end]="msg.sender.id === user()?.id">
+              <div class="group relative flex" [class.justify-end]="msg.sender.id === user()?.id">
                 <div
                   class="max-w-xs lg:max-w-sm px-4 py-2.5 rounded-xl text-sm"
                   [class.bg-primary]="msg.sender.id === user()?.id"
@@ -103,7 +103,7 @@
                       <p class="text-xs truncate max-w-[14rem]">{{ msg.replyTo.content }}</p>
                     </div>
                   }
-                  <p>{{ msg.content }}</p>
+                  <p [innerHTML]="renderContent(msg.content)"></p>
                   @if (msg.attachment) {
                     <div class="flex items-center gap-3 mt-2 px-3 py-2 bg-surface-container rounded-lg max-w-xs">
                       <span class="material-symbols-outlined text-on-surface-variant shrink-0">
@@ -126,6 +126,19 @@
                   @if (msg.editedAt) {
                     <p class="text-[9px] opacity-60 mt-0.5">edited</p>
                   }
+                </div>
+                <!-- Hover action bar -->
+                <div class="absolute top-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 bg-surface-container-high rounded-lg px-1 py-0.5 shadow-sm"
+                     [class.right-full]="msg.sender.id === user()?.id"
+                     [class.left-full]="msg.sender.id !== user()?.id"
+                     [class.mr-1]="msg.sender.id === user()?.id"
+                     [class.ml-1]="msg.sender.id !== user()?.id">
+                  <button type="button"
+                          class="w-7 h-7 flex items-center justify-center rounded hover:bg-surface-container text-on-surface-variant hover:text-on-surface transition-colors"
+                          title="Reply"
+                          (click)="startReply(msg)">
+                    <span class="material-symbols-outlined text-sm">reply</span>
+                  </button>
                 </div>
               </div>
             } @else {
@@ -155,32 +168,70 @@
             </button>
           </div>
         }
-        <div class="flex gap-2 items-end">
-          <textarea
-            class="flex-1 bg-surface-container-low border-none rounded-xl px-4 py-3 text-sm text-on-surface resize-none focus:ring-1 focus:ring-primary/30 outline-none"
-            data-testid="dm-message-input"
-            placeholder="Type a message..."
-            rows="1"
-            [value]="messageText()"
-            [disabled]="selectedDialog()!.isFrozen || isSending()"
-            (input)="messageText.set($any($event.target).value)"
-            (keydown.enter)="$event.preventDefault(); sendMessage()"
-            (paste)="onPaste($event)"
-          ></textarea>
-          <button type="button"
-                  class="p-2 rounded-lg hover:bg-surface-container text-on-surface-variant"
-                  [disabled]="isUploading()"
-                  (click)="dmFileInput.click()">
-            <span class="material-symbols-outlined">attach_file</span>
-          </button>
-          <button
-            class="px-4 py-3 bg-primary text-on-primary text-sm font-bold rounded-xl hover:bg-primary-dim transition-colors disabled:opacity-50"
-            data-testid="dm-send-btn"
-            [disabled]="isSending() || (!messageText().trim() && !pendingAttachment()) || selectedDialog()!.isFrozen"
-            (click)="sendMessage()"
-          >
-            <span class="material-symbols-outlined" style="font-size:1.25rem">send</span>
-          </button>
+        <div class="rounded-xl bg-surface-container-low border border-outline-variant/30 focus-within:ring-1 focus-within:ring-primary/30">
+          @if (replyingTo()) {
+            <div class="flex items-center justify-between px-4 py-2 bg-primary-container/40 border-l-2 border-primary rounded-t-lg"
+                 data-testid="reply-banner">
+              <div class="min-w-0">
+                <p class="text-xs font-bold text-primary flex items-center gap-1">
+                  <span class="material-symbols-outlined text-sm">reply</span>
+                  Replying to {{ replyingTo()!.sender.username }}
+                </p>
+                <p class="text-xs text-on-surface-variant truncate max-w-xs">{{ replyingTo()!.content }}</p>
+              </div>
+              <button type="button"
+                      class="ml-2 shrink-0 text-on-surface-variant hover:text-on-surface"
+                      data-testid="reply-banner-dismiss"
+                      (click)="cancelReply()">
+                <span class="material-symbols-outlined text-sm">close</span>
+              </button>
+            </div>
+          }
+          <div #composerEl
+               contenteditable="true"
+               class="block w-full resize-none bg-transparent px-4 py-3 text-sm text-on-surface outline-none min-h-[72px] max-h-40 overflow-y-auto"
+               data-testid="message-input"
+               [attr.aria-label]="'Type a message'"
+               (input)="onComposerInput($event)"
+               (paste)="onPaste($event)"
+               (keydown)="handleComposerKeydown($event)">
+          </div>
+          <!-- Toolbar -->
+          <div class="flex items-center gap-1 px-3 py-2 border-t border-outline-variant/20">
+            <button type="button"
+                    class="w-8 h-8 rounded-md flex items-center justify-center text-sm font-bold text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"
+                    data-testid="composer-bold"
+                    title="Bold (Ctrl+B)"
+                    (mousedown)="$event.preventDefault()"
+                    (click)="applyBold()"><strong>B</strong></button>
+            <button type="button"
+                    class="w-8 h-8 rounded-md flex items-center justify-center text-sm italic text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"
+                    data-testid="composer-italic"
+                    title="Italic (Ctrl+I)"
+                    (mousedown)="$event.preventDefault()"
+                    (click)="applyItalic()">I</button>
+            <button type="button"
+                    class="w-8 h-8 rounded-md flex items-center justify-center text-xs font-mono text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"
+                    data-testid="composer-code"
+                    title="Code (Ctrl+`)"
+                    (mousedown)="$event.preventDefault()"
+                    (click)="applyCode()">&lt;/&gt;</button>
+            <div class="flex-1"></div>
+            <button type="button"
+                    class="p-2 rounded-lg hover:bg-surface-container text-on-surface-variant"
+                    [disabled]="isUploading()"
+                    (click)="dmFileInput.click()">
+              <span class="material-symbols-outlined">attach_file</span>
+            </button>
+            <button
+              class="px-4 py-2 bg-primary text-on-primary text-sm font-bold rounded-lg hover:bg-primary-dim transition-colors disabled:opacity-50"
+              data-testid="dm-send-btn"
+              [disabled]="!canSendMessage() || selectedDialog()!.isFrozen"
+              (click)="sendMessage()"
+            >
+              <span class="material-symbols-outlined" style="font-size:1.25rem">send</span>
+            </button>
+          </div>
         </div>
       </div>
     }

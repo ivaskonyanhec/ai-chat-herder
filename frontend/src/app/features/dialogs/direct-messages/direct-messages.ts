@@ -1,5 +1,6 @@
-import { Component, effect, inject, signal } from '@angular/core';
+import { Component, effect, inject, signal, ElementRef, viewChild } from '@angular/core';
 import { finalize } from 'rxjs';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { AuthSessionService } from '../../../core/auth/auth-session.service';
 import { DialogsApiService } from '../../../core/dialogs/dialogs-api.service';
 import { ChatService } from '../../../core/signalr/chat.service';
@@ -7,6 +8,7 @@ import { FilesApiService } from '../../../core/files/files-api.service';
 import { NotificationsApiService } from '../../../core/notifications/notifications-api.service';
 import { UnreadService } from '../../../core/signalr/unread.service';
 import { PresenceService } from '../../../core/signalr/presence.service';
+import { parseInlineMarkdown, serializeToMarkdown } from '../../../shared/utils/inline-markdown';
 import type { DialogDto } from '../../../core/dialogs/dialogs.models';
 import type { DialogMessageDto } from '../../../core/signalr/hub.models';
 import type { AttachmentDto } from '../../../core/files/files.models';
@@ -26,6 +28,7 @@ export class DirectMessagesComponent {
   private readonly notificationsApi = inject(NotificationsApiService);
   private readonly unread = inject(UnreadService);
   private readonly presence = inject(PresenceService);
+  private readonly sanitizer = inject(DomSanitizer);
 
   readonly user = this.authSession.user;
   readonly isLoadingDialogs = signal(true);
@@ -34,10 +37,13 @@ export class DirectMessagesComponent {
   readonly dialogs = signal<DialogDto[]>([]);
   readonly selectedDialog = signal<DialogDto | null>(null);
   readonly messages = signal<DialogMessageDto[]>([]);
-  readonly messageText = signal('');
   readonly isSending = signal(false);
   readonly isUploading = signal(false);
   readonly pendingAttachment = signal<AttachmentDto | null>(null);
+
+  readonly composerEl = viewChild<ElementRef<HTMLDivElement>>('composerEl');
+  readonly composerEmpty = signal(true);
+  readonly replyingTo = signal<DialogMessageDto | null>(null);
 
   constructor() {
     this.loadDialogs();
@@ -71,16 +77,79 @@ export class DirectMessagesComponent {
     this.loadMessages(dialog.id);
   }
 
+  onComposerInput(event: Event): void {
+    const el = event.target as HTMLDivElement;
+    this.composerEmpty.set(!el.textContent?.trim());
+  }
+
+  applyBold(): void { document.execCommand('bold'); }
+  applyItalic(): void { document.execCommand('italic'); }
+
+  applyCode(): void {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+    const range = sel.getRangeAt(0);
+    const code = document.createElement('code');
+    try { range.surroundContents(code); } catch { /* partial selection */ }
+  }
+
+  handleComposerKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      this.sendMessage();
+      return;
+    }
+    if (event.ctrlKey || event.metaKey) {
+      if (event.key === 'b') { event.preventDefault(); this.applyBold(); }
+      if (event.key === 'i') { event.preventDefault(); this.applyItalic(); }
+      if (event.key === '`') { event.preventDefault(); this.applyCode(); }
+    }
+  }
+
+  clearComposer(): void {
+    const el = this.composerEl()?.nativeElement;
+    if (el) el.innerHTML = '';
+    this.composerEmpty.set(true);
+  }
+
+  onPaste(event: ClipboardEvent): void {
+    const file = event.clipboardData?.files[0];
+    if (file) {
+      event.preventDefault();
+      this.uploadFile(file);
+      return;
+    }
+    const text = event.clipboardData?.getData('text/plain');
+    if (text) { event.preventDefault(); document.execCommand('insertText', false, text); }
+  }
+
+  startReply(msg: DialogMessageDto): void {
+    this.replyingTo.set(msg);
+    setTimeout(() => this.composerEl()?.nativeElement.focus(), 0);
+  }
+
+  cancelReply(): void { this.replyingTo.set(null); }
+
+  renderContent(content: string | null): SafeHtml {
+    if (!content) return this.sanitizer.bypassSecurityTrustHtml('');
+    return this.sanitizer.bypassSecurityTrustHtml(parseInlineMarkdown(content));
+  }
+
+  canSendMessage(): boolean {
+    return !this.composerEmpty() && !this.isSending();
+  }
+
   sendMessage(): void {
-    const content = this.messageText().trim();
+    const content = serializeToMarkdown(this.composerEl()?.nativeElement.innerHTML ?? '');
     const attachment = this.pendingAttachment();
     const dialog = this.selectedDialog();
     if ((!content && !attachment) || !dialog || this.isSending()) return;
 
     this.isSending.set(true);
-    void this.chat.sendDirectMessage(dialog.id, content, null, attachment?.id ?? null)
+    void this.chat.sendDirectMessage(dialog.id, content, this.replyingTo()?.id ?? null, attachment?.id ?? null)
       .then(() => {
-        this.messageText.set('');
+        this.clearComposer();
+        this.replyingTo.set(null);
         this.pendingAttachment.set(null);
       })
       .finally(() => { this.isSending.set(false); });
@@ -91,14 +160,6 @@ export class DirectMessagesComponent {
     const file = input.files?.[0];
     if (file) this.uploadFile(file);
     input.value = '';
-  }
-
-  onPaste(event: ClipboardEvent): void {
-    const file = event.clipboardData?.files[0];
-    if (file) {
-      event.preventDefault();
-      this.uploadFile(file);
-    }
   }
 
   clearAttachment(): void {

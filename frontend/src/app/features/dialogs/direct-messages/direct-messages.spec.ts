@@ -1,7 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { of } from 'rxjs';
-import { vi } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+import { BrowserModule } from '@angular/platform-browser';
 import { DirectMessagesComponent } from './direct-messages';
 import { AuthSessionService } from '../../../core/auth/auth-session.service';
 import { DialogsApiService } from '../../../core/dialogs/dialogs-api.service';
@@ -26,7 +27,7 @@ function buildTestBed(presenceOverride?: Partial<{ joinDialog: ReturnType<typeof
   const leaveDialog = presenceOverride?.leaveDialog ?? vi.fn().mockResolvedValue(undefined);
 
   TestBed.configureTestingModule({
-    imports: [DirectMessagesComponent],
+    imports: [BrowserModule, DirectMessagesComponent],
     providers: [
       { provide: AuthSessionService,      useValue: { user: signal(null) } },
       { provide: DialogsApiService,       useValue: { getDialogs: () => of([]), getMessages: () => of([]) } },
