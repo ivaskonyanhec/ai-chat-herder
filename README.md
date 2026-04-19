@@ -49,16 +49,16 @@ npm run test:manual
 
 | Suite | Files | Tests | Status |
 |---|---|---|---|
-| .NET unit | — | 104 | Passing |
+| .NET unit | — | 116 | Passing |
 | .NET integration | — | 2 | Passing |
-| Angular unit | 32 | 149 | Passing |
+| Angular unit | 33 | 202 | Passing |
 | E2E / UAT | 11 spec files | 96 | Dockerized |
 
 Phase 5 (XMPP/Jabber gateway) is architecturally planned but gated behind an explicit implementation request.
 
 Useful status documents:
 
-- `DEVELOPMENT_LOG.md` — chronological implementation log (T1–T193)
+- `DEVELOPMENT_LOG.md` — chronological implementation log (T1–T201)
 - `docs/TEST_COVERAGE_MATRIX.md` — requirement-to-test coverage matrix
 - `docs/QA_SELF_AUDIT.md` — E2E/UAT audit notes
 - `docs/LOAD_TEST_RESULTS.md` / `docs/LOAD_TEST_COVERAGE_MATRIX.md` — load test results
@@ -74,12 +74,18 @@ Useful status documents:
 - Infinite scroll with cursor-based pagination (`SentAt DESC, Id DESC`)
 - Message edit and soft-delete
 - File and image attachments with backend access-control checks
+- Message reactions — persisted `MessageReaction` entity; `POST /api/messages/{id}/reactions` toggles add/remove; `ReactionToggled` SignalR event; reaction pills with optimistic UI update and rollback
+- WYSIWYG composer — `contenteditable` div with Bold / Italic / Code toolbar (`document.execCommand`); marker syntax (`**bold**`, `_italic_`, `` `code` ``) stored in DB; rendered via `parseInlineMarkdown` + `DomSanitizer` on display
 
 ### Presence
 - Online / AFK / Offline status tracked per-user across multiple tabs
 - Client-driven AFK: `SetAfk()` / `SetActive()` hub methods, < 2 s SLA
 - Live room member sidebar with real-time status dots
 - Presence snapshotted at room join; reconciled via `MemberJoined` / `MemberLeft` hub events
+
+### UI
+- Collapsible sidebar — toggles between 288 px expanded view and 48 px icon strip; state persisted in `localStorage`; chevron toggle pinned top-right
+- Custom favicon — SVG chat-bubble in slate `#545f73`; page title "AI Chat Herder" set via Angular `Title` service
 
 ### Social
 - Friends / contacts system with request / confirm / decline workflow
