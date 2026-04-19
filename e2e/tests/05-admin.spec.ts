@@ -79,6 +79,19 @@ test.describe('Room moderation', () => {
     expect(members.map(m => m.userId)).toContain(userB.id);
   });
 
+  test('admin cannot remove owner admin status', async ({ userA, userB, api }) => {
+    const room = await createPublicRoomWithMembers(api, userA, [userB]);
+    await api.makeAdmin(room.id, userB.id, userA.accessToken);
+
+    const adminCtx = await api.authContext(userB.accessToken);
+    const attempt = await adminCtx.delete(`/api/rooms/${room.id}/members/${userA.id}/admin`);
+    expect(attempt.status()).toBe(400);
+    await adminCtx.dispose();
+
+    const members = await api.getMembers(room.id, userA.accessToken);
+    expect(members).toContainEqual(expect.objectContaining({ userId: userA.id, role: 'Owner' }));
+  });
+
   test('owner can remove admin status and demoted user loses admin permissions', async ({ api }) => {
     const owner = await api.register();
     const admin = await api.register();
@@ -132,7 +145,8 @@ test.describe('Room moderation', () => {
     const afterDeleteCtx = await api.authContext(owner.accessToken);
     const afterDelete = await afterDeleteCtx.get(`/api/rooms/${room.id}/messages`);
     const remaining = await afterDelete.json();
-    expect(remaining.map((m: { id: string }) => m.id)).not.toContain(message.id);
+    const deletedMsg = remaining.find((m: { id: string }) => m.id === message.id);
+    expect(deletedMsg).toMatchObject({ isDeleted: true, content: null });
     await afterDeleteCtx.dispose();
   });
 

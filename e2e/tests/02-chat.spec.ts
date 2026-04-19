@@ -126,18 +126,41 @@ test.describe('Room chat', () => {
 
     const afterDelete = await ctx.get(`/api/rooms/${room.id}/messages`);
     const remaining = await afterDelete.json();
-    expect(remaining.some((m: { id: string }) => m.id === message.id)).toBe(false);
+    const deletedMsg = remaining.find((m: { id: string }) => m.id === message.id);
+    expect(deletedMsg).toMatchObject({ isDeleted: true, content: null });
     await ctx.dispose();
   });
 
-  test.skip('user B receives a room message in the browser within 3 seconds', async () => {
-    // BLOCKED: RoomChat now renders message state, but ChatHub still has no JoinRoom method for the chat
-    // connection and message text lacks the required data-testid="message-text" selector.
+  test('user B receives a room message in the browser within 3 seconds', async ({ userA, userB, userBPage, api }) => {
+    const room = await createPublicRoomWithMembers(api, userA, [userB]);
+    const message = `realtime-recv-${Date.now()}`;
+
+    await userBPage.goto(`/app/rooms/${room.id}`);
+    await expect(userBPage.locator('[data-testid="chat-area"]')).toBeVisible({ timeout: 10_000 });
+
+    const chat = await createHubConnection('/hubs/chat', userA.accessToken);
+    await chat.invoke('SendMessage', room.id, message, null, null);
+    await chat.stop();
+
+    await expect(
+      userBPage.locator('[data-testid="chat-area"] [data-testid="message-text"]').filter({ hasText: message }),
+    ).toBeVisible({ timeout: 3_000 });
   });
 
-  test.skip('sender sees their own message immediately in the browser', async () => {
-    // BLOCKED: RoomChat sends through ChatService, but visible message assertions need data-testid="message-text"
-    // and reliable ChatHub room-group membership for the sender connection.
+  test('sender sees their own message immediately in the browser', async ({ userA, userAPage, api }) => {
+    const room = await api.createRoom(userA.accessToken, { visibility: 'Public' });
+    const message = `self-send-${Date.now()}`;
+
+    await userAPage.goto(`/app/rooms/${room.id}`);
+    await expect(userAPage.locator('[data-testid="chat-area"]')).toBeVisible({ timeout: 10_000 });
+
+    const chat = await createHubConnection('/hubs/chat', userA.accessToken);
+    await chat.invoke('SendMessage', room.id, message, null, null);
+    await chat.stop();
+
+    await expect(
+      userAPage.locator('[data-testid="chat-area"] [data-testid="message-text"]').filter({ hasText: message }),
+    ).toBeVisible({ timeout: 3_000 });
   });
 
   test.skip('reply/reference flow shows quoted message UI', async () => {

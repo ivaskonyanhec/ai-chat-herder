@@ -49,8 +49,6 @@ services:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
       - chatnet
-    ports:
-      - "15672:15672"   # Management UI — dev convenience; remove for production
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "ping"]
       interval: 15s

@@ -161,6 +161,22 @@ test.describe('Authentication', () => {
     await ctx.dispose();
   });
 
+  test('delete account deletes rooms owned by the deleted user', async ({ api }) => {
+    const owner = await api.register();
+    const member = await api.register();
+    const room = await api.createRoom(owner.accessToken, { visibility: 'Public' });
+    await api.joinPublicRoom(room.id, member.accessToken);
+
+    const ownerCtx = await api.authContext(owner.accessToken);
+    expect((await ownerCtx.delete('/api/auth/account')).status()).toBe(204);
+    await ownerCtx.dispose();
+
+    // After owner account is deleted, the JWT is revoked — use a different user to verify the room is gone
+    const memberCtx = await api.authContext(member.accessToken);
+    expect((await memberCtx.get(`/api/rooms/${room.id}`)).status()).toBe(404);
+    await memberCtx.dispose();
+  });
+
   test('delete account removes the deleted user from memberships in other rooms', async ({ api }) => {
     const owner = await api.register();
     const member = await api.register();

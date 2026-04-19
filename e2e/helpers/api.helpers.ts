@@ -283,7 +283,7 @@ export class ApiHelpers {
 
   async getDialogMessages(accessToken: string, dialogId: string): Promise<DialogMessageDto[]> {
     const ctx = await this.authContext(accessToken);
-    const res = await ctx.get(`/api/dialogs/${dialogId}/messages`);
+    const res = await ctx.get(`/api/dialogs/${dialogId}/messages?limit=100`);
     expect(res.status(), await res.text()).toBe(200);
     const messages = await res.json();
     await ctx.dispose();

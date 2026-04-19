@@ -340,7 +340,7 @@ public static class RoomEndpoints
         limit = Math.Clamp(limit, 1, 100);
 
         IQueryable<Message> query = db.Messages
-            .Where(m => m.RoomId == id && m.DeletedAt == null)
+            .Where(m => m.RoomId == id)
             .Include(m => m.Author)
             .Include(m => m.Attachment)
             .Include(m => m.ReplyToMessage).ThenInclude(r => r!.Author);

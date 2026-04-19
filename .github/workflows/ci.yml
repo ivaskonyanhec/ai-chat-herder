@@ -150,17 +150,22 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Create CI environment file
+        env:
+          CI_POSTGRES_PASSWORD: ${{ secrets.CI_POSTGRES_PASSWORD }}
+          CI_REDIS_PASSWORD: ${{ secrets.CI_REDIS_PASSWORD }}
+          CI_RABBITMQ_PASSWORD: ${{ secrets.CI_RABBITMQ_PASSWORD }}
+          CI_JWT_SECRET_KEY: ${{ secrets.CI_JWT_SECRET_KEY }}
         run: |
-          cat > .env <<'EOF'
+          cat > .env <<EOF
           ASPNETCORE_ENVIRONMENT=Development
           POSTGRES_DB=chatherder_ci
           POSTGRES_USER=chatherder
-          POSTGRES_PASSWORD=ci_postgres_password
-          REDIS_PASSWORD=ci_redis_password
+          POSTGRES_PASSWORD=${CI_POSTGRES_PASSWORD}
+          REDIS_PASSWORD=${CI_REDIS_PASSWORD}
           RABBITMQ_USER=chatherder
-          RABBITMQ_PASSWORD=ci_rabbitmq_password
+          RABBITMQ_PASSWORD=${CI_RABBITMQ_PASSWORD}
           RABBITMQ_VHOST=chatherder
-          JWT_SECRET_KEY=ci_secret_key_for_github_actions_only_64_chars_minimum_value_1234567890
+          JWT_SECRET_KEY=${CI_JWT_SECRET_KEY}
           JWT_ISSUER=ChatHerder
           JWT_AUDIENCE=ChatHerderClient
           SMTP_HOST=localhost

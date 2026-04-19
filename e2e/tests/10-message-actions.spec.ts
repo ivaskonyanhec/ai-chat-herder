@@ -6,7 +6,7 @@ interface MessageDto {
   id: string;
   content: string | null;
   isDeleted?: boolean;
-  replyToMessage?: { id: string } | null;
+  replyTo?: { id: string } | null;
 }
 
 test.describe('Room message actions', () => {
@@ -109,7 +109,7 @@ test.describe('Room message actions', () => {
     const replyMsg  = messages2.find((m: MessageDto) => m.content === reply);
     expect(replyMsg).toMatchObject({
       content: reply,
-      replyToMessage: expect.objectContaining({ id: parentMsg.id }),
+      replyTo: expect.objectContaining({ id: parentMsg.id }),
     });
     await ctx.dispose();
   });

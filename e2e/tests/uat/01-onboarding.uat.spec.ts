@@ -3,7 +3,7 @@ import { uniqueIdentity } from '../../helpers/auth.helpers';
 
 test.describe('UAT: Onboarding and identity', () => {
   test('new user can register, sign in, and delete account through supported paths', async ({ page, api }) => {
-    const identity = uniqueIdentity('uat_onboarding');
+    const identity = uniqueIdentity('uat_ob');
 
     await page.goto('/auth');
     await page.click('[data-testid="go-to-register"]');

@@ -1,0 +1,8 @@
+# docker-compose.override.yml — local development overrides only
+# Automatically merged by `docker compose up` on a developer machine.
+# Do NOT use in production or CI.
+
+services:
+  rabbitmq:
+    ports:
+      - "15672:15672"   # RabbitMQ Management UI (http://localhost:15672)

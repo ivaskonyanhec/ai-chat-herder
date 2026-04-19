@@ -83,6 +83,29 @@ test.describe('Friends, blocks, and direct messages', () => {
     expect((await api.getBlocks(userA.accessToken)).map(b => b.blockedUserId)).not.toContain(userB.id);
   });
 
+  test('non-friends cannot create a direct message dialog', async ({ api, userA, userB }) => {
+    const ctx = await api.authContext(userA.accessToken);
+    const res = await ctx.post('/api/dialogs', { data: { userId: userB.id } });
+    expect(res.status()).toBe(403);
+    await ctx.dispose();
+  });
+
+  test('frozen dialog history remains readable after blocking a user', async ({ api, userA, userB }) => {
+    await becomeFriends(api, userA.accessToken, userB.accessToken, userB.username, userA.id);
+    const dialog = await api.createDialog(userA.accessToken, userB.id);
+    const chat = await createHubConnection('/hubs/chat', userA.accessToken);
+    const sentMessage = `frozen-history-${Date.now()}`;
+    await chat.invoke('SendDirectMessage', dialog.id, sentMessage, null, null);
+    await chat.stop();
+
+    await api.blockUser(userA.accessToken, userB.id);
+
+    expect((await api.getDialog(userA.accessToken, dialog.id)).isFrozen).toBe(true);
+
+    const history = await api.getDialogMessages(userA.accessToken, dialog.id);
+    expect(history.some((m) => m.content === sentMessage)).toBe(true);
+  });
+
   test('direct messages persist to dialog history and support author edit/delete endpoints', async ({ api, userA, userB }) => {
     await becomeFriends(api, userA.accessToken, userB.accessToken, userB.username, userA.id);
     const dialog = await api.createDialog(userA.accessToken, userB.id);

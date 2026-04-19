@@ -92,6 +92,50 @@ test.describe('Room catalog, membership, and invitations', () => {
     expect(members.map((m) => m.userId)).toContain(userB.id);
   });
 
+  test('owner can update room settings via PATCH and changes are reflected in room details', async ({ api, userA }) => {
+    const room = await api.createRoom(userA.accessToken, { visibility: 'Public' });
+    const updatedName = `updated-${Date.now()}`;
+    const updatedDesc = 'Updated description E2E';
+
+    const ctx = await api.authContext(userA.accessToken);
+    const patch = await ctx.patch(`/api/rooms/${room.id}`, {
+      data: { name: updatedName, description: updatedDesc },
+    });
+    expect(patch.status(), await patch.text()).toBe(200);
+    const body = await patch.json();
+    expect(body.name).toBe(updatedName);
+    expect(body.description).toBe(updatedDesc);
+
+    const get = await ctx.get(`/api/rooms/${room.id}`);
+    expect(get.status()).toBe(200);
+    const fetched = await get.json();
+    expect(fetched.name).toBe(updatedName);
+    await ctx.dispose();
+  });
+
+  test('invited user can reject a room invitation and does not appear as a member', async ({ api, userA, userB }) => {
+    const room = await api.createRoom(userA.accessToken, { visibility: 'Private' });
+    const ownerCtx = await api.authContext(userA.accessToken);
+    const invite = await ownerCtx.post(`/api/rooms/${room.id}/invitations`, {
+      data: { username: userB.username },
+    });
+    expect(invite.status(), await invite.text()).toBe(204);
+    await ownerCtx.dispose();
+
+    const inviteeCtx = await api.authContext(userB.accessToken);
+    const invitations = await inviteeCtx.get('/api/invitations');
+    const body = await invitations.json();
+    const invitation = body.find((i: { roomId: string }) => i.roomId === room.id);
+    expect(invitation?.id).toBeTruthy();
+
+    const reject = await inviteeCtx.post(`/api/invitations/${invitation.id}/reject`);
+    expect(reject.status(), await reject.text()).toBe(204);
+    await inviteeCtx.dispose();
+
+    const members = await api.getMembers(room.id, userA.accessToken);
+    expect(members.map((m) => m.userId)).not.toContain(userB.id);
+  });
+
   test('member can leave a room, but owner cannot leave their own room', async ({ api, userA, userB }) => {
     const room = await createPublicRoomWithMembers(api, userA, [userB]);
 

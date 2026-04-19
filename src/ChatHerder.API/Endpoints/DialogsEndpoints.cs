@@ -79,6 +79,12 @@ public static class DialogsEndpoints
         if (otherUser is null)
             return Results.NotFound(new { error = "User not found." });
 
+        var areFriends = await db.Friendships.AnyAsync(
+            f => (f.User1Id == callerId && f.User2Id == req.UserId) ||
+                 (f.User1Id == req.UserId && f.User2Id == callerId), ct);
+        if (!areFriends)
+            return Results.StatusCode(403);
+
         var (u1, u2) = callerId < req.UserId ? (callerId, req.UserId) : (req.UserId, callerId);
 
         var existing = await db.PersonalDialogs
