@@ -94,6 +94,7 @@ api.MapGroup("/blocks").MapBlocksEndpoints();
 api.MapGroup("/dialogs").MapDialogEndpoints();
 api.MapGroup("/dm-messages").MapDmMessageEndpoints();
 api.MapGroup("/files").MapFilesEndpoints();
+api.MapGroup("/admin/bans").MapPlatformBansEndpoints();
 
 // SignalR hubs — JWT over WebSocket arrives as ?access_token= (already configured in OnMessageReceived above)
 app.MapHub<ChatHerder.API.Hubs.PresenceHub>("/hubs/presence").RequireAuthorization();
