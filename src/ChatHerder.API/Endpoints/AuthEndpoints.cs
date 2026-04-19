@@ -1,8 +1,10 @@
 using System.Security.Claims;
+using ChatHerder.API.Hubs;
 using ChatHerder.Application.DTOs;
 using ChatHerder.Application.Ports;
 using ChatHerder.Domain.Entities;
 using ChatHerder.Infrastructure.Persistence;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace ChatHerder.API.Endpoints;
@@ -288,6 +290,9 @@ public static class AuthEndpoints
         ClaimsPrincipal principal,
         AppDbContext db,
         ISessionStore sessions,
+        IFileStorage storage,
+        IPresenceStore presence,
+        IHubContext<PresenceHub> presenceHub,
         CancellationToken ct)
     {
         var userId = Guid.Parse(principal.FindFirstValue("user_id")!);
@@ -295,7 +300,39 @@ public static class AuthEndpoints
         var user = await db.Users.FindAsync([userId], ct);
         if (user is null) return Results.NotFound();
 
-        // Remove non-owned room memberships
+        // Cascade-delete owned rooms: files → attachments → messages → bans/invitations/memberships → room
+        var ownedRoomIds = await db.Rooms
+            .Where(r => r.OwnerId == userId)
+            .Select(r => r.Id)
+            .ToListAsync(ct);
+
+        foreach (var roomId in ownedRoomIds)
+        {
+            var msgIds = await db.Messages
+                .Where(m => m.RoomId == roomId)
+                .Select(m => m.Id)
+                .ToListAsync(ct);
+
+            var attachmentPaths = await db.Attachments
+                .Where(a => a.MessageId != null && msgIds.Contains(a.MessageId.Value))
+                .Select(a => a.StoragePath)
+                .ToListAsync(ct);
+
+            foreach (var path in attachmentPaths)
+                await storage.DeleteAsync(path, ct);
+
+            await db.Attachments
+                .Where(a => a.MessageId != null && msgIds.Contains(a.MessageId.Value))
+                .ExecuteDeleteAsync(ct);
+            await db.Messages       .Where(m => m.RoomId == roomId) .ExecuteDeleteAsync(ct);
+            await db.RoomBans       .Where(b => b.RoomId == roomId) .ExecuteDeleteAsync(ct);
+            await db.RoomInvitations.Where(i => i.RoomId == roomId) .ExecuteDeleteAsync(ct);
+            await db.RoomMemberships.Where(m => m.RoomId == roomId) .ExecuteDeleteAsync(ct);
+        }
+
+        await db.Rooms.Where(r => r.OwnerId == userId).ExecuteDeleteAsync(ct);
+
+        // Remove remaining (non-owned) room memberships
         await db.RoomMemberships
             .Where(m => m.UserId == userId)
             .ExecuteDeleteAsync(ct);
@@ -311,12 +348,28 @@ public static class AuthEndpoints
             .Where(b => b.BlockerId == userId || b.BlockedUserId == userId)
             .ExecuteDeleteAsync(ct);
 
-        // Soft-delete preserves email + username to prevent re-registration (AGENT.md §6)
+        // Soft-delete preserves email + username to prevent re-registration
         user.DeletedAt = DateTime.UtcNow;
         await db.SaveChangesAsync(ct);
 
+        // Revoke all sessions so reconnect attempts are rejected
         await sessions.RevokeAllAsync(userId, ct: ct);
+
+        // Broadcast ForceDisconnect to all active SignalR connections
+        var connIds = await presence.GetConnectionIdsAsync(userId, ct);
+        foreach (var connId in connIds)
+            await presenceHub.Clients.Client(connId).SendAsync("ForceDisconnect", ct);
 
         return Results.NoContent();
     }
+
+    internal static Task<IResult> DeleteAccountInternal(
+        ClaimsPrincipal principal,
+        AppDbContext db,
+        ISessionStore sessions,
+        IFileStorage storage,
+        IPresenceStore presence,
+        IHubContext<PresenceHub> presenceHub,
+        CancellationToken ct)
+        => DeleteAccount(principal, db, sessions, storage, presence, presenceHub, ct);
 }
