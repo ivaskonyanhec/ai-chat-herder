@@ -66,6 +66,24 @@ public sealed class UserEndpointsTests
         var statusCode = result.GetType().GetProperty("StatusCode")?.GetValue(result);
         Assert.Equal(400, statusCode);
     }
+
+    [Fact]
+    public async Task SearchUsers_ReturnsMatchingActiveUsers_ExcludingCaller()
+    {
+        await using var db = BuildContext();
+        var caller = new User { Username = "admin", Email = "admin@test.com", PasswordHash = "x" };
+        var match = new User { Username = "Alice", Email = "alice@test.com", PasswordHash = "x" };
+        var otherMatch = new User { Username = "alina", Email = "alina@test.com", PasswordHash = "x" };
+        var deleted = new User { Username = "ali_deleted", Email = "deleted@test.com", PasswordHash = "x", DeletedAt = DateTime.UtcNow };
+        var nonMatch = new User { Username = "bob", Email = "bob@test.com", PasswordHash = "x" };
+        db.Users.AddRange(caller, match, otherMatch, deleted, nonMatch);
+        await db.SaveChangesAsync();
+
+        var result = await UserEndpointsTestHelper.SearchUsers("ali", 8, MakePrincipal(caller.Id), db, CancellationToken.None);
+
+        var ok = Assert.IsType<Ok<List<UserSearchResultDto>>>(result);
+        Assert.Equal(["Alice", "alina"], ok.Value!.Select(u => u.Username));
+    }
 }
 
 internal static class UserEndpointsTestHelper
@@ -75,4 +93,7 @@ internal static class UserEndpointsTestHelper
 
     public static Task<IResult> PatchMe(UpdateMeRequest req, ClaimsPrincipal p, AppDbContext db, CancellationToken ct)
         => ChatHerder.API.Endpoints.UserEndpoints.PatchMeInternal(req, p, db, ct);
+
+    public static Task<IResult> SearchUsers(string q, int limit, ClaimsPrincipal p, AppDbContext db, CancellationToken ct)
+        => ChatHerder.API.Endpoints.UserEndpoints.SearchUsersInternal(q, limit, p, db, ct);
 }

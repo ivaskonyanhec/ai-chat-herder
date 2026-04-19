@@ -23,3 +23,4 @@ e2e/.tsbuild/
 e2e/node_modules/
 e2e/debug-*.mjs
 tests/load/results.json
+.worktrees/

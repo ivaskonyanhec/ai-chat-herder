@@ -13,7 +13,11 @@ using ChatHerder.API.Endpoints;
 namespace ChatHerder.API.Hubs;
 
 [Authorize]
-public sealed class ChatHub(AppDbContext db, IUnreadStore unread, IPresenceStore presence) : Hub
+public sealed class ChatHub(
+    AppDbContext db,
+    IUnreadStore unread,
+    IPresenceStore presence,
+    IHubContext<PresenceHub> presenceHub) : Hub
 {
     private const int MaxMessageBytes = 3072;
 
@@ -243,7 +247,7 @@ public sealed class ChatHub(AppDbContext db, IUnreadStore unread, IPresenceStore
         if (connIds.Count > 0)
         {
             var count = await unread.GetCountAsync(otherId, "dialog", dialogId, ct);
-            await Clients.Clients(connIds).SendAsync(
+            await presenceHub.Clients.Clients(connIds).SendAsync(
                 "UnreadCountChanged", new { contextType = "dialog", contextId = dialogId, count }, ct);
         }
     }
@@ -340,7 +344,7 @@ public sealed class ChatHub(AppDbContext db, IUnreadStore unread, IPresenceStore
                 if (connIds.Count > 0)
                 {
                     var count = await unread.GetCountAsync(memberId, "room", roomId, ct);
-                    await Clients.Clients(connIds).SendAsync(
+                    await presenceHub.Clients.Clients(connIds).SendAsync(
                         "UnreadCountChanged",
                         new { contextType = "room", contextId = roomId, count }, ct);
                 }

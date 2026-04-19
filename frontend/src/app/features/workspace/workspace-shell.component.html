@@ -7,7 +7,15 @@
       <nav class="hidden md:flex gap-6">
         <a routerLink="/app/rooms" routerLinkActive="border-b-2 border-white text-white" [routerLinkActiveOptions]="{exact:true}" class="text-on-primary/70 hover:text-on-primary transition-colors pb-1" data-testid="go-to-rooms">Public Rooms</a>
         <a routerLink="/app/private-rooms" routerLinkActive="border-b-2 border-white text-white" class="text-on-primary/70 hover:text-on-primary transition-colors pb-1" data-testid="go-to-private-rooms">Private Rooms</a>
-        <a routerLink="/app/invitations" routerLinkActive="border-b-2 border-white text-white" class="text-on-primary/70 hover:text-on-primary transition-colors pb-1">Invitations</a>
+        <span class="relative">
+          <a routerLink="/app/invitations"
+             routerLinkActive="border-b-2 border-white text-white"
+             class="text-on-primary/70 hover:text-on-primary transition-colors pb-1">Invitations</a>
+          @if (pendingInvitationCount() > 0) {
+            <span class="absolute -top-1 -right-2 w-2 h-2 bg-error rounded-full"
+                  data-testid="invitation-badge"></span>
+          }
+        </span>
         <a routerLink="/app/contacts" routerLinkActive="border-b-2 border-white text-white" class="text-on-primary/70 hover:text-on-primary transition-colors pb-1">Contacts</a>
         <a routerLink="/app/admin" routerLinkActive="border-b-2 border-white text-white" class="text-on-primary/70 hover:text-on-primary transition-colors pb-1">Admin</a>
         <a routerLink="/app/sessions" routerLinkActive="border-b-2 border-white text-white" class="text-on-primary/70 hover:text-on-primary transition-colors pb-1" data-testid="go-to-sessions">Sessions</a>
@@ -50,7 +58,13 @@
       <div class="mb-6">
         <div class="bg-surface-container-high p-2 rounded-lg mb-6 flex items-center gap-2 text-sm text-on-surface-variant">
           <span class="material-symbols-outlined text-sm">search</span>
-          <input class="bg-transparent border-none focus:outline-none p-0 text-sm w-full placeholder-on-surface-variant" placeholder="Search workspace..." type="text" />
+          <input
+            class="bg-transparent border-none focus:outline-none p-0 text-sm w-full placeholder-on-surface-variant"
+            placeholder="Search workspace..."
+            type="text"
+            [value]="searchQuery()"
+            (input)="searchQuery.set($any($event.target).value)"
+          />
         </div>
 
         <!-- Public Rooms accordion -->
@@ -76,7 +90,8 @@
                   </span>
                   @let count = getUnreadCount('room', room.id);
                   @if (count > 0) {
-                    <span class="ml-1 shrink-0 min-w-[1.25rem] h-5 px-1 bg-primary text-on-primary text-[10px] font-black rounded-full flex items-center justify-center">{{ count }}</span>
+                    <span class="ml-1 shrink-0 min-w-[1.25rem] h-5 px-1 bg-primary text-on-primary text-[10px] font-black rounded-full flex items-center justify-center"
+                          [attr.data-testid]="'unread-badge-' + room.id">{{ count }}</span>
                   }
                 </a>
               } @empty {
@@ -109,7 +124,8 @@
                   </span>
                   @let count = getUnreadCount('room', room.id);
                   @if (count > 0) {
-                    <span class="ml-1 shrink-0 min-w-[1.25rem] h-5 px-1 bg-primary text-on-primary text-[10px] font-black rounded-full flex items-center justify-center">{{ count }}</span>
+                    <span class="ml-1 shrink-0 min-w-[1.25rem] h-5 px-1 bg-primary text-on-primary text-[10px] font-black rounded-full flex items-center justify-center"
+                          [attr.data-testid]="'unread-badge-' + room.id">{{ count }}</span>
                   }
                 </a>
               } @empty {

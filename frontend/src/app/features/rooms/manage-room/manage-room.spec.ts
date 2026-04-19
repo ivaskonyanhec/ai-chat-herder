@@ -80,4 +80,34 @@ describe('ManageRoomComponent', () => {
     expect(component.admins().length).toBe(1);
     expect(component.admins()[0].username).toBe('alice');
   });
+
+  it('searches invitees as a typeahead and excludes current room members', async () => {
+    fixture.detectChanges();
+    http.expectOne(`/api/rooms/${roomId}`).flush(mockRoom);
+    http.expectOne(`/api/rooms/${roomId}/members`).flush([
+      { userId: 'u1', username: 'alice', avatarUrl: null, role: 'Member', joinedAt: '', presenceStatus: 'online' },
+    ]);
+    await fixture.whenStable();
+
+    component.switchTab('invitations');
+    fixture.detectChanges();
+    http.expectOne(`/api/rooms/${roomId}/invitations`).flush([]);
+    await fixture.whenStable();
+
+    component.onInviteUsernameInput('al');
+    const search = http.expectOne('/api/users/search?q=al&limit=8');
+    expect(search.request.method).toBe('GET');
+    search.flush([
+      { id: 'u1', username: 'alice', avatarUrl: null },
+      { id: 'u2', username: 'alex', avatarUrl: null },
+    ]);
+    await fixture.whenStable();
+
+    expect(component.inviteSuggestions().map(u => u.username)).toEqual(['alex']);
+
+    component.selectInviteSuggestion({ id: 'u2', username: 'alex', avatarUrl: null });
+
+    expect(component.inviteUsername).toBe('alex');
+    expect(component.inviteSuggestions()).toEqual([]);
+  });
 });

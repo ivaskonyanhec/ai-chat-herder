@@ -92,6 +92,34 @@ test.describe('Room catalog, membership, and invitations', () => {
     expect(members.map((m) => m.userId)).toContain(userB.id);
   });
 
+  test('room invitation form suggests users with typeahead in the browser', async ({ api, userA, userB, userAPage }) => {
+    const room = await api.createRoom(userA.accessToken, { visibility: 'Private' });
+
+    await userAPage.goto(`/app/rooms/${room.id}/manage`);
+    const manageInvitationsTab = userAPage.getByRole('main').getByText('Invitations');
+    await expect(manageInvitationsTab).toBeVisible({ timeout: 10_000 });
+    await manageInvitationsTab.click();
+
+    await userAPage.locator('[data-testid="invite-username-input"]').fill(userB.username);
+    await expect(userAPage.locator(`[data-testid="invite-user-suggestion-${userB.username}"]`))
+      .toBeVisible({ timeout: 5_000 });
+    await userAPage.locator(`[data-testid="invite-user-suggestion-${userB.username}"]`).click();
+    await expect(userAPage.locator('[data-testid="invite-username-input"]')).toHaveValue(userB.username);
+    const inviteResponse = userAPage.waitForResponse(response =>
+      response.url().endsWith(`/api/rooms/${room.id}/invitations`),
+    );
+    await userAPage.locator('[data-testid="send-room-invitation"]').click();
+    const inviteResult = await inviteResponse;
+    expect(inviteResult.status(), await inviteResult.text()).toBe(204);
+
+    const inviteeCtx = await api.authContext(userB.accessToken);
+    const invitations = await inviteeCtx.get('/api/invitations');
+    expect(invitations.status(), await invitations.text()).toBe(200);
+    const body = await invitations.json();
+    expect(body.some((i: { roomId: string }) => i.roomId === room.id)).toBe(true);
+    await inviteeCtx.dispose();
+  });
+
   test('accepted private room invitation appears in the browser sidebar without a reload', async ({
     api,
     userA,

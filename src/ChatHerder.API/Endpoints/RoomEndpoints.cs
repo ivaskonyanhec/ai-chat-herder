@@ -26,7 +26,10 @@ public static class RoomEndpoints
         group.MapGet("/{id:guid}/messages", GetMessages).RequireAuthorization();
         group.MapGet("/{id:guid}/bans", GetBans).RequireAuthorization();
         group.MapPost("/{id:guid}/members/{userId:guid}/ban", BanMember).RequireAuthorization();
-        group.MapDelete("/{id:guid}/bans/{userId:guid}", UnbanMember).RequireAuthorization();
+        group.MapDelete("/{id:guid}/bans/{userId:guid}",
+            (Guid id, Guid userId, ClaimsPrincipal p, AppDbContext db,
+             IHubContext<PresenceHub> hub, IPresenceStore presence, CancellationToken ct)
+                => UnbanMember(id, userId, p, db, hub, presence, ct)).RequireAuthorization();
         group.MapPost("/{id:guid}/members/{userId:guid}/make-admin", MakeAdmin).RequireAuthorization();
         group.MapDelete("/{id:guid}/members/{userId:guid}/admin", RemoveAdmin).RequireAuthorization();
         group.MapDelete("/{id:guid}/messages/{msgId:guid}", DeleteMessage).RequireAuthorization();
@@ -46,6 +49,12 @@ public static class RoomEndpoints
         IHubContext<PresenceHub> presenceHub, IPresenceStore presence,
         CancellationToken ct)
         => BanMember(id, userId, req, principal, db, presenceHub, presence, ct);
+
+    internal static Task<IResult> UnbanMemberInternal(
+        Guid id, Guid userId, ClaimsPrincipal principal, AppDbContext db,
+        IHubContext<PresenceHub> presenceHub, IPresenceStore presence,
+        CancellationToken ct)
+        => UnbanMember(id, userId, principal, db, presenceHub, presence, ct);
 
     private static async Task<IResult> GetPublicCatalog(
         AppDbContext db,
@@ -419,6 +428,8 @@ public static class RoomEndpoints
         Guid userId,
         ClaimsPrincipal principal,
         AppDbContext db,
+        IHubContext<PresenceHub> presenceHub,
+        IPresenceStore presence,
         CancellationToken ct)
     {
         if (!Guid.TryParse(principal.FindFirstValue("user_id"), out var callerId))
@@ -432,7 +443,17 @@ public static class RoomEndpoints
 
         ban.RevokedAt = DateTime.UtcNow;
         ban.RevokedByUserId = callerId;
+
+        var alreadyMember = await db.RoomMemberships.AnyAsync(m => m.RoomId == id && m.UserId == userId, ct);
+        if (!alreadyMember)
+            db.RoomMemberships.Add(new RoomMembership { RoomId = id, UserId = userId, Role = MemberRole.Member });
+
         await db.SaveChangesAsync(ct);
+
+        var connIds = await presence.GetConnectionIdsAsync(userId, ct);
+        foreach (var connId in connIds)
+            await presenceHub.Clients.Client(connId)
+                .SendAsync("AddedToRoom", new { roomId = id }, cancellationToken: ct);
 
         return Results.NoContent();
     }
