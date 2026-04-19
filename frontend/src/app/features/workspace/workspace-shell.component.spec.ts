@@ -13,8 +13,10 @@ import { NotificationsApiService } from '../../core/notifications/notifications-
 import { RoomsApiService } from '../../core/rooms/rooms-api.service';
 import { FriendsApiService } from '../../core/friends/friends-api.service';
 import type { RoomDto } from '../../core/rooms/rooms.models';
+import type { RoomInvitationReceivedEvent } from '../../core/signalr/hub.models';
+import { InvitationsApiService } from '../../core/invitations/invitations-api.service';
 
-type HubStub = { connect: ReturnType<typeof vi.fn>; disconnect: ReturnType<typeof vi.fn>; presenceMap?: unknown; addedToRoom?: unknown };
+type HubStub = { connect: ReturnType<typeof vi.fn>; disconnect: ReturnType<typeof vi.fn>; presenceMap?: unknown; addedToRoom?: unknown; invitationReceived?: unknown };
 type AuthSessionStub = { user: Signal<null>; accessToken?: Signal<null>; clearSession: ReturnType<typeof vi.fn> };
 type AuthApiStub = { logout: ReturnType<typeof vi.fn> };
 
@@ -38,6 +40,7 @@ function buildProviders(overrides: {
     disconnect: vi.fn().mockResolvedValue(undefined),
     presenceMap: signal(new Map()).asReadonly(),
     addedToRoom: signal(null).asReadonly(),
+    invitationReceived: signal(null).asReadonly(),
   };
   const chatService: HubStub = overrides.chatService ?? {
     connect: vi.fn().mockResolvedValue(undefined),
@@ -53,6 +56,7 @@ function buildProviders(overrides: {
       { provide: ChatService, useValue: chatService },
       { provide: NotificationsApiService, useValue: { getUnreadCounts: vi.fn().mockReturnValue(of([])) } },
       { provide: FriendsApiService, useValue: { getFriends: vi.fn().mockReturnValue(of([])) } },
+      { provide: InvitationsApiService, useValue: { getMyInvitations: vi.fn().mockReturnValue(of([])) } },
       {
         provide: RoomsApiService,
         useValue: {
@@ -302,5 +306,112 @@ describe('WorkspaceShellComponent', () => {
     await fixture.whenStable();
     expect(comp.createRoomError()).toBe('Failed to create room. Try again.');
     expect(comp.isCreatingRoomPending()).toBe(false);
+  });
+
+  it('shows invitation badge when pendingInvitationCount > 0', async () => {
+    const { providers } = buildProviders();
+    TestBed.configureTestingModule({ imports: [WorkspaceShellComponent], providers });
+    const fixture = TestBed.createComponent(WorkspaceShellComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.componentInstance.pendingInvitationCount.set(3);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[data-testid="invitation-badge"]')).not.toBeNull();
+  });
+
+  it('hides invitation badge when pendingInvitationCount is 0', async () => {
+    const { providers } = buildProviders();
+    TestBed.configureTestingModule({ imports: [WorkspaceShellComponent], providers });
+    const fixture = TestBed.createComponent(WorkspaceShellComponent);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[data-testid="invitation-badge"]')).toBeNull();
+  });
+
+  it('bootstraps pendingInvitationCount from GET /invitations', async () => {
+    const { providers } = buildProviders();
+    const invitationsStub = {
+      getMyInvitations: vi.fn().mockReturnValue(of([
+        { id: 'i1', status: 'Pending' },
+        { id: 'i2', status: 'Pending' },
+      ])),
+    };
+    const providersWithInvitations = providers.map(p =>
+      'provide' in p && p.provide === InvitationsApiService
+        ? { provide: InvitationsApiService, useValue: invitationsStub }
+        : p,
+    );
+    TestBed.configureTestingModule({ imports: [WorkspaceShellComponent], providers: providersWithInvitations });
+    const fixture = TestBed.createComponent(WorkspaceShellComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(fixture.componentInstance.pendingInvitationCount()).toBe(2);
+  });
+
+  it('increments pendingInvitationCount when invitationReceived signal fires', async () => {
+    const invitationReceivedSig = signal<RoomInvitationReceivedEvent | null>(null);
+    const customPresence: HubStub = {
+      connect: vi.fn().mockResolvedValue(undefined),
+      disconnect: vi.fn().mockResolvedValue(undefined),
+      presenceMap: signal(new Map()).asReadonly(),
+      addedToRoom: signal(null).asReadonly(),
+      invitationReceived: invitationReceivedSig.asReadonly(),
+    };
+    const { providers } = buildProviders({ presenceService: customPresence });
+    TestBed.configureTestingModule({ imports: [WorkspaceShellComponent], providers });
+    const fixture = TestBed.createComponent(WorkspaceShellComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(fixture.componentInstance.pendingInvitationCount()).toBe(0);
+    invitationReceivedSig.set({ invitationId: 'x', roomId: 'r', roomName: 'Room', fromUserId: 'u' });
+    TestBed.flushEffects();
+    expect(fixture.componentInstance.pendingInvitationCount()).toBe(1);
+  });
+
+  it('resets pendingInvitationCount to 0 when navigating to /app/invitations', async () => {
+    const { providers } = buildProviders();
+    // Replace the default provideRouter (index 0) with one that includes /app/invitations
+    const providersWithRoute = [
+      provideRouter([
+        { path: 'auth', component: EmptyAuthComponent },
+        { path: 'app/invitations', component: EmptyAuthComponent },
+      ]),
+      ...providers.slice(1),
+    ];
+    TestBed.configureTestingModule({ imports: [WorkspaceShellComponent], providers: providersWithRoute });
+    const fixture = TestBed.createComponent(WorkspaceShellComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    fixture.componentInstance.pendingInvitationCount.set(5);
+    fixture.detectChanges();
+    expect(fixture.componentInstance.pendingInvitationCount()).toBe(5);
+
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/app/invitations');
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(fixture.componentInstance.pendingInvitationCount()).toBe(0);
+  });
+
+  it('filters publicRooms by searchQuery', async () => {
+    const rooms: RoomDto[] = [
+      { id: 'r1', name: 'General', description: null, visibility: 'Public', ownerId: 'u1', createdAt: '', memberCount: 1, callerRole: 'Member' },
+      { id: 'r2', name: 'Design', description: null, visibility: 'Public', ownerId: 'u1', createdAt: '', memberCount: 1, callerRole: 'Member' },
+    ];
+    const roomsApi = { getMyRooms: vi.fn().mockReturnValue(of(rooms)), createRoom: vi.fn() };
+    const { providers } = buildProviders();
+    const providersWithRooms = providers.map(p =>
+      'provide' in p && p.provide === RoomsApiService ? { provide: RoomsApiService, useValue: roomsApi } : p,
+    );
+    TestBed.configureTestingModule({ imports: [WorkspaceShellComponent], providers: providersWithRooms });
+    const fixture = TestBed.createComponent(WorkspaceShellComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    fixture.componentInstance.searchQuery.set('des');
+    expect(fixture.componentInstance.publicRooms()).toHaveLength(1);
+    expect(fixture.componentInstance.publicRooms()[0].name).toBe('Design');
   });
 });
