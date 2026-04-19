@@ -241,6 +241,10 @@ Angular components must add these attributes for the selectors to resolve:
 | `data-testid="ban-member-{userId}"` | AdminMembersTab | 05-admin |
 | `data-testid="ban-confirm"` | AdminModal | 05-admin |
 | `data-testid="access-denied"` | RoomView | 05-admin (optional) |
+| `data-testid="dm-messages"` | DirectMessagesComponent | 06-dm-flow |
+| `data-testid="dialog-item-{id}"` | DirectMessagesComponent | 06-dm-flow (dialog list button per conversation) |
+| `data-testid="dm-message-input"` | DirectMessagesComponent | 06-dm-flow (DM message text input) |
+| `data-testid="dm-send-btn"` | DirectMessagesComponent | 06-dm-flow (send message button in DM composer) |
 
 ---
 

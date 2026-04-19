@@ -1,6 +1,5 @@
 import { test, expect } from '../../fixtures/test-fixtures';
 import type { ApiHelpers } from '../../helpers/api.helpers';
-import { createHubConnection } from '../../helpers/signalr.helpers';
 
 async function becomeFriends(
   api: ApiHelpers,
