@@ -84,4 +84,15 @@ describe('PresenceService', () => {
     await service.leaveRoom('room-123');
     expect(mockConn.invoke).toHaveBeenCalledWith('LeaveRoom', 'room-123');
   });
+
+  it('joinDialog invokes JoinDialog on the hub', async () => {
+    await service.joinDialog('dialog-123');
+    expect(mockConn.invoke).toHaveBeenCalledWith('JoinDialog', 'dialog-123');
+  });
+
+  it('leaveDialog invokes LeaveDialog on the hub', async () => {
+    await service.joinDialog('dialog-123');
+    await service.leaveDialog('dialog-123');
+    expect(mockConn.invoke).toHaveBeenCalledWith('LeaveDialog', 'dialog-123');
+  });
 });

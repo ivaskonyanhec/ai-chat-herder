@@ -68,4 +68,16 @@ describe('DirectMessagesComponent', () => {
     expect(leaveDialog).toHaveBeenCalledWith('dialog-1');
     expect(joinDialog).toHaveBeenCalledWith('dialog-2');
   });
+
+  it('starts with no selected dialog', () => {
+    buildTestBed();
+    const fixture = TestBed.createComponent(DirectMessagesComponent);
+    expect(fixture.componentInstance.selectedDialog()).toBeNull();
+  });
+
+  it('finishes loading dialogs synchronously with of([])', () => {
+    buildTestBed();
+    const fixture = TestBed.createComponent(DirectMessagesComponent);
+    expect(fixture.componentInstance.isLoadingDialogs()).toBe(false);
+  });
 });

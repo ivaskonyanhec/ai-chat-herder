@@ -100,12 +100,14 @@ export class PresenceService {
 
   async joinDialog(dialogId: string): Promise<void> {
     if (!this.connection) return;
+    if (this.joinedDialogs.has(dialogId)) return;
     await this.connection.invoke('JoinDialog', dialogId);
     this.joinedDialogs.add(dialogId);
   }
 
   async leaveDialog(dialogId: string): Promise<void> {
     if (!this.connection) return;
+    if (!this.joinedDialogs.has(dialogId)) return;
     await this.connection.invoke('LeaveDialog', dialogId);
     this.joinedDialogs.delete(dialogId);
   }
