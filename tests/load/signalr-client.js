@@ -1,5 +1,5 @@
 import { invocation, signalRConnect } from './helpers/websocket.helper.js';
-import { setInterval, setTimeout } from 'k6/timers';
+import { setInterval, setTimeout, clearInterval, clearTimeout } from 'k6/timers';
 import {
   recordMessageMiss,
   recordMessageReceived,
@@ -13,15 +13,16 @@ import {
 export function connectPresence(user, roomId, runtimeMs) {
   const pendingPresence = {};
   let invocationId = 0;
+  let heartbeatId, afkId, closeId;
 
   signalRConnect('/hubs/presence', user.accessToken, {
     open(socket) {
       sendIfOpen(socket, invocation(++invocationId, 'JoinRoom', [roomId]));
-      setInterval(() => {
+      heartbeatId = setInterval(() => {
         sendIfOpen(socket, invocation(++invocationId, 'Heartbeat', []));
       }, 30000);
 
-      setInterval(() => {
+      afkId = setInterval(() => {
         pendingPresence[user.id] = Date.now();
         recordPresenceSent();
         sendIfOpen(socket, invocation(++invocationId, 'SetAfk', []));
@@ -30,7 +31,7 @@ export function connectPresence(user, roomId, runtimeMs) {
         }, 1000);
       }, randomInterval(25000, 45000));
 
-      setTimeout(() => socket.close(), runtimeMs);
+      closeId = setTimeout(() => socket.close(), runtimeMs);
     },
     message(_socket, message) {
       if (message.type !== 1 || message.target !== 'UserStatusChanged') return;
@@ -41,6 +42,9 @@ export function connectPresence(user, roomId, runtimeMs) {
       delete pendingPresence[payload.userId];
     },
     close() {
+      clearInterval(heartbeatId);
+      clearInterval(afkId);
+      clearTimeout(closeId);
       Object.keys(pendingPresence).forEach((key) => {
         recordPresenceMiss();
         delete pendingPresence[key];
@@ -55,10 +59,13 @@ export function connectPresence(user, roomId, runtimeMs) {
 export function connectChat(user, roomId, runtimeMs) {
   const pendingMessages = {};
   let invocationId = 0;
+  let sendId, cleanupId, closeId;
 
   signalRConnect('/hubs/chat', user.accessToken, {
     open(socket) {
-      setInterval(() => {
+      sendIfOpen(socket, invocation(++invocationId, 'JoinRoom', [roomId]));
+
+      sendId = setInterval(() => {
         const id = `${__VU}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
         const content = `load-message:${id}`;
         pendingMessages[id] = Date.now();
@@ -66,7 +73,7 @@ export function connectChat(user, roomId, runtimeMs) {
         sendIfOpen(socket, invocation(++invocationId, 'SendMessage', [roomId, content, null, null]));
       }, randomInterval(8000, 20000));
 
-      setInterval(() => {
+      cleanupId = setInterval(() => {
         Object.keys(pendingMessages).forEach((key) => {
           if (Date.now() - pendingMessages[key] > 3000) {
             recordMessageMiss();
@@ -75,7 +82,7 @@ export function connectChat(user, roomId, runtimeMs) {
         });
       }, 1000);
 
-      setTimeout(() => socket.close(), runtimeMs);
+      closeId = setTimeout(() => socket.close(), runtimeMs);
     },
     message(_socket, message) {
       if (message.type !== 1 || message.target !== 'MessageReceived') return;
@@ -89,6 +96,9 @@ export function connectChat(user, roomId, runtimeMs) {
       delete pendingMessages[id];
     },
     close() {
+      clearInterval(sendId);
+      clearInterval(cleanupId);
+      clearTimeout(closeId);
       Object.keys(pendingMessages).forEach((key) => {
         recordMessageMiss();
         delete pendingMessages[key];

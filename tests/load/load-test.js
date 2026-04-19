@@ -1,5 +1,5 @@
 import http from 'k6/http';
-import { check, fail, sleep } from 'k6';
+import { check, fail } from 'k6';
 import {
   buildRegisterRequest,
   buildLoginRequest,
@@ -78,7 +78,9 @@ export default function (data) {
   const user = data.users[(__VU - 1) % data.users.length];
   runPresenceScenario(user, data.roomId, runtimeMs);
   runMessagingScenario(user, data.roomId, runtimeMs);
-  sleep(runtimeMs / 1000);
+  // No sleep — socket close timeouts (runtimeMs) control VU lifecycle.
+  // With k6/experimental/websockets, the event loop stays alive until all
+  // sockets and timers resolve; sleep would block that event loop.
 }
 
 export function handleSummary(data) {
