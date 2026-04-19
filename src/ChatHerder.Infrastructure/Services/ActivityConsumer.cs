@@ -54,7 +54,7 @@ public sealed class ActivityConsumer(
                 await ProcessMessageAsync(db, evt, stoppingToken);
                 await channel.BasicAckAsync(ea.DeliveryTag, false);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 logger.LogError(ex, "Failed to process ActivityEvent");
                 await channel.BasicNackAsync(ea.DeliveryTag, false, false);
