@@ -1,4 +1,4 @@
-import { Component, DestroyRef, OnInit, OnDestroy, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, OnDestroy, computed, effect, inject, signal } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter } from 'rxjs';
@@ -44,6 +44,12 @@ export class WorkspaceShellComponent implements OnInit, OnDestroy {
   readonly publicRoomsExpanded = signal(true);
   readonly privateRoomsExpanded = signal(true);
   readonly sidebarOpen = signal(false);
+
+  constructor() {
+    effect(() => {
+      if (this.presence.addedToRoom()) this.loadRooms();
+    });
+  }
 
   readonly isCreatingRoom = signal(false);
   readonly newRoomName = signal('');

@@ -5,13 +5,16 @@ import { firstValueFrom } from 'rxjs';
 import { HUB_CONNECTION_FACTORY } from './hub-connection.factory';
 import { AuthRefreshService } from '../auth/auth-refresh.service';
 import { AuthSessionService } from '../auth/auth-session.service';
+import { UnreadService } from './unread.service';
 import type {
   PresenceStatus,
   RoomMembersSnapshotEvent,
   MemberJoinedEvent,
   MemberLeftEvent,
   RemovedFromRoomEvent,
+  AddedToRoomEvent,
   UserStatusChangedEvent,
+  UnreadCountChangedEvent,
 } from './hub.models';
 
 const HEARTBEAT_INTERVAL_MS = 30_000;
@@ -25,6 +28,7 @@ export class PresenceService {
   private readonly authSession = inject(AuthSessionService);
   private readonly authRefresh = inject(AuthRefreshService);
   private readonly document = inject(DOCUMENT);
+  private readonly unread = inject(UnreadService);
 
   private connection: HubConnection | null = null;
   private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
@@ -41,6 +45,7 @@ export class PresenceService {
   private readonly _memberJoined = signal<MemberJoinedEvent | null>(null);
   private readonly _memberLeft = signal<MemberLeftEvent | null>(null);
   private readonly _removedFromRoom = signal<RemovedFromRoomEvent | null>(null);
+  private readonly _addedToRoom = signal<AddedToRoomEvent | null>(null);
 
   readonly connected = this._connected.asReadonly();
   readonly presenceMap = this._presenceMap.asReadonly();
@@ -48,6 +53,7 @@ export class PresenceService {
   readonly memberJoined = this._memberJoined.asReadonly();
   readonly memberLeft = this._memberLeft.asReadonly();
   readonly removedFromRoom = this._removedFromRoom.asReadonly();
+  readonly addedToRoom = this._addedToRoom.asReadonly();
 
   async connect(): Promise<void> {
     const token = this.authSession.accessToken();
@@ -151,6 +157,14 @@ export class PresenceService {
     conn.on('RemovedFromRoom', (e: RemovedFromRoomEvent) => {
       this.joinedRooms.delete(e.roomId);
       this._removedFromRoom.set(e);
+    });
+
+    conn.on('AddedToRoom', (e: AddedToRoomEvent) => {
+      this._addedToRoom.set(e);
+    });
+
+    conn.on('UnreadCountChanged', (e: UnreadCountChangedEvent) => {
+      this.unread.setCount(e.contextType, e.contextId, e.count);
     });
 
     conn.on('ForceDisconnect', () => {

@@ -59,6 +59,7 @@ export interface RoomMembersSnapshotEvent { roomId: string; members: RoomMemberP
 export interface MemberJoinedEvent { roomId: string; user: RoomMemberJoined; }
 export interface MemberLeftEvent { roomId: string; userId: string; }
 export interface RemovedFromRoomEvent { roomId: string; }
+export interface AddedToRoomEvent { roomId: string; }
 export interface FriendRequestReceivedEvent { requestId: string; fromUserId: string; fromUsername: string; message: string | null; }
 export interface FriendRequestAcceptedEvent { userId: string; username: string; }
 export interface RoomInvitationReceivedEvent { invitationId: string; roomId: string; roomName: string; fromUserId: string; }

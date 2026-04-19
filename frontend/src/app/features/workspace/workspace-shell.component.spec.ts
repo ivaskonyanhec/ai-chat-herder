@@ -14,7 +14,7 @@ import { RoomsApiService } from '../../core/rooms/rooms-api.service';
 import { FriendsApiService } from '../../core/friends/friends-api.service';
 import type { RoomDto } from '../../core/rooms/rooms.models';
 
-type HubStub = { connect: ReturnType<typeof vi.fn>; disconnect: ReturnType<typeof vi.fn>; presenceMap?: unknown };
+type HubStub = { connect: ReturnType<typeof vi.fn>; disconnect: ReturnType<typeof vi.fn>; presenceMap?: unknown; addedToRoom?: unknown };
 type AuthSessionStub = { user: Signal<null>; accessToken?: Signal<null>; clearSession: ReturnType<typeof vi.fn> };
 type AuthApiStub = { logout: ReturnType<typeof vi.fn> };
 
@@ -37,6 +37,7 @@ function buildProviders(overrides: {
     connect: vi.fn().mockResolvedValue(undefined),
     disconnect: vi.fn().mockResolvedValue(undefined),
     presenceMap: signal(new Map()).asReadonly(),
+    addedToRoom: signal(null).asReadonly(),
   };
   const chatService: HubStub = overrides.chatService ?? {
     connect: vi.fn().mockResolvedValue(undefined),
