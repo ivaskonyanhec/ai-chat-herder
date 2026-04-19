@@ -124,4 +124,22 @@ test.describe('UAT: Profile Settings page', () => {
     await loginCtx.dispose();
     await ctx.close();
   });
+
+  test('deleted account email and username can be re-registered immediately', async ({ api }) => {
+    const user = await api.register();
+    await api.deleteAccount(user.accessToken);
+
+    // Same email, new username — must return 200, not 409 or 500
+    const reregCtx = await api.context();
+    const res = await reregCtx.post('/api/auth/register', {
+      data: {
+        email:       user.email,
+        username:    `${user.username}_v2`,
+        password:    user.password,
+        keepSignedIn: false,
+      },
+    });
+    expect(res.status(), await res.text()).toBe(200);
+    await reregCtx.dispose();
+  });
 });

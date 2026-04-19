@@ -29,3 +29,12 @@ export function joinRoom(user, roomId) {
     fail(`Failed to join room ${roomId}: ${res.status} ${res.body}`);
   }
 }
+
+export function buildJoinRoomRequest(user, roomId) {
+  return {
+    method: 'POST',
+    url: `${apiBaseUrl()}/api/rooms/${roomId}/join`,
+    body: null,
+    params: { headers: authHeaders(user.accessToken), tags: { endpoint: 'join-room' } },
+  };
+}

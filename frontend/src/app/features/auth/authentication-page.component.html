@@ -43,7 +43,7 @@
     <!-- Auth Forms Column -->
     <div class="flex flex-col space-y-6">
       <!-- Tab Switcher -->
-      <div class="inline-flex p-1 bg-surface-container rounded-lg self-center md:self-start">
+      <div class="inline-flex p-1 bg-surface-container rounded-lg self-center md:self-start shadow-inner-thick">
         <button
           type="button"
           class="px-6 py-2 text-sm font-bold rounded-lg transition-colors"
@@ -77,7 +77,7 @@
       <!-- Sign In Form -->
       @if (mode() === 'login') {
         <div
-          class="bg-surface-container-lowest/85 backdrop-blur-md border border-outline-variant/15 p-10 rounded-xl shadow-ambient">
+          class="bg-surface-container-lowest/85 backdrop-blur-md border border-outline-variant/15 p-10 rounded-xl">
           <div class="mb-8">
             <h3 class="text-2xl font-bold text-on-surface tracking-tight mb-2">Welcome Back</h3>
             <p class="text-on-surface-variant text-sm">Please enter your credentials to access the workspace.</p>
@@ -134,7 +134,7 @@
               }
             </div>
             <div class="flex items-center space-x-3">
-              <input class="h-4 w-4 rounded border-outline-variant text-primary focus:ring-primary/20"
+              <input class="h-4 w-4 rounded-sm accent-primary cursor-pointer"
                      id="keep-signed-in" type="checkbox" formControlName="keepSignedIn"/>
               <label class="text-xs text-on-surface-variant font-medium select-none" for="keep-signed-in">Keep me signed
                 in on this device</label>
@@ -229,7 +229,8 @@
                 }
               </div>
               <div class="space-y-1">
-                <label class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Confirm Password</label>
+                <label class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Confirm
+                  Password</label>
                 <input
                   pInputText
                   [invalid]="registerFieldHasError('confirmPassword') || registerPasswordMismatch()"
@@ -245,9 +246,10 @@
               </div>
             </div>
             <div class="flex items-center space-x-3">
-              <input class="h-4 w-4 rounded border-outline-variant text-primary focus:ring-primary/20"
+              <input class="h-4 w-4 rounded-sm accent-primary cursor-pointer"
                      id="register-keep-signed-in" type="checkbox" formControlName="keepSignedIn"/>
-              <label class="text-xs text-on-surface-variant font-medium select-none" for="register-keep-signed-in">Keep me signed
+              <label class="text-xs text-on-surface-variant font-medium select-none" for="register-keep-signed-in">Keep
+                me signed
                 in on this device</label>
             </div>
             <div class="pt-4">

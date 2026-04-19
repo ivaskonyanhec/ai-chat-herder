@@ -338,6 +338,8 @@ public static class AuthEndpoints
         var user = await db.Users.FindAsync([userId], ct);
         if (user is null) return Results.NotFound();
 
+        await using var tx = await db.Database.BeginTransactionAsync(ct);
+
         // Cascade-delete owned rooms: files → attachments → messages → bans/invitations/memberships → room
         var ownedRoomIds = await db.Rooms
             .Where(r => r.OwnerId == userId)
@@ -389,12 +391,18 @@ public static class AuthEndpoints
             .Where(b => b.BlockerId == userId || b.BlockedUserId == userId)
             .ExecuteDeleteAsync(ct);
 
-        // Revoke all sessions so reconnect attempts are rejected
-        await sessions.RevokeAllAsync(userId, ct: ct);
+        // Anonymize PII so the email + username are freed for re-use; row kept for audit trail
+        await db.Users
+            .Where(u => u.Id == userId)
+            .ExecuteUpdateAsync(u => u
+                .SetProperty(p => p.Email,     $"deleted.{userId:N}@deleted.invalid")
+                .SetProperty(p => p.Username,  userId.ToString("N"))
+                .SetProperty(p => p.DeletedAt, DateTime.UtcNow), ct);
 
-        // Soft-delete preserves email + username to prevent re-registration
-        user.DeletedAt = DateTime.UtcNow;
-        await db.SaveChangesAsync(ct);
+        await tx.CommitAsync(ct);
+
+        // Session revocation and SignalR broadcast run after DB commit (not transactional)
+        await sessions.RevokeAllAsync(userId, ct: ct);
 
         // Broadcast ForceDisconnect to all active SignalR connections
         var connIds = await presence.GetConnectionIdsAsync(userId, ct);
@@ -413,4 +421,14 @@ public static class AuthEndpoints
         IHubContext<PresenceHub> presenceHub,
         CancellationToken ct)
         => DeleteAccount(principal, db, sessions, storage, presence, presenceHub, ct);
+
+    internal static Task<IResult> RegisterInternal(
+        RegisterRequest req,
+        AppDbContext db,
+        IPasswordHasher hasher,
+        IJwtTokenService jwt,
+        ISessionStore sessions,
+        HttpContext ctx,
+        CancellationToken ct)
+        => Register(req, db, hasher, jwt, sessions, ctx, ct);
 }

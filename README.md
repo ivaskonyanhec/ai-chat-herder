@@ -49,16 +49,16 @@ npm run test:manual
 
 | Suite | Files | Tests | Status |
 |---|---|---|---|
-| .NET unit | — | 100 | Passing |
+| .NET unit | — | 104 | Passing |
 | .NET integration | — | 2 | Passing |
-| Angular unit | 28 | 114 | Passing |
-| E2E / UAT | 11 spec files | — | Dockerized |
+| Angular unit | 32 | 149 | Passing |
+| E2E / UAT | 11 spec files | 96 | Dockerized |
 
 Phase 5 (XMPP/Jabber gateway) is architecturally planned but gated behind an explicit implementation request.
 
 Useful status documents:
 
-- `DEVELOPMENT_LOG.md` — chronological implementation log (T1–T164)
+- `DEVELOPMENT_LOG.md` — chronological implementation log (T1–T193)
 - `docs/TEST_COVERAGE_MATRIX.md` — requirement-to-test coverage matrix
 - `docs/QA_SELF_AUDIT.md` — E2E/UAT audit notes
 - `docs/LOAD_TEST_RESULTS.md` / `docs/LOAD_TEST_COVERAGE_MATRIX.md` — load test results
@@ -141,7 +141,7 @@ Useful status documents:
 │   └── ChatHerder.API/             # Minimal API endpoints, SignalR hubs, DI wiring
 ├── frontend/                       # Angular 21 SPA
 ├── tests/
-│   ├── ChatHerder.Unit.Tests/      # xUnit + NSubstitute — no I/O, 100 tests
+│   ├── ChatHerder.Unit.Tests/      # xUnit + NSubstitute — no I/O, 104 tests
 │   └── ChatHerder.Integration.Tests/ # xUnit + Testcontainers (Postgres + Redis), 2 tests
 ├── e2e/                            # Playwright E2E/UAT (11 spec files)
 ├── docs/                           # Coverage matrices, audit notes, load test results
@@ -197,7 +197,7 @@ Reports land under `./e2e-reports/latest/`: `summary.md`, `manifest.json`, `resu
 docker compose --profile load run load-tester
 ```
 
-The harness lives in `tests/load/` and targets authenticated SignalR messaging and presence flows at 300 concurrent users.
+The harness lives in `tests/load/` and targets authenticated SignalR messaging and presence flows at 300 concurrent users. Setup registers and logs in all users via `http.batch()` (three parallel sweeps) to stay well within the 120 s `setupTimeout`.
 
 ---
 

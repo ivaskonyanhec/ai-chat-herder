@@ -9,7 +9,7 @@ export async function createHubConnection(path: string, accessToken: string): Pr
   const connection = new HubConnectionBuilder()
     .withUrl(hubUrl(path), { accessTokenFactory: () => accessToken })
     .withAutomaticReconnect()
-    .configureLogging(LogLevel.Warning)
+    .configureLogging(LogLevel.Error)
     .build();
 
   await connection.start();

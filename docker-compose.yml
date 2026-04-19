@@ -164,7 +164,6 @@ services:
     volumes:
       - ./tests/load:/scripts
     environment:
-      - TARGET_URL=http://backend:5000/chatHub
       - API_BASE_URL=http://backend:8080
       - LOAD_USERS=300
       - LOAD_RAMP_UP=60s

@@ -23,6 +23,7 @@ export async function bootstrapAuthenticatedContext(context: BrowserContext, use
     ({ accessToken, persistedSession, atKey, psKey }) => {
       window.localStorage.setItem(atKey, accessToken);
       window.localStorage.setItem(psKey, JSON.stringify(persistedSession));
+      (window as any).__e2eHooks = true;
     },
     {
       atKey: accessTokenStorageKey,

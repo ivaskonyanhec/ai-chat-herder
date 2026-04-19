@@ -4,6 +4,9 @@ FROM mcr.microsoft.com/playwright:v1.59.1-noble
 
 WORKDIR /e2e
 
+# Browsers are already installed in the base image; skip the postinstall download.
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+
 # Install Node dependencies first (cached layer on package-lock.json changes).
 COPY e2e/package.json e2e/package-lock.json ./
 RUN npm ci
@@ -19,4 +22,7 @@ ENV BASE_URL=http://frontend
 
 # Run typecheck + all E2E/UAT tests and write agent-readable reports.
 ENV E2E_REPORTS_ROOT=/e2e-reports
-CMD ["npm", "run", "test:all"]
+# umask 0022 ensures directories created by Node cpSync are owner-writable (755).
+# chmod ensures the bind-mounted reports dir is writable even on re-runs where a
+# previous container left files with a restrictive umask.
+CMD ["sh", "-c", "umask 0022 && chmod -R a+rwX /e2e-reports 2>/dev/null || true && npm run test:all"]

@@ -65,7 +65,7 @@ export class PresenceService {
       this._connected.set(false);
     });
 
-    if (isDevMode()) {
+    if (isDevMode() || (window as any).__e2eHooks) {
       (window as unknown as Record<string, unknown>)['__presenceHub'] = this.connection;
     }
 

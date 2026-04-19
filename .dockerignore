@@ -1,0 +1,21 @@
+# Test reports written by the e2e container — never part of any image build context.
+e2e-reports/
+
+# Local dev overrides
+.env
+docker-compose.override.yml
+
+# Git & IDE
+.git/
+.claude/
+.idea/
+.vscode/
+
+# Node
+node_modules/
+frontend/node_modules/
+e2e/node_modules/
+
+# .NET build output
+**/bin/
+**/obj/

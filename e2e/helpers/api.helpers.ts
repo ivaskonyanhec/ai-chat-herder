@@ -335,6 +335,13 @@ export class ApiHelpers {
     return attachment;
   }
 
+  async deleteAccount(accessToken: string): Promise<void> {
+    const ctx = await this.authContext(accessToken);
+    const res = await ctx.delete('/api/auth/account');
+    expect(res.status(), await res.text()).toBe(204);
+    await ctx.dispose();
+  }
+
   async getUnreadCounts(accessToken: string): Promise<UnreadContextDto[]> {
     const ctx = await this.authContext(accessToken);
     const res = await ctx.get('/api/unread');

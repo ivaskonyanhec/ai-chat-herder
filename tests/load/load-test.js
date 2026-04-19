@@ -1,6 +1,11 @@
-import { sleep } from 'k6';
-import { registerUser } from './helpers/auth.helper.js';
-import { createPublicRoom, joinRoom } from './helpers/room.helper.js';
+import http from 'k6/http';
+import { check, fail, sleep } from 'k6';
+import {
+  buildRegisterRequest,
+  buildLoginRequest,
+  parseLoginResponse,
+} from './helpers/auth.helper.js';
+import { createPublicRoom, buildJoinRoomRequest } from './helpers/room.helper.js';
 import { runMessagingScenario } from './scenarios/messaging.scenario.js';
 import { runPresenceScenario } from './scenarios/presence.scenario.js';
 
@@ -11,6 +16,7 @@ const rampDownDuration = __ENV.LOAD_RAMP_DOWN || '30s';
 const runtimeMs = durationToMs(rampUpDuration) + durationToMs(steadyDuration);
 
 export const options = {
+  setupTimeout: '120s',
   scenarios: {
     signalr_chat_load: {
       executor: 'ramping-vus',
@@ -33,21 +39,39 @@ export const options = {
 
 export function setup() {
   const runId = `${Date.now()}`;
-  const users = [];
-  for (let i = 0; i < targetUsers; i += 1) {
-    users.push(registerUser(i, runId));
-  }
 
+  // Derive email list upfront so login batch can reference it by index.
+  const emails = Array.from(
+    { length: targetUsers },
+    (_, i) => `load_${runId}_${i}@load.test`,
+  );
+
+  // Batch 1: register all users concurrently.
+  const registerResponses = http.batch(
+    Array.from({ length: targetUsers }, (_, i) => buildRegisterRequest(i, runId)),
+  );
+  registerResponses.forEach((res, i) => {
+    if (!check(res, { 'register user succeeded': (r) => r.status === 200 || r.status === 409 })) {
+      fail(`Failed to register ${emails[i]}: ${res.status} ${res.body}`);
+    }
+  });
+
+  // Batch 2: login all users concurrently.
+  const loginResponses = http.batch(emails.map(buildLoginRequest));
+  const users = loginResponses.map((res, i) => parseLoginResponse(res, emails[i]));
+
+  // Single call: create the shared room.
   const room = createPublicRoom(users[0], runId);
-  for (let i = 1; i < users.length; i += 1) {
-    joinRoom(users[i], room.id);
-  }
 
-  return {
-    users,
-    roomId: room.id,
-    runId,
-  };
+  // Batch 3: join remaining users concurrently.
+  const joinResponses = http.batch(users.slice(1).map((u) => buildJoinRoomRequest(u, room.id)));
+  joinResponses.forEach((res) => {
+    if (!check(res, { 'join public load room succeeded': (r) => r.status === 204 || r.status === 409 })) {
+      fail(`Failed to join room ${room.id}: ${res.status} ${res.body}`);
+    }
+  });
+
+  return { users, roomId: room.id, runId };
 }
 
 export default function (data) {

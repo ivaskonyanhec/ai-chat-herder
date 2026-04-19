@@ -154,6 +154,9 @@
   /* Ambient shadow for modals — 24px blur, 4% on-surface tint */
   --shadow-ambient:               0 4px 24px 0 rgba(42, 52, 57, 0.04);
 
+  /* Inner shadow for thick borders */
+  --shadow-inner-thick:           inset 0 0px 4px 4px rgba(0, 0, 0, 0.05);
+
   /* Glassmorphism (context menus, profile cards) */
   --glass-bg:                     rgba(255, 255, 255, 0.85);
   --glass-blur:                   12px;

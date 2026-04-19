@@ -77,6 +77,7 @@
 
   /* Shadow */
   --shadow-ambient: var(--shadow-ambient);
+  --shadow-inner-thick: var(--shadow-inner-thick);
 
   /* Border radius — matching design's Tailwind config (ROUND_FOUR system)
    * rounded       = 0.125rem (xs)

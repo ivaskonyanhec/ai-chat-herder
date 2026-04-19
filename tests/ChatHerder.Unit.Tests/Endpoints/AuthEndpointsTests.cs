@@ -1,5 +1,6 @@
 using ChatHerder.API.Endpoints;
 using ChatHerder.API.Hubs;
+using ChatHerder.Application.DTOs;
 using ChatHerder.Application.Ports;
 using ChatHerder.Domain.Entities;
 using ChatHerder.Domain.Enums;
@@ -70,7 +71,7 @@ public sealed class AuthEndpointsTests
         var sessions    = Substitute.For<ISessionStore>();
         var storage     = Substitute.For<IFileStorage>();
         var presence    = Substitute.For<IPresenceStore>();
-        presence.GetConnectionIdsAsync(userId).Returns(Array.Empty<string>());
+        presence.GetConnectionIdsAsync(userId, Arg.Any<CancellationToken>()).Returns(Array.Empty<string>());
         var presenceHub = Substitute.For<IHubContext<PresenceHub>>();
         var hubClients  = Substitute.For<IHubClients>();
         presenceHub.Clients.Returns(hubClients);
@@ -99,7 +100,7 @@ public sealed class AuthEndpointsTests
         var sessions    = Substitute.For<ISessionStore>();
         var storage     = Substitute.For<IFileStorage>();
         var presence    = Substitute.For<IPresenceStore>();
-        presence.GetConnectionIdsAsync(userId).Returns(new[] { "conn-1", "conn-2" });
+        presence.GetConnectionIdsAsync(userId, Arg.Any<CancellationToken>()).Returns(new[] { "conn-1", "conn-2" });
         var presenceHub = Substitute.For<IHubContext<PresenceHub>>();
         var hubClients  = Substitute.For<IHubClients>();
         presenceHub.Clients.Returns(hubClients);
@@ -116,6 +117,107 @@ public sealed class AuthEndpointsTests
         await clientProxy.Received(2).SendCoreAsync(
             "ForceDisconnect", Arg.Is<object[]>(a => a.Length == 0), Arg.Any<CancellationToken>());
     }
+
+    [Fact]
+    public async Task DeleteAccount_AnonymizesEmailAndUsername()
+    {
+        var (db, conn) = BuildContext();
+        await using var _ = db;
+        await using var __ = conn;
+        var userId = Guid.NewGuid();
+        db.Users.Add(new User { Id = userId, Username = "carol", Email = "carol@x.com", PasswordHash = "x" });
+        await db.SaveChangesAsync();
+
+        var sessions    = Substitute.For<ISessionStore>();
+        var storage     = Substitute.For<IFileStorage>();
+        var presence    = Substitute.For<IPresenceStore>();
+        presence.GetConnectionIdsAsync(userId, Arg.Any<CancellationToken>()).Returns(Array.Empty<string>());
+        var presenceHub = Substitute.For<IHubContext<PresenceHub>>();
+        presenceHub.Clients.Returns(Substitute.For<IHubClients>());
+
+        await AuthEndpointsHelper.DeleteAccount(
+            Principal(userId), db, sessions, storage, presence, presenceHub, CancellationToken.None);
+
+        // AsNoTracking bypasses the EF change-tracker cache so we see the raw-SQL update
+        var row = await db.Users.AsNoTracking().FirstAsync(u => u.Id == userId);
+        Assert.NotNull(row.DeletedAt);
+        Assert.Equal($"deleted.{userId:N}@deleted.invalid", row.Email);
+        Assert.Equal(userId.ToString("N"), row.Username);
+        // Session revocation must fire even if SignalR broadcast has no connections
+        await sessions.Received(1).RevokeAllAsync(userId, ct: Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task DeleteAccount_AllowsReregistrationWithSameEmail()
+    {
+        var (db, conn) = BuildContext();
+        await using var _ = db;
+        await using var __ = conn;
+        var userId = Guid.NewGuid();
+        const string email    = "reuse@x.com";
+        const string username = "original_dave";
+        db.Users.Add(new User { Id = userId, Username = username, Email = email, PasswordHash = "x" });
+        await db.SaveChangesAsync();
+
+        var sessions    = Substitute.For<ISessionStore>();
+        var storage     = Substitute.For<IFileStorage>();
+        var presence    = Substitute.For<IPresenceStore>();
+        presence.GetConnectionIdsAsync(userId, Arg.Any<CancellationToken>()).Returns(Array.Empty<string>());
+        var presenceHub = Substitute.For<IHubContext<PresenceHub>>();
+        presenceHub.Clients.Returns(Substitute.For<IHubClients>());
+
+        await AuthEndpointsHelper.DeleteAccount(
+            Principal(userId), db, sessions, storage, presence, presenceHub, CancellationToken.None);
+
+        var hasher   = Substitute.For<IPasswordHasher>();
+        hasher.Hash(Arg.Any<string>()).Returns("hash");
+        var jwt      = Substitute.For<IJwtTokenService>();
+        jwt.GenerateRawRefreshToken().Returns("raw");
+        jwt.HashRefreshToken(Arg.Any<string>()).Returns("hashed");
+        jwt.GenerateAccessToken(Arg.Any<Guid>(), Arg.Any<Guid>()).Returns("tok");
+        var sessions2 = Substitute.For<ISessionStore>();
+
+        var result = await AuthEndpointsHelper.Register(
+            new RegisterRequest("new_dave", email, "password123", true),
+            db, hasher, jwt, sessions2, new DefaultHttpContext(), CancellationToken.None);
+
+        Assert.Equal(200, StatusCode(result));
+    }
+
+    [Fact]
+    public async Task DeleteAccount_AllowsReregistrationWithSameUsername()
+    {
+        var (db, conn) = BuildContext();
+        await using var _ = db;
+        await using var __ = conn;
+        var userId = Guid.NewGuid();
+        const string username = "taken_username";
+        db.Users.Add(new User { Id = userId, Username = username, Email = "e@x.com", PasswordHash = "x" });
+        await db.SaveChangesAsync();
+
+        var sessions    = Substitute.For<ISessionStore>();
+        var storage     = Substitute.For<IFileStorage>();
+        var presence    = Substitute.For<IPresenceStore>();
+        presence.GetConnectionIdsAsync(userId, Arg.Any<CancellationToken>()).Returns(Array.Empty<string>());
+        var presenceHub = Substitute.For<IHubContext<PresenceHub>>();
+        presenceHub.Clients.Returns(Substitute.For<IHubClients>());
+
+        await AuthEndpointsHelper.DeleteAccount(
+            Principal(userId), db, sessions, storage, presence, presenceHub, CancellationToken.None);
+
+        var hasher   = Substitute.For<IPasswordHasher>();
+        hasher.Hash(Arg.Any<string>()).Returns("hash");
+        var jwt      = Substitute.For<IJwtTokenService>();
+        jwt.GenerateRawRefreshToken().Returns("raw");
+        jwt.HashRefreshToken(Arg.Any<string>()).Returns("hashed");
+        jwt.GenerateAccessToken(Arg.Any<Guid>(), Arg.Any<Guid>()).Returns("tok");
+
+        var result = await AuthEndpointsHelper.Register(
+            new RegisterRequest(username, "new_email@x.com", "password123", true),
+            db, hasher, jwt, Substitute.For<ISessionStore>(), new DefaultHttpContext(), CancellationToken.None);
+
+        Assert.Equal(200, StatusCode(result));
+    }
 }
 
 internal static class AuthEndpointsHelper
@@ -130,4 +232,14 @@ internal static class AuthEndpointsHelper
         CancellationToken ct)
         => ChatHerder.API.Endpoints.AuthEndpoints.DeleteAccountInternal(
             principal, db, sessions, storage, presence, presenceHub, ct);
+
+    public static Task<IResult> Register(
+        RegisterRequest req,
+        AppDbContext db,
+        IPasswordHasher hasher,
+        IJwtTokenService jwt,
+        ISessionStore sessions,
+        HttpContext ctx,
+        CancellationToken ct)
+        => ChatHerder.API.Endpoints.AuthEndpoints.RegisterInternal(req, db, hasher, jwt, sessions, ctx, ct);
 }

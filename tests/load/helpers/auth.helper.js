@@ -58,3 +58,33 @@ export function authHeaders(accessToken) {
     'Content-Type': 'application/json',
   };
 }
+
+// Batch-request builders — use with http.batch() in setup() to avoid sequential round-trips.
+
+export function buildRegisterRequest(index, runId) {
+  const username = `load_${runId}_${index}`;
+  const email = `${username}@load.test`;
+  return {
+    method: 'POST',
+    url: `${apiBaseUrl()}/api/auth/register`,
+    body: JSON.stringify({ username, email, password: DEFAULT_PASSWORD, keepSignedIn: true }),
+    params: { headers: { 'Content-Type': 'application/json' }, tags: { endpoint: 'register' } },
+  };
+}
+
+export function buildLoginRequest(email) {
+  return {
+    method: 'POST',
+    url: `${apiBaseUrl()}/api/auth/login`,
+    body: JSON.stringify({ email, password: DEFAULT_PASSWORD, keepSignedIn: true }),
+    params: { headers: { 'Content-Type': 'application/json' }, tags: { endpoint: 'login' } },
+  };
+}
+
+export function parseLoginResponse(res, email) {
+  if (!check(res, { 'login user succeeded': (r) => r.status === 200 })) {
+    fail(`Failed to login ${email}: ${res.status} ${res.body}`);
+  }
+  const body = res.json();
+  return { id: body.user.id, username: body.user.username, email, accessToken: body.accessToken };
+}
