@@ -48,7 +48,7 @@ describe('BlockedUsersComponent', () => {
     http.expectOne('/api/blocks').flush([]);
     await fixture.whenStable();
     fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('No blocked users');
+    expect(fixture.nativeElement.textContent).toContain('No blocked users.');
   });
 
   it('calls DELETE /api/blocks/{userId} when Unblock is clicked', async () => {
