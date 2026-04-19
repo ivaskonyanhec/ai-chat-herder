@@ -129,4 +129,79 @@ public sealed class PresenceHubTests
         var hub = new PresenceHub(store, chatCtx, BuildDb());
         Assert.NotNull(hub);
     }
+
+    [Fact]
+    public async Task JoinDialog_AddsConnectionToChatHubDialogGroup_ForParticipant()
+    {
+        var userId  = Guid.NewGuid();
+        var otherId = Guid.NewGuid();
+        // User1Id < User2Id — sort them
+        var (u1, u2) = userId.CompareTo(otherId) < 0 ? (userId, otherId) : (otherId, userId);
+
+        var db = BuildDb();
+        db.Users.AddRange(
+            new User { Id = userId,  Username = "alice", Email = "a@x.com", PasswordHash = "x" },
+            new User { Id = otherId, Username = "bob",   Email = "b@x.com", PasswordHash = "x" });
+        var dialog = new PersonalDialog { User1Id = u1, User2Id = u2 };
+        db.PersonalDialogs.Add(dialog);
+        await db.SaveChangesAsync();
+
+        var store    = Substitute.For<IPresenceStore>();
+        var chatGrps = Substitute.For<IGroupManager>();
+        var chatCtx  = Substitute.For<IHubContext<ChatHub>>();
+        chatCtx.Groups.Returns(chatGrps);
+
+        var hub = new PresenceHub(store, chatCtx, db);
+        var ctx = Substitute.For<HubCallerContext>();
+        ctx.ConnectionId.Returns("conn-1");
+        ctx.User.Returns(new ClaimsPrincipal(new ClaimsIdentity([
+            new Claim("user_id",    userId.ToString()),
+            new Claim("session_id", Guid.NewGuid().ToString()),
+        ], "Test")));
+        ctx.Items.Returns(new Dictionary<object, object?>());
+        ctx.Features.Returns(Substitute.For<IFeatureCollection>());
+        hub.Context = ctx;
+        hub.Clients = Substitute.For<IHubCallerClients>();
+        hub.Groups  = Substitute.For<IGroupManager>();
+
+        await hub.JoinDialog(dialog.Id);
+
+        await chatGrps.Received(1).AddToGroupAsync(
+            "conn-1", $"dialog:{dialog.Id}", Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task JoinDialog_DoesNotAddGroup_WhenNotParticipant()
+    {
+        var userId = Guid.NewGuid();
+        var db     = BuildDb();
+        db.Users.Add(new User { Id = userId, Username = "carol", Email = "c@x.com", PasswordHash = "x" });
+        // Dialog between two other users — userId is NOT a participant
+        var dialog = new PersonalDialog { User1Id = Guid.NewGuid(), User2Id = Guid.NewGuid() };
+        db.PersonalDialogs.Add(dialog);
+        await db.SaveChangesAsync();
+
+        var store    = Substitute.For<IPresenceStore>();
+        var chatGrps = Substitute.For<IGroupManager>();
+        var chatCtx  = Substitute.For<IHubContext<ChatHub>>();
+        chatCtx.Groups.Returns(chatGrps);
+
+        var hub = new PresenceHub(store, chatCtx, db);
+        var ctx = Substitute.For<HubCallerContext>();
+        ctx.ConnectionId.Returns("conn-1");
+        ctx.User.Returns(new ClaimsPrincipal(new ClaimsIdentity([
+            new Claim("user_id",    userId.ToString()),
+            new Claim("session_id", Guid.NewGuid().ToString()),
+        ], "Test")));
+        ctx.Items.Returns(new Dictionary<object, object?>());
+        ctx.Features.Returns(Substitute.For<IFeatureCollection>());
+        hub.Context = ctx;
+        hub.Clients = Substitute.For<IHubCallerClients>();
+        hub.Groups  = Substitute.For<IGroupManager>();
+
+        await hub.JoinDialog(dialog.Id);
+
+        await chatGrps.DidNotReceive().AddToGroupAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+    }
 }

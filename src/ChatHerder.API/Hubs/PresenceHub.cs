@@ -48,6 +48,12 @@ public sealed class PresenceHub(IPresenceStore presence, IHubContext<ChatHub> ch
             }
         }
 
+        if (Context.Items.TryGetValue("dialogs", out var dialogsObj) && dialogsObj is HashSet<Guid> dialogs)
+        {
+            foreach (var dialogId in dialogs)
+                await chatHub.Groups.RemoveFromGroupAsync(Context.ConnectionId, $"dialog:{dialogId}", ct);
+        }
+
         var tabCount = await presence.GetTabCountAsync(userId, ct);
         if (tabCount == 0)
         {
@@ -179,6 +185,35 @@ public sealed class PresenceHub(IPresenceStore presence, IHubContext<ChatHub> ch
             rooms.Remove(roomId);
 
         await Clients.Group($"room:{roomId}").SendAsync("MemberLeft", new { roomId, userId }, ct);
+    }
+
+    public async Task JoinDialog(Guid dialogId)
+    {
+        var userId = GetUserId();
+        var ct     = Context.ConnectionAborted;
+
+        var isParticipant = await db.PersonalDialogs
+            .AnyAsync(d => d.Id == dialogId && (d.User1Id == userId || d.User2Id == userId), ct);
+
+        if (!isParticipant) return;
+
+        await chatHub.Groups.AddToGroupAsync(Context.ConnectionId, $"dialog:{dialogId}", ct);
+
+        if (!Context.Items.TryGetValue("dialogs", out var dialogsObj) || dialogsObj is not HashSet<Guid> dialogs)
+        {
+            dialogs = new HashSet<Guid>();
+            Context.Items["dialogs"] = dialogs;
+        }
+        dialogs.Add(dialogId);
+    }
+
+    public async Task LeaveDialog(Guid dialogId)
+    {
+        var ct = Context.ConnectionAborted;
+        await chatHub.Groups.RemoveFromGroupAsync(Context.ConnectionId, $"dialog:{dialogId}", ct);
+
+        if (Context.Items.TryGetValue("dialogs", out var dialogsObj) && dialogsObj is HashSet<Guid> dialogs)
+            dialogs.Remove(dialogId);
     }
 
     private Guid GetUserId()
