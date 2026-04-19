@@ -7,4 +7,7 @@ public interface IFileStorage
 
     /// <summary>Deletes a file by its relative storage path. No-op if not found.</summary>
     Task DeleteAsync(string storagePath, CancellationToken ct = default);
+
+    /// <summary>Opens a read stream for a file at the given relative storage path.</summary>
+    Task<Stream> OpenReadAsync(string storagePath, CancellationToken ct = default);
 }
