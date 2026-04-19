@@ -56,6 +56,9 @@ export class WorkspaceShellComponent implements OnInit, OnDestroy {
   readonly publicRoomsExpanded = signal(true);
   readonly privateRoomsExpanded = signal(true);
   readonly sidebarOpen = signal(false);
+  readonly sidebarCollapsed = signal<boolean>(
+    localStorage.getItem('sidebar_collapsed') === 'true'
+  );
   readonly pendingInvitationCount = signal(0);
   readonly searchQuery = signal('');
 
@@ -119,7 +122,11 @@ export class WorkspaceShellComponent implements OnInit, OnDestroy {
   }
 
   toggleSidebar(): void {
-    this.sidebarOpen.update(v => !v);
+    this.sidebarCollapsed.update(v => {
+      const next = !v;
+      localStorage.setItem('sidebar_collapsed', String(next));
+      return next;
+    });
   }
 
   openCreateRoom(): void {

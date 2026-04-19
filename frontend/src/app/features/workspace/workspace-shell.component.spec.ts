@@ -414,4 +414,40 @@ describe('WorkspaceShellComponent', () => {
     expect(fixture.componentInstance.publicRooms()).toHaveLength(1);
     expect(fixture.componentInstance.publicRooms()[0].name).toBe('Design');
   });
+
+  describe('sidebar collapse', () => {
+    let component: WorkspaceShellComponent;
+
+    beforeEach(() => {
+      localStorage.removeItem('sidebar_collapsed');
+      const { providers } = buildProviders();
+      TestBed.configureTestingModule({ imports: [WorkspaceShellComponent], providers });
+      component = TestBed.createComponent(WorkspaceShellComponent).componentInstance;
+    });
+
+    it('starts expanded (sidebarCollapsed = false)', () => {
+      expect(component.sidebarCollapsed()).toBe(false);
+    });
+
+    it('toggleSidebar flips sidebarCollapsed', () => {
+      component.toggleSidebar();
+      expect(component.sidebarCollapsed()).toBe(true);
+      component.toggleSidebar();
+      expect(component.sidebarCollapsed()).toBe(false);
+    });
+
+    it('reads initial state from localStorage', () => {
+      localStorage.setItem('sidebar_collapsed', 'true');
+      const fresh = TestBed.createComponent(WorkspaceShellComponent).componentInstance;
+      expect(fresh.sidebarCollapsed()).toBe(true);
+      localStorage.removeItem('sidebar_collapsed');
+    });
+
+    it('writes to localStorage on toggle', () => {
+      component.toggleSidebar();
+      expect(localStorage.getItem('sidebar_collapsed')).toBe('true');
+      component.toggleSidebar();
+      expect(localStorage.getItem('sidebar_collapsed')).toBe('false');
+    });
+  });
 });
