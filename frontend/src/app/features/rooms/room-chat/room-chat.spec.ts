@@ -10,6 +10,7 @@ import { PresenceService } from '../../../core/signalr/presence.service';
 import { AuthSessionService } from '../../../core/auth/auth-session.service';
 import { FilesApiService } from '../../../core/files/files-api.service';
 import { NotificationsApiService } from '../../../core/notifications/notifications-api.service';
+import { UnreadService } from '../../../core/signalr/unread.service';
 import type { RoomDto } from '../../../core/rooms/rooms.models';
 import type { RoomMembersSnapshotEvent } from '../../../core/signalr/hub.models';
 
@@ -65,6 +66,10 @@ function buildProviders(snapshotOverride?: RoomMembersSnapshotEvent | null) {
       {
         provide: NotificationsApiService,
         useValue: { markRoomRead: () => of(void 0) },
+      },
+      {
+        provide: UnreadService,
+        useValue: { setCount: vi.fn(), getCount: vi.fn().mockReturnValue(0), clearAll: vi.fn() },
       },
     ],
   };

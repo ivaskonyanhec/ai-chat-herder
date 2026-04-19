@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, computed, effect, inject, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, computed, effect, inject, signal, untracked } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { finalize } from 'rxjs';
 import { Button } from 'primeng/button';
@@ -76,7 +76,7 @@ export class RoomChatComponent implements OnInit, OnDestroy {
     effect(() => {
       const event = this.presence.memberJoined();
       if (!event || event.roomId !== this.roomId()) return;
-      const status = this.presence.presenceMap().get(event.user.userId) ?? 'online';
+      const status = untracked(() => this.presence.presenceMap().get(event.user.userId)) ?? 'online';
       this.members.update(list => [
         ...list.filter(m => m.userId !== event.user.userId),
         {

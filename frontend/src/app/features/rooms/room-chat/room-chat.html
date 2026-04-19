@@ -146,12 +146,10 @@
             </div>
           }
           <span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-surface-container"
-                [attr.data-testid]="'member-status-' + member.userId"
-                [class]="(presenceMap().get(member.userId) ?? member.presenceStatus) === 'online'
-                  ? 'bg-green-500'
-                  : (presenceMap().get(member.userId) ?? member.presenceStatus) === 'afk'
-                  ? 'bg-yellow-400'
-                  : 'bg-outline'">
+                [class.bg-green-500]="(presenceMap().get(member.userId) ?? member.presenceStatus) === 'online'"
+                [class.bg-yellow-400]="(presenceMap().get(member.userId) ?? member.presenceStatus) === 'afk'"
+                [class.bg-outline]="(presenceMap().get(member.userId) ?? member.presenceStatus) !== 'online' && (presenceMap().get(member.userId) ?? member.presenceStatus) !== 'afk'"
+                [attr.data-testid]="'member-status-' + member.userId">
           </span>
         </div>
         <span class="text-xs text-on-surface truncate">{{ member.username }}</span>
