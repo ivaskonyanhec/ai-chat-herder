@@ -45,6 +45,7 @@ public sealed class ActivityConsumerTests
 
         await ActivityConsumer.ProcessMessageAsync(db, evt, CancellationToken.None);
 
-        Assert.Single(await db.ActivityLogs.ToListAsync());
+        var log = await db.ActivityLogs.SingleAsync();
+        Assert.Null(log.UserId);
     }
 }
