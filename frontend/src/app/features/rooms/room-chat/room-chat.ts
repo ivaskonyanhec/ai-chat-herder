@@ -9,6 +9,8 @@ import { RoomsApiService } from '../../../core/rooms/rooms-api.service';
 import { ChatService } from '../../../core/signalr/chat.service';
 import { PresenceService } from '../../../core/signalr/presence.service';
 import { FilesApiService } from '../../../core/files/files-api.service';
+import { NotificationsApiService } from '../../../core/notifications/notifications-api.service';
+import { UnreadService } from '../../../core/signalr/unread.service';
 import type { RoomDto } from '../../../core/rooms/rooms.models';
 import type { MessageDto } from '../../../core/signalr/hub.models';
 import type { AttachmentDto } from '../../../core/files/files.models';
@@ -27,6 +29,8 @@ export class RoomChatComponent implements OnInit, OnDestroy {
   private readonly chat = inject(ChatService);
   private readonly presence = inject(PresenceService);
   private readonly filesApi = inject(FilesApiService);
+  private readonly notificationsApi = inject(NotificationsApiService);
+  private readonly unread = inject(UnreadService);
 
   readonly user = this.authSession.user;
   readonly roomId = computed(() => this.route.snapshot.params['id'] as string);
@@ -139,7 +143,11 @@ export class RoomChatComponent implements OnInit, OnDestroy {
         this.roomsApi.getMessages(id)
           .pipe(finalize(() => this.isLoading.set(false)))
           .subscribe({
-            next: msgs => this.messages.set(msgs),
+            next: msgs => {
+              this.messages.set(msgs);
+              this.notificationsApi.markRoomRead(id).subscribe();
+              this.unread.setCount('room', id, 0);
+            },
             error: () => this.errorMessage.set('Unable to load messages.'),
           });
       },

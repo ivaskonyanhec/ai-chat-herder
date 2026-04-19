@@ -4,6 +4,8 @@ import { AuthSessionService } from '../../../core/auth/auth-session.service';
 import { DialogsApiService } from '../../../core/dialogs/dialogs-api.service';
 import { ChatService } from '../../../core/signalr/chat.service';
 import { FilesApiService } from '../../../core/files/files-api.service';
+import { NotificationsApiService } from '../../../core/notifications/notifications-api.service';
+import { UnreadService } from '../../../core/signalr/unread.service';
 import type { DialogDto } from '../../../core/dialogs/dialogs.models';
 import type { DialogMessageDto } from '../../../core/signalr/hub.models';
 import type { AttachmentDto } from '../../../core/files/files.models';
@@ -20,6 +22,8 @@ export class DirectMessagesComponent {
   private readonly dialogsApi = inject(DialogsApiService);
   private readonly chat = inject(ChatService);
   private readonly filesApi = inject(FilesApiService);
+  private readonly notificationsApi = inject(NotificationsApiService);
+  private readonly unread = inject(UnreadService);
 
   readonly user = this.authSession.user;
   readonly isLoadingDialogs = signal(true);
@@ -128,7 +132,11 @@ export class DirectMessagesComponent {
     this.dialogsApi.getMessages(dialogId)
       .pipe(finalize(() => this.isLoadingMessages.set(false)))
       .subscribe({
-        next: messages => this.messages.set([...messages].reverse()),
+        next: messages => {
+          this.messages.set([...messages].reverse());
+          this.notificationsApi.markDialogRead(dialogId).subscribe();
+          this.unread.setCount('dialog', dialogId, 0);
+        },
         error: () => this.errorMessage.set('Unable to load messages.'),
       });
   }

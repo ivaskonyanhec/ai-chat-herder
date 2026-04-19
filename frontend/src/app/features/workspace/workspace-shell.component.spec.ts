@@ -9,6 +9,8 @@ import { AuthSessionService } from '../../core/auth/auth-session.service';
 import { PresenceService } from '../../core/signalr/presence.service';
 import { ChatService } from '../../core/signalr/chat.service';
 import { UnreadService } from '../../core/signalr/unread.service';
+import { NotificationsApiService } from '../../core/notifications/notifications-api.service';
+import { RoomsApiService } from '../../core/rooms/rooms-api.service';
 
 type HubStub = { connect: ReturnType<typeof vi.fn>; disconnect: ReturnType<typeof vi.fn> };
 type AuthSessionStub = { user: Signal<null>; accessToken?: Signal<null>; clearSession: ReturnType<typeof vi.fn> };
@@ -42,6 +44,8 @@ function buildProviders(overrides: {
       { provide: AuthSessionService, useValue: authSession },
       { provide: PresenceService, useValue: presenceService },
       { provide: ChatService, useValue: chatService },
+      { provide: NotificationsApiService, useValue: { getUnreadCounts: vi.fn().mockReturnValue(of([])) } },
+      { provide: RoomsApiService, useValue: { getMyRooms: vi.fn().mockReturnValue(of([])) } },
       UnreadService,
     ],
     authApi,
@@ -109,8 +113,6 @@ describe('WorkspaceShellComponent', () => {
     await fixture.whenStable();
 
     fixture.componentInstance.logout();
-    // flush microtasks: async next() callback returns a Promise that RxJS doesn't await;
-    // we need multiple Promise.resolve() ticks to let the async chain drain.
     await Promise.resolve();
     await Promise.resolve();
     await Promise.resolve();
