@@ -24,7 +24,7 @@ public sealed class ActivityLoggerServiceTests
 
         await bus.Received(1).PublishAsync(
             "user.connected",
-            Arg.Is<ActivityEvent>(e => e.UserId == evt.UserId),
+            evt,
             Arg.Any<CancellationToken>());
     }
 }
