@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Speech bubble body -->
+  <rect x="2" y="2" width="28" height="22" rx="5" ry="5" fill="#545f73"/>
+  <!-- Tail (bottom-left pointer) -->
+  <path d="M6 24 L2 30 L12 24 Z" fill="#545f73"/>
+  <!-- Three ellipsis dots -->
+  <circle cx="10" cy="13" r="2.5" fill="white"/>
+  <circle cx="16" cy="13" r="2.5" fill="white"/>
+  <circle cx="22" cy="13" r="2.5" fill="white"/>
+</svg>
