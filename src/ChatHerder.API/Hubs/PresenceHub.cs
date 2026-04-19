@@ -41,8 +41,8 @@ public sealed class PresenceHub(IPresenceStore presence, IHubContext<ChatHub> ch
         {
             foreach (var roomId in rooms)
             {
-                await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"room:{roomId}", ct);
-                await chatHub.Groups.RemoveFromGroupAsync(Context.ConnectionId, $"room:{roomId}", ct);
+                await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"room:{roomId}", CancellationToken.None);
+                await chatHub.Groups.RemoveFromGroupAsync(Context.ConnectionId, $"room:{roomId}", CancellationToken.None);
                 await Clients.OthersInGroup($"room:{roomId}")
                     .SendAsync("MemberLeft", new { roomId, userId }, ct);
             }
@@ -51,7 +51,7 @@ public sealed class PresenceHub(IPresenceStore presence, IHubContext<ChatHub> ch
         if (Context.Items.TryGetValue("dialogs", out var dialogsObj) && dialogsObj is HashSet<Guid> dialogs)
         {
             foreach (var dialogId in dialogs)
-                await chatHub.Groups.RemoveFromGroupAsync(Context.ConnectionId, $"dialog:{dialogId}", ct);
+                await chatHub.Groups.RemoveFromGroupAsync(Context.ConnectionId, $"dialog:{dialogId}", CancellationToken.None);
         }
 
         var tabCount = await presence.GetTabCountAsync(userId, ct);
@@ -197,14 +197,14 @@ public sealed class PresenceHub(IPresenceStore presence, IHubContext<ChatHub> ch
 
         if (!isParticipant) return;
 
-        await chatHub.Groups.AddToGroupAsync(Context.ConnectionId, $"dialog:{dialogId}", ct);
-
         if (!Context.Items.TryGetValue("dialogs", out var dialogsObj) || dialogsObj is not HashSet<Guid> dialogs)
         {
             dialogs = new HashSet<Guid>();
             Context.Items["dialogs"] = dialogs;
         }
-        dialogs.Add(dialogId);
+
+        if (dialogs.Add(dialogId))  // HashSet.Add returns false if already present
+            await chatHub.Groups.AddToGroupAsync(Context.ConnectionId, $"dialog:{dialogId}", ct);
     }
 
     public async Task LeaveDialog(Guid dialogId)

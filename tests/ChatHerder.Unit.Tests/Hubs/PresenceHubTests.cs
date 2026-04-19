@@ -177,7 +177,10 @@ public sealed class PresenceHubTests
         var db     = BuildDb();
         db.Users.Add(new User { Id = userId, Username = "carol", Email = "c@x.com", PasswordHash = "x" });
         // Dialog between two other users — userId is NOT a participant
-        var dialog = new PersonalDialog { User1Id = Guid.NewGuid(), User2Id = Guid.NewGuid() };
+        var a = Guid.NewGuid();
+        var b = Guid.NewGuid();
+        var (u1, u2) = a.CompareTo(b) < 0 ? (a, b) : (b, a);
+        var dialog = new PersonalDialog { User1Id = u1, User2Id = u2 };
         db.PersonalDialogs.Add(dialog);
         await db.SaveChangesAsync();
 
@@ -203,5 +206,77 @@ public sealed class PresenceHubTests
 
         await chatGrps.DidNotReceive().AddToGroupAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task LeaveDialog_RemovesConnectionFromChatHubDialogGroup()
+    {
+        var userId = Guid.NewGuid();
+        var store    = Substitute.For<IPresenceStore>();
+        var chatGrps = Substitute.For<IGroupManager>();
+        var chatCtx  = Substitute.For<IHubContext<ChatHub>>();
+        chatCtx.Groups.Returns(chatGrps);
+
+        var hub = new PresenceHub(store, chatCtx, BuildDb());
+        var ctx = Substitute.For<HubCallerContext>();
+        ctx.ConnectionId.Returns("conn-1");
+        ctx.User.Returns(new ClaimsPrincipal(new ClaimsIdentity([
+            new Claim("user_id",    userId.ToString()),
+            new Claim("session_id", Guid.NewGuid().ToString()),
+        ], "Test")));
+        var dialogId = Guid.NewGuid();
+        ctx.Items.Returns(new Dictionary<object, object?>
+        {
+            ["dialogs"] = new HashSet<Guid> { dialogId },
+        });
+        ctx.Features.Returns(Substitute.For<IFeatureCollection>());
+        hub.Context = ctx;
+        hub.Clients = Substitute.For<IHubCallerClients>();
+        hub.Groups  = Substitute.For<IGroupManager>();
+
+        await hub.LeaveDialog(dialogId);
+
+        await chatGrps.Received(1).RemoveFromGroupAsync(
+            "conn-1", $"dialog:{dialogId}", Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task OnDisconnectedAsync_CleansUpDialogGroups()
+    {
+        var userId   = Guid.NewGuid();
+        var dialogId = Guid.NewGuid();
+
+        var store    = Substitute.For<IPresenceStore>();
+        store.GetTabCountAsync(userId).Returns(0);
+        store.GetStatusAsync(userId).Returns((string?)"online");
+
+        var chatGrps = Substitute.For<IGroupManager>();
+        var chatCtx  = Substitute.For<IHubContext<ChatHub>>();
+        chatCtx.Groups.Returns(chatGrps);
+
+        var hub = new PresenceHub(store, chatCtx, BuildDb());
+        var ctx = Substitute.For<HubCallerContext>();
+        ctx.ConnectionId.Returns("conn-1");
+        ctx.User.Returns(new ClaimsPrincipal(new ClaimsIdentity([
+            new Claim("user_id",    userId.ToString()),
+            new Claim("session_id", Guid.NewGuid().ToString()),
+        ], "Test")));
+        ctx.Items.Returns(new Dictionary<object, object?>
+        {
+            ["dialogs"] = new HashSet<Guid> { dialogId },
+        });
+        ctx.Features.Returns(Substitute.For<IFeatureCollection>());
+        hub.Context = ctx;
+
+        var allProxy = Substitute.For<IClientProxy>();
+        var clients  = Substitute.For<IHubCallerClients>();
+        clients.All.Returns(allProxy);
+        hub.Clients = clients;
+        hub.Groups  = Substitute.For<IGroupManager>();
+
+        await hub.OnDisconnectedAsync(null);
+
+        await chatGrps.Received(1).RemoveFromGroupAsync(
+            "conn-1", $"dialog:{dialogId}", Arg.Any<CancellationToken>());
     }
 }
