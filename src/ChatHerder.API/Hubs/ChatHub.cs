@@ -22,11 +22,15 @@ public sealed class ChatHub(AppDbContext db, IUnreadStore unread, IPresenceStore
     public async Task SendMessage(Guid roomId, string content,
         Guid? replyToId = null, Guid? attachmentId = null)
     {
-        if (string.IsNullOrWhiteSpace(content) || Encoding.UTF8.GetByteCount(content) > MaxMessageBytes)
-            throw new HubException("Message content is invalid or exceeds 3 KB.");
-
         var ct     = Context.ConnectionAborted;
         var userId = GetUserId();
+
+        // Validate content + attachment
+        content = content?.Trim() ?? "";
+        if (string.IsNullOrEmpty(content) && !attachmentId.HasValue)
+            throw new HubException("Message must have content or an attachment.");
+        if (!string.IsNullOrEmpty(content) && Encoding.UTF8.GetByteCount(content) > MaxMessageBytes)
+            throw new HubException("Message content is invalid or exceeds 3 KB.");
 
         var isMember = await db.RoomMemberships.AnyAsync(
             m => m.RoomId == roomId && m.UserId == userId, ct);
@@ -35,6 +39,18 @@ public sealed class ChatHub(AppDbContext db, IUnreadStore unread, IPresenceStore
         var isBanned = await db.RoomBans.AnyAsync(
             b => b.RoomId == roomId && b.BannedUserId == userId && b.RevokedAt == null, ct);
         if (isBanned) throw new HubException("You are banned from this room.");
+
+        // Validate attachment (before AllocateSequence so errors are testable)
+        Attachment? att = null;
+        if (attachmentId.HasValue)
+        {
+            att = await db.Attachments.FirstOrDefaultAsync(
+                a => a.Id == attachmentId.Value
+                  && a.UploadedByUserId == userId
+                  && a.MessageId == null
+                  && a.PersonalDialogMessageId == null, ct);
+            if (att is null) throw new HubException("Attachment not found or already linked.");
+        }
 
         var seq = await AllocateSequenceAsync(ContextType.Room, roomId, ct);
 
@@ -47,6 +63,8 @@ public sealed class ChatHub(AppDbContext db, IUnreadStore unread, IPresenceStore
             ReplyToMessageId = replyToId,
         };
         db.Messages.Add(msg);
+        if (att is not null)
+            att.MessageId = msg.Id;
         await db.SaveChangesAsync(ct);
 
         var full = await db.Messages
@@ -129,16 +147,30 @@ public sealed class ChatHub(AppDbContext db, IUnreadStore unread, IPresenceStore
     public async Task SendDirectMessage(Guid dialogId, string content,
         Guid? replyToId = null, Guid? attachmentId = null)
     {
-        if (string.IsNullOrWhiteSpace(content) || Encoding.UTF8.GetByteCount(content) > MaxMessageBytes)
-            throw new HubException("Message content is invalid or exceeds 3 KB.");
-
         var ct     = Context.ConnectionAborted;
         var userId = GetUserId();
+
+        content = content?.Trim() ?? "";
+        if (string.IsNullOrEmpty(content) && !attachmentId.HasValue)
+            throw new HubException("Message must have content or an attachment.");
+        if (!string.IsNullOrEmpty(content) && Encoding.UTF8.GetByteCount(content) > MaxMessageBytes)
+            throw new HubException("Message content is invalid or exceeds 3 KB.");
 
         var dialog = await db.PersonalDialogs.FirstOrDefaultAsync(
             d => d.Id == dialogId && (d.User1Id == userId || d.User2Id == userId), ct);
         if (dialog is null) throw new HubException("Dialog not found.");
         if (dialog.FrozenAt is not null) throw new HubException("This dialog is frozen.");
+
+        Attachment? att = null;
+        if (attachmentId.HasValue)
+        {
+            att = await db.Attachments.FirstOrDefaultAsync(
+                a => a.Id == attachmentId.Value
+                  && a.UploadedByUserId == userId
+                  && a.MessageId == null
+                  && a.PersonalDialogMessageId == null, ct);
+            if (att is null) throw new HubException("Attachment not found or already linked.");
+        }
 
         var seq = await AllocateSequenceAsync(ContextType.Dialog, dialogId, ct);
 
@@ -151,6 +183,8 @@ public sealed class ChatHub(AppDbContext db, IUnreadStore unread, IPresenceStore
             ReplyToMessageId = replyToId,
         };
         db.PersonalDialogMessages.Add(dm);
+        if (att is not null)
+            att.PersonalDialogMessageId = dm.Id;
         await db.SaveChangesAsync(ct);
 
         var full = await db.PersonalDialogMessages

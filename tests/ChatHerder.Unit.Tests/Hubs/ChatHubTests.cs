@@ -127,4 +127,63 @@ public sealed class ChatHubTests
         var hub = new ChatHub(BuildDb(), Substitute.For<IUnreadStore>(), Substitute.For<IPresenceStore>());
         Assert.NotNull(hub);
     }
+
+    [Fact]
+    public async Task SendMessage_ThrowsHubException_WhenNoContentAndNoAttachment()
+    {
+        var userId = Guid.NewGuid();
+        var hub    = BuildHub(BuildDb(), userId);
+
+        // Whitespace content and no attachmentId → must throw
+        await Assert.ThrowsAsync<HubException>(() => hub.SendMessage(Guid.NewGuid(), "   "));
+    }
+
+    [Fact]
+    public async Task SendMessage_ThrowsHubException_WhenAttachmentNotFound()
+    {
+        var userId = Guid.NewGuid();
+        var db     = BuildDb();
+        var user   = new User { Id = userId, Username = "u", Email = "u@x.com", PasswordHash = "x" };
+        var room   = new Room { Name = "r", Visibility = RoomVisibility.Public, OwnerId = userId };
+        db.Users.Add(user);
+        db.Rooms.Add(room);
+        db.RoomMemberships.Add(new RoomMembership { RoomId = room.Id, UserId = userId, Role = MemberRole.Owner });
+        await db.SaveChangesAsync();
+
+        var hub = BuildHub(db, userId);
+
+        // Non-existent attachmentId → must throw
+        await Assert.ThrowsAsync<HubException>(
+            () => hub.SendMessage(room.Id, "hello", null, Guid.NewGuid()));
+    }
+
+    [Fact]
+    public async Task SendMessage_ThrowsHubException_WhenAttachmentAlreadyLinked()
+    {
+        var userId    = Guid.NewGuid();
+        var messageId = Guid.NewGuid();
+        var db        = BuildDb();
+        var user      = new User { Id = userId, Username = "u", Email = "u@x.com", PasswordHash = "x" };
+        var room      = new Room { Name = "r", Visibility = RoomVisibility.Public, OwnerId = userId };
+        db.Users.Add(user);
+        db.Rooms.Add(room);
+        db.RoomMemberships.Add(new RoomMembership { RoomId = room.Id, UserId = userId, Role = MemberRole.Owner });
+        var linked = new Attachment
+        {
+            UploadedByUserId = userId,
+            MessageId        = messageId,   // already linked
+            StoragePath      = "a/f.txt",
+            FileName         = "f.txt",
+            ContentType      = "text/plain",
+            SizeBytes        = 10,
+        };
+        db.Attachments.Add(linked);
+        await db.SaveChangesAsync();
+
+        var hub = BuildHub(db, userId);
+
+        // Attachment already linked → must throw
+        await Assert.ThrowsAsync<HubException>(
+            () => hub.SendMessage(room.Id, "hello", null, linked.Id));
+    }
 }

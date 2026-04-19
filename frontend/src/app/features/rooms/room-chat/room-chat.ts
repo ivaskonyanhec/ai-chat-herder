@@ -96,7 +96,7 @@ export class RoomChatComponent implements OnInit, OnDestroy {
     const attachment = this.pendingAttachment();
     if ((!content && !attachment) || this.isSending()) return;
     this.isSending.set(true);
-    void this.chat.sendMessage(this.roomId(), content || ' ', null, attachment?.id ?? null)
+    void this.chat.sendMessage(this.roomId(), content, null, attachment?.id ?? null)
       .then(() => {
         this.messageText.set('');
         this.pendingAttachment.set(null);

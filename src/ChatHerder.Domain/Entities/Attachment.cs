@@ -3,8 +3,8 @@ namespace ChatHerder.Domain.Entities;
 public sealed class Attachment
 {
     public Guid Id { get; init; } = Guid.NewGuid();
-    public Guid? MessageId { get; init; }
-    public Guid? PersonalDialogMessageId { get; init; }
+    public Guid? MessageId { get; set; }
+    public Guid? PersonalDialogMessageId { get; set; }
     public required Guid UploadedByUserId { get; init; }
     public required string StoragePath { get; init; }  // relative; resolved via IFileStorage
     public required string FileName { get; init; }

@@ -65,7 +65,7 @@ export class DirectMessagesComponent {
     if ((!content && !attachment) || !dialog || this.isSending()) return;
 
     this.isSending.set(true);
-    void this.chat.sendDirectMessage(dialog.id, content || ' ', null, attachment?.id ?? null)
+    void this.chat.sendDirectMessage(dialog.id, content, null, attachment?.id ?? null)
       .then(() => {
         this.messageText.set('');
         this.pendingAttachment.set(null);
