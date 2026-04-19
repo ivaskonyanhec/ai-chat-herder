@@ -7,6 +7,7 @@ import { RoomsApiService } from '../../../core/rooms/rooms-api.service';
 import { ChatService } from '../../../core/signalr/chat.service';
 import { PresenceService } from '../../../core/signalr/presence.service';
 import { AuthSessionService } from '../../../core/auth/auth-session.service';
+import { FilesApiService } from '../../../core/files/files-api.service';
 import type { RoomDto } from '../../../core/rooms/rooms.models';
 
 describe('RoomChatComponent', () => {
@@ -55,6 +56,14 @@ describe('RoomChatComponent', () => {
           useValue: {
             joinRoom: () => Promise.resolve(),
             leaveRoom: () => Promise.resolve(),
+          },
+        },
+        {
+          provide: FilesApiService,
+          useValue: {
+            uploadFile: () => of(),
+            downloadFile: () => {},
+            getFileUrl: () => '',
           },
         },
       ],

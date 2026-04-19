@@ -8,8 +8,10 @@ import { AuthSessionService } from '../../../core/auth/auth-session.service';
 import { RoomsApiService } from '../../../core/rooms/rooms-api.service';
 import { ChatService } from '../../../core/signalr/chat.service';
 import { PresenceService } from '../../../core/signalr/presence.service';
+import { FilesApiService } from '../../../core/files/files-api.service';
 import type { RoomDto } from '../../../core/rooms/rooms.models';
 import type { MessageDto } from '../../../core/signalr/hub.models';
+import type { AttachmentDto } from '../../../core/files/files.models';
 
 @Component({
   selector: 'app-room-chat',
@@ -24,6 +26,7 @@ export class RoomChatComponent implements OnInit, OnDestroy {
   private readonly roomsApi = inject(RoomsApiService);
   private readonly chat = inject(ChatService);
   private readonly presence = inject(PresenceService);
+  private readonly filesApi = inject(FilesApiService);
 
   readonly user = this.authSession.user;
   readonly roomId = computed(() => this.route.snapshot.params['id'] as string);
@@ -34,6 +37,8 @@ export class RoomChatComponent implements OnInit, OnDestroy {
   readonly messages = signal<MessageDto[]>([]);
   readonly messageText = signal('');
   readonly isSending = signal(false);
+  readonly isUploading = signal(false);
+  readonly pendingAttachment = signal<AttachmentDto | null>(null);
 
   constructor() {
     effect(() => {
@@ -67,21 +72,61 @@ export class RoomChatComponent implements OnInit, OnDestroy {
     void this.presence.leaveRoom(this.roomId());
   }
 
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (file) this.uploadFile(file);
+    input.value = '';
+  }
+
+  onPaste(event: ClipboardEvent): void {
+    const file = event.clipboardData?.files[0];
+    if (file) {
+      event.preventDefault();
+      this.uploadFile(file);
+    }
+  }
+
+  clearAttachment(): void {
+    this.pendingAttachment.set(null);
+  }
+
   sendMessage(): void {
     const content = this.messageText().trim();
-    if (!content || this.isSending()) return;
+    const attachment = this.pendingAttachment();
+    if ((!content && !attachment) || this.isSending()) return;
     this.isSending.set(true);
-    void this.chat.sendMessage(this.roomId(), content, null, null)
+    void this.chat.sendMessage(this.roomId(), content || ' ', null, attachment?.id ?? null)
       .then(() => {
         this.messageText.set('');
+        this.pendingAttachment.set(null);
       })
-      .finally(() => {
-        this.isSending.set(false);
-      });
+      .finally(() => this.isSending.set(false));
+  }
+
+  downloadFile(attachmentId: string, fileName: string): void {
+    this.filesApi.downloadFile(attachmentId, fileName);
   }
 
   formatTime(iso: string): string {
     return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  formatSize(bytes: number): string {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  }
+
+  private uploadFile(file: File): void {
+    if (this.isUploading()) return;
+    this.isUploading.set(true);
+    this.filesApi.uploadFile(file)
+      .pipe(finalize(() => this.isUploading.set(false)))
+      .subscribe({
+        next: dto => this.pendingAttachment.set(dto),
+        error: () => this.errorMessage.set('File upload failed.'),
+      });
   }
 
   private loadRoom(id: string): void {

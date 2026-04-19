@@ -53,6 +53,25 @@
                 <p class="text-sm text-outline italic">Message deleted.</p>
               } @else {
                 <p class="text-sm text-on-surface leading-relaxed max-w-2xl">{{ msg.content }}</p>
+                @if (msg.attachment) {
+                  <div class="flex items-center gap-3 mt-2 px-3 py-2 bg-surface-container rounded-lg max-w-xs">
+                    <span class="material-symbols-outlined text-on-surface-variant shrink-0">
+                      {{ msg.attachment.contentType.startsWith('image/') ? 'image' : 'attach_file' }}
+                    </span>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-medium text-on-surface truncate">{{ msg.attachment.fileName }}</p>
+                      @if (msg.attachment.comment) {
+                        <p class="text-xs text-on-surface-variant">{{ msg.attachment.comment }}</p>
+                      }
+                      <p class="text-xs text-on-surface-variant">{{ formatSize(msg.attachment.sizeBytes) }}</p>
+                    </div>
+                    <button type="button"
+                            class="p-1 rounded hover:bg-surface-container-high text-on-surface-variant"
+                            (click)="downloadFile(msg.attachment.id, msg.attachment.fileName)">
+                      <span class="material-symbols-outlined text-sm">download</span>
+                    </button>
+                  </div>
+                }
               }
             </div>
           </div>
@@ -60,9 +79,31 @@
       }
     </div>
 
+    <!-- Attachment preview -->
+    @if (pendingAttachment()) {
+      <div class="flex items-center gap-2 px-4 py-2 bg-primary-container/30 rounded-lg mx-4 mb-1 text-sm">
+        <span class="material-symbols-outlined text-sm text-primary">attach_file</span>
+        <span class="flex-1 truncate text-on-surface font-medium">{{ pendingAttachment()!.fileName }}</span>
+        <span class="text-xs text-on-surface-variant">{{ formatSize(pendingAttachment()!.sizeBytes) }}</span>
+        <button class="text-on-surface-variant hover:text-error" type="button" (click)="clearAttachment()">
+          <span class="material-symbols-outlined text-sm">close</span>
+        </button>
+      </div>
+    }
+    @if (isUploading()) {
+      <p class="px-4 pb-1 text-xs text-on-surface-variant">Uploading…</p>
+    }
+
     <!-- Composer -->
     <div class="border-t border-outline-variant/10 p-4 bg-surface-container-lowest">
+      <input type="file" #fileInput hidden (change)="onFileSelected($event)" />
       <div class="flex gap-3 items-end">
+        <button type="button"
+                class="p-2 rounded-lg hover:bg-surface-container text-on-surface-variant shrink-0"
+                [disabled]="isUploading()"
+                (click)="fileInput.click()">
+          <span class="material-symbols-outlined">attach_file</span>
+        </button>
         <textarea
           pTextarea
           data-testid="message-input"
@@ -71,11 +112,12 @@
           placeholder="Type a message…"
           [ngModel]="messageText()"
           (ngModelChange)="messageText.set($event)"
+          (paste)="onPaste($event)"
           (keydown.enter)="$event.preventDefault(); sendMessage()"
         ></textarea>
         <p-button
           label="Send"
-          [disabled]="!messageText().trim() || isSending()"
+          [disabled]="isSending() || isUploading()"
           (onClick)="sendMessage()"
         ></p-button>
       </div>
