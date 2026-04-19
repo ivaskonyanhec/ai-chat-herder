@@ -11,6 +11,18 @@
           <p class="text-xs text-on-surface-variant truncate">{{ room()!.description }}</p>
         }
       </div>
+      @if (members().length > 0) {
+        <div class="flex items-center gap-1 flex-wrap shrink-0">
+          @for (member of members(); track member.userId) {
+            <span class="w-2.5 h-2.5 rounded-full"
+                  [attr.data-testid]="'member-status-' + member.userId"
+                  [class.bg-status-online]="(presenceMap().get(member.userId) ?? member.presenceStatus) === 'online'"
+                  [class.bg-status-afk]="(presenceMap().get(member.userId) ?? member.presenceStatus) === 'afk'"
+                  [class.bg-outline]="(presenceMap().get(member.userId) ?? member.presenceStatus) === 'offline'"
+                  [title]="member.username"></span>
+          }
+        </div>
+      }
       <a [routerLink]="['/app/rooms', roomId(), 'manage']"
          class="p-2 rounded-md text-on-surface-variant hover:bg-surface-container-high transition-colors"
          data-testid="manage-room-link"
@@ -209,9 +221,11 @@
       @if (emojiPickerOpen()) {
         <div class="absolute bottom-14 left-2 z-20 grid grid-cols-4 gap-1 rounded-lg bg-surface-container-lowest p-2 shadow-lg ring-1 ring-outline-variant/40"
              data-testid="emoji-picker">
-          @for (emoji of quickEmojis; track emoji) {
+          @for (emoji of quickEmojis; track emoji; let i = $index) {
             <button type="button"
                     class="w-9 h-9 rounded-md text-lg leading-none hover:bg-surface-container-high focus:outline-none"
+                    [attr.data-testid]="'emoji-option-' + i"
+                    (mousedown)="$event.preventDefault()"
                     (click)="insertEmoji(emoji)">{{ emoji }}</button>
           }
         </div>
@@ -269,6 +283,7 @@
                   class="w-8 h-8 rounded-md flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"
                   data-testid="emoji-picker-btn"
                   title="Add emoji"
+                  (mousedown)="$event.preventDefault()"
                   (click)="toggleEmojiPicker()">
             <span class="material-symbols-outlined text-[19px]">mood</span>
           </button>

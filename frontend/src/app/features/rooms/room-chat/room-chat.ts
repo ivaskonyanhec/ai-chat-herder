@@ -12,7 +12,7 @@ import { FilesApiService } from '../../../core/files/files-api.service';
 import { NotificationsApiService } from '../../../core/notifications/notifications-api.service';
 import { UnreadService } from '../../../core/signalr/unread.service';
 import { ReactionsApiService } from '../../../core/reactions/reactions-api.service';
-import { parseInlineMarkdown, serializeToMarkdown, markersToHtml } from '../../../shared/utils/inline-markdown';
+import { parseInlineMarkdown, serializeToMarkdown } from '../../../shared/utils/inline-markdown';
 import type { RoomDto } from '../../../core/rooms/rooms.models';
 import type { MessageDto, RoomMemberPresence } from '../../../core/signalr/hub.models';
 import type { AttachmentDto } from '../../../core/files/files.models';

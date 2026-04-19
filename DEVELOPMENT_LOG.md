@@ -4,6 +4,10 @@ Format: `[Timestamp] | Task | Reasoning | Changes`
 
 ---
 
+`[2026-04-20 T203]` | **[Fix] E2E failures — test assertions, emoji data-testid + focus, member status panel** | Four groups of failing tests with three root causes. **(1) Tests 24-27 (composer Shift+Enter / emoji send):** `[data-testid="message-input"]` is a `contenteditable` div; Playwright's `toHaveValue()` only works on `<input>`/`<textarea>`/`<select>` — returns undefined for divs. Fix: replace `toHaveValue(x)` with `toHaveJSProperty('innerText', x)` in `02-chat.spec.ts` (4 call-sites). The WYSIWYG contenteditable is preserved. **(2) Test 241 also:** `[data-testid="emoji-option-0"]` not present on emoji picker buttons — locator never resolves. Fix: add `let i = $index` + `[attr.data-testid]="'emoji-option-' + i"` to emoji `@for`. Additionally, clicking the emoji-picker-btn and emoji option buttons blurred the contenteditable, causing `document.execCommand('insertText')` to miss the target — same issue as the Bold/Italic toolbar pattern. Fix: add `(mousedown)="$event.preventDefault()"` to both `emoji-picker-btn` and each emoji option button. **(3) Tests 34-35 and 86-87 (presence dots, AFK UI):** `[data-testid="member-status-{userId}"]` not rendered anywhere in the room chat view — `members()` and `presenceMap()` were wired in the component but the template had no member strip. Fix: compact status-dot row in room-chat header; dots bind `presenceMap()` for live `UserStatusChanged` updates. | `e2e/tests/02-chat.spec.ts`, `frontend/src/app/features/rooms/room-chat/room-chat.html` | **[FIXED]**
+
+---
+
 ## 2026-04-18 — Architecture Planning Session
 
 ---

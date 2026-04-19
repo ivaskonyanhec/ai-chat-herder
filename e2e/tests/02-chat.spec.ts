@@ -229,11 +229,11 @@ test.describe('Room chat', () => {
     await expect(userAPage.locator('[data-testid="send-message-btn"]')).toBeEnabled();
     await userAPage.locator('[data-testid="message-input"]').press('Shift+Enter');
     await userAPage.locator('[data-testid="message-input"]').pressSequentially('second line');
-    await expect(userAPage.locator('[data-testid="message-input"]')).toHaveValue(expectedMessage);
+    await expect(userAPage.locator('[data-testid="message-input"]')).toHaveJSProperty('innerText', expectedMessage);
 
     await userAPage.locator('[data-testid="message-input"]').press('Enter');
 
-    await expect(userAPage.locator('[data-testid="message-input"]')).toHaveValue('', { timeout: 5_000 });
+    await expect(userAPage.locator('[data-testid="message-input"]')).toHaveJSProperty('innerText', '', { timeout: 5_000 });
     await expect(userAPage.locator('[data-testid="chat-area"] [data-testid="message-text"]').filter({ hasText: expectedMessage }))
       .toBeVisible({ timeout: 5_000 });
   });
@@ -251,10 +251,10 @@ test.describe('Room chat', () => {
     await expect(userAPage.locator('[data-testid="emoji-picker"]')).toBeVisible();
     await userAPage.locator('[data-testid="emoji-option-0"]').click();
 
-    await expect(userAPage.locator('[data-testid="message-input"]')).toHaveValue(expectedMessage);
+    await expect(userAPage.locator('[data-testid="message-input"]')).toHaveJSProperty('innerText', expectedMessage);
     await userAPage.locator('[data-testid="send-message-btn"]').click();
 
-    await expect(userAPage.locator('[data-testid="message-input"]')).toHaveValue('', { timeout: 5_000 });
+    await expect(userAPage.locator('[data-testid="message-input"]')).toHaveJSProperty('innerText', '', { timeout: 5_000 });
     await expect(userAPage.locator('[data-testid="chat-area"] [data-testid="message-text"]').filter({ hasText: expectedMessage }))
       .toBeVisible({ timeout: 5_000 });
   });
