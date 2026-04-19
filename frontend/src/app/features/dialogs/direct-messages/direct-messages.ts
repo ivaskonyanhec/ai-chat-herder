@@ -3,8 +3,10 @@ import { finalize } from 'rxjs';
 import { AuthSessionService } from '../../../core/auth/auth-session.service';
 import { DialogsApiService } from '../../../core/dialogs/dialogs-api.service';
 import { ChatService } from '../../../core/signalr/chat.service';
+import { FilesApiService } from '../../../core/files/files-api.service';
 import type { DialogDto } from '../../../core/dialogs/dialogs.models';
 import type { DialogMessageDto } from '../../../core/signalr/hub.models';
+import type { AttachmentDto } from '../../../core/files/files.models';
 
 @Component({
   selector: 'app-direct-messages',
@@ -17,6 +19,7 @@ export class DirectMessagesComponent {
   private readonly authSession = inject(AuthSessionService);
   private readonly dialogsApi = inject(DialogsApiService);
   private readonly chat = inject(ChatService);
+  private readonly filesApi = inject(FilesApiService);
 
   readonly user = this.authSession.user;
   readonly isLoadingDialogs = signal(true);
@@ -27,6 +30,8 @@ export class DirectMessagesComponent {
   readonly messages = signal<DialogMessageDto[]>([]);
   readonly messageText = signal('');
   readonly isSending = signal(false);
+  readonly isUploading = signal(false);
+  readonly pendingAttachment = signal<AttachmentDto | null>(null);
 
   constructor() {
     this.loadDialogs();
@@ -55,13 +60,57 @@ export class DirectMessagesComponent {
 
   sendMessage(): void {
     const content = this.messageText().trim();
-    const dialog  = this.selectedDialog();
-    if (!content || !dialog || this.isSending()) return;
+    const attachment = this.pendingAttachment();
+    const dialog = this.selectedDialog();
+    if ((!content && !attachment) || !dialog || this.isSending()) return;
 
     this.isSending.set(true);
-    void this.chat.sendDirectMessage(dialog.id, content, null, null)
-      .then(() => { this.messageText.set(''); })
+    void this.chat.sendDirectMessage(dialog.id, content || ' ', null, attachment?.id ?? null)
+      .then(() => {
+        this.messageText.set('');
+        this.pendingAttachment.set(null);
+      })
       .finally(() => { this.isSending.set(false); });
+  }
+
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (file) this.uploadFile(file);
+    input.value = '';
+  }
+
+  onPaste(event: ClipboardEvent): void {
+    const file = event.clipboardData?.files[0];
+    if (file) {
+      event.preventDefault();
+      this.uploadFile(file);
+    }
+  }
+
+  clearAttachment(): void {
+    this.pendingAttachment.set(null);
+  }
+
+  downloadFile(attachmentId: string, fileName: string): void {
+    this.filesApi.downloadFile(attachmentId, fileName);
+  }
+
+  formatSize(bytes: number): string {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  }
+
+  private uploadFile(file: File): void {
+    if (this.isUploading()) return;
+    this.isUploading.set(true);
+    this.filesApi.uploadFile(file)
+      .pipe(finalize(() => this.isUploading.set(false)))
+      .subscribe({
+        next: dto => this.pendingAttachment.set(dto),
+        error: () => this.errorMessage.set('File upload failed.'),
+      });
   }
 
   private loadDialogs(): void {

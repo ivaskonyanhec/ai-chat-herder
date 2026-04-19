@@ -93,6 +93,25 @@
                     : 'bg-surface-container-lowest text-on-surface rounded-bl-sm'"
                 >
                   <p>{{ msg.content }}</p>
+                  @if (msg.attachment) {
+                    <div class="flex items-center gap-3 mt-2 px-3 py-2 bg-surface-container rounded-lg max-w-xs">
+                      <span class="material-symbols-outlined text-on-surface-variant shrink-0">
+                        {{ msg.attachment.contentType.startsWith('image/') ? 'image' : 'attach_file' }}
+                      </span>
+                      <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-on-surface truncate">{{ msg.attachment.fileName }}</p>
+                        @if (msg.attachment.comment) {
+                          <p class="text-xs text-on-surface-variant">{{ msg.attachment.comment }}</p>
+                        }
+                        <p class="text-xs text-on-surface-variant">{{ formatSize(msg.attachment.sizeBytes) }}</p>
+                      </div>
+                      <button type="button"
+                              class="p-1 rounded hover:bg-surface-container-high text-on-surface-variant"
+                              (click)="downloadFile(msg.attachment.id, msg.attachment.fileName)">
+                        <span class="material-symbols-outlined text-sm">download</span>
+                      </button>
+                    </div>
+                  }
                   @if (msg.editedAt) {
                     <p class="text-[9px] opacity-60 mt-0.5">edited</p>
                   }
@@ -114,6 +133,17 @@
         @if (errorMessage()) {
           <p class="text-error text-xs mb-2">{{ errorMessage() }}</p>
         }
+        <input type="file" #dmFileInput hidden (change)="onFileSelected($event)" />
+        @if (pendingAttachment()) {
+          <div class="flex items-center gap-2 px-4 py-2 bg-primary-container/30 rounded-lg mx-0 mb-2 text-sm">
+            <span class="material-symbols-outlined text-sm text-primary">attach_file</span>
+            <span class="flex-1 truncate font-medium">{{ pendingAttachment()!.fileName }}</span>
+            <span class="text-xs text-on-surface-variant">{{ formatSize(pendingAttachment()!.sizeBytes) }}</span>
+            <button class="hover:text-error" type="button" (click)="clearAttachment()">
+              <span class="material-symbols-outlined text-sm">close</span>
+            </button>
+          </div>
+        }
         <div class="flex gap-2 items-end">
           <textarea
             class="flex-1 bg-surface-container-low border-none rounded-xl px-4 py-3 text-sm text-on-surface resize-none focus:ring-1 focus:ring-primary/30 outline-none"
@@ -124,10 +154,17 @@
             [disabled]="selectedDialog()!.isFrozen || isSending()"
             (input)="messageText.set($any($event.target).value)"
             (keydown.enter)="$event.preventDefault(); sendMessage()"
+            (paste)="onPaste($event)"
           ></textarea>
+          <button type="button"
+                  class="p-2 rounded-lg hover:bg-surface-container text-on-surface-variant"
+                  [disabled]="isUploading()"
+                  (click)="dmFileInput.click()">
+            <span class="material-symbols-outlined">attach_file</span>
+          </button>
           <button
             class="px-4 py-3 bg-primary text-on-primary text-sm font-bold rounded-xl hover:bg-primary-dim transition-colors disabled:opacity-50"
-            [disabled]="isSending() || !messageText().trim() || selectedDialog()!.isFrozen"
+            [disabled]="isSending() || (!messageText().trim() && !pendingAttachment()) || selectedDialog()!.isFrozen"
             (click)="sendMessage()"
           >
             <span class="material-symbols-outlined" style="font-size:1.25rem">send</span>
