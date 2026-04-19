@@ -1,6 +1,8 @@
 using ChatHerder.Application.Ports;
+using ChatHerder.Application.Services;
 using ChatHerder.Infrastructure.Cache;
 using ChatHerder.Infrastructure.Email;
+using ChatHerder.Infrastructure.Messaging;
 using ChatHerder.Infrastructure.Persistence;
 using ChatHerder.Infrastructure.Security;
 using ChatHerder.Infrastructure.Services;
@@ -42,6 +44,12 @@ public static class InfrastructureExtensions
 
         services.AddSingleton<IFileStorage, LocalFileStorage>();
         services.AddHostedService<OrphanCleanupService>();
+
+        // RabbitMQ — message bus + activity consumer
+        services.AddSingleton<RabbitMqMessageBus>();
+        services.AddSingleton<IMessageBus>(sp => sp.GetRequiredService<RabbitMqMessageBus>());
+        services.AddScoped<IActivityLogger, ActivityLoggerService>();
+        services.AddHostedService<ActivityConsumer>();
 
         return services;
     }
