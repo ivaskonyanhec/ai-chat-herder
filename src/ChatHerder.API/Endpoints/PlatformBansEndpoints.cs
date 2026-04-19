@@ -36,9 +36,6 @@ public static class PlatformBansEndpoints
         AppDbContext db,
         CancellationToken ct)
     {
-        if (!Guid.TryParse(principal.FindFirstValue("user_id"), out _))
-            return Results.Unauthorized();
-
         var bans = await db.PlatformBans
             .Include(b => b.User)
             .Include(b => b.IssuedByAdmin)
@@ -68,12 +65,17 @@ public static class PlatformBansEndpoints
         if (!Guid.TryParse(principal.FindFirstValue("user_id"), out var adminId))
             return Results.Unauthorized();
 
+        var now = DateTime.UtcNow;
+
         var target = await db.Users.FirstOrDefaultAsync(
             u => u.Username == req.Username && u.DeletedAt == null, ct);
         if (target is null) return Results.NotFound();
 
+        if (await db.PlatformBans.AnyAsync(b => b.UserId == target.Id && b.RevokedAt == null, ct))
+            return Results.Conflict();
+
         DateTime? expiresAt = req.DurationHours.HasValue
-            ? DateTime.UtcNow.AddHours(req.DurationHours.Value)
+            ? now.AddHours(req.DurationHours.Value)
             : null;
 
         db.PlatformBans.Add(new PlatformBan
@@ -86,7 +88,7 @@ public static class PlatformBansEndpoints
         await db.SaveChangesAsync(ct);
 
         var redisDb = redis.GetDatabase();
-        var expiry  = expiresAt.HasValue ? expiresAt.Value - DateTime.UtcNow : (TimeSpan?)null;
+        var expiry  = expiresAt.HasValue ? expiresAt.Value - now : (TimeSpan?)null;
         await redisDb.StringSetAsync($"ban:{target.Id}", "1", expiry, When.Always, CommandFlags.None);
 
         return Results.NoContent();
@@ -103,13 +105,15 @@ public static class PlatformBansEndpoints
             return Results.Unauthorized();
 
         var ban = await db.PlatformBans
-            .FirstOrDefaultAsync(b => b.UserId == userId && b.RevokedAt == null, ct);
+            .FirstOrDefaultAsync(b => b.UserId == userId && b.RevokedAt == null
+                && (b.ExpiresAt == null || b.ExpiresAt > DateTime.UtcNow), ct);
         if (ban is null) return Results.NotFound();
 
         ban.RevokedAt = DateTime.UtcNow;
         await db.SaveChangesAsync(ct);
 
-        await redis.GetDatabase().KeyDeleteAsync($"ban:{userId}");
+        var redisDb = redis.GetDatabase();
+        await redisDb.KeyDeleteAsync($"ban:{userId}");
         return Results.NoContent();
     }
 }

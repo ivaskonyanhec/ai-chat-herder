@@ -104,6 +104,27 @@ public sealed class PlatformBansEndpointsTests
     }
 
     [Fact]
+    public async Task IssueBan_Returns409_WhenUserAlreadyBanned()
+    {
+        var db       = BuildDb();
+        var adminId  = Guid.NewGuid();
+        var targetId = Guid.NewGuid();
+        var admin  = new User { Id = adminId,  Username = "admin",  Email = "a@x.com", PasswordHash = "h" };
+        var target = new User { Id = targetId, Username = "target", Email = "t@x.com", PasswordHash = "h" };
+        db.Users.AddRange(admin, target);
+        db.PlatformBans.Add(new PlatformBan
+            { UserId = targetId, IssuedByAdminId = adminId, Reason = "existing", RevokedAt = null });
+        await db.SaveChangesAsync();
+
+        var (redis, _) = BuildRedisMock();
+        var result = await PlatformBansEndpoints.IssueBanInternal(
+            new ChatHerder.Application.DTOs.IssuePlatformBanRequest("target", "spam", null),
+            Caller(adminId), db, redis, CancellationToken.None);
+
+        Assert.IsType<Microsoft.AspNetCore.Http.HttpResults.Conflict>(result);
+    }
+
+    [Fact]
     public async Task RevokeBan_Returns404_WhenNoActiveBan()
     {
         var db       = BuildDb();
