@@ -50,7 +50,7 @@
                 }
               </div>
               @if (msg.isDeleted) {
-                <p class="text-sm text-outline italic" data-testid="message-deleted">Message deleted.</p>
+                <p class="text-sm text-on-surface-variant italic" data-testid="message-deleted">Message deleted.</p>
               } @else {
                 @if (msg.replyTo) {
                   <div class="border-l-2 border-primary/50 pl-2 mb-1 rounded-sm bg-surface-container/50"
@@ -145,9 +145,9 @@
               <span class="text-[10px] font-bold text-on-surface-variant">{{ member.username[0].toUpperCase() }}</span>
             </div>
           }
-          <span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-surface-container"
-                [class.bg-green-500]="(presenceMap().get(member.userId) ?? member.presenceStatus) === 'online'"
-                [class.bg-yellow-400]="(presenceMap().get(member.userId) ?? member.presenceStatus) === 'afk'"
+          <span class="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border-2 border-surface-container-lowest"
+                [class.bg-status-online]="(presenceMap().get(member.userId) ?? member.presenceStatus) === 'online'"
+                [class.bg-status-afk]="(presenceMap().get(member.userId) ?? member.presenceStatus) === 'afk'"
                 [class.bg-outline]="(presenceMap().get(member.userId) ?? member.presenceStatus) !== 'online' && (presenceMap().get(member.userId) ?? member.presenceStatus) !== 'afk'"
                 [attr.data-testid]="'member-status-' + member.userId">
           </span>

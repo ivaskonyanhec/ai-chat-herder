@@ -14,6 +14,22 @@
   --color-on-primary: var(--color-on-primary);
   --color-on-primary-container: var(--color-on-primary-container);
 
+  /* Secondary */
+  --color-secondary: var(--color-secondary);
+  --color-secondary-dim: var(--color-secondary-dim);
+  --color-secondary-container: var(--color-secondary-container);
+  --color-on-secondary: var(--color-on-secondary);
+  --color-on-secondary-container: var(--color-on-secondary-container);
+
+  /* Tertiary */
+  --color-tertiary: var(--color-tertiary);
+  --color-tertiary-container: var(--color-tertiary-container);
+  --color-on-tertiary: var(--color-on-tertiary);
+  --color-on-tertiary-container: var(--color-on-tertiary-container);
+
+  /* Inverse */
+  --color-inverse-primary: var(--color-inverse-primary);
+
   /* Surface */
   --color-surface: var(--color-surface);
   --color-surface-bright: var(--color-surface-bright);
@@ -54,13 +70,12 @@
    * rounded       = 0.125rem (xs)
    * rounded-lg    = 0.25rem  (not a token; halfway between xs and md)
    * rounded-xl    = 0.5rem   (maps to our --radius-lg)
-   * rounded-full  = 0.75rem  (maps to our --radius-xl; editorial heavy-round)
-   * For true circles (avatars): use style="border-radius:50%" or w-N h-N rounded-full
+   * rounded-full  = 9999px   (true circle / pill; use for avatars and status dots)
    */
   --radius: var(--radius-xs);
   --radius-sm: var(--radius-sm);
   --radius-md: var(--radius-md);
   --radius-lg: 0.25rem;
   --radius-xl: var(--radius-lg);
-  --radius-full: var(--radius-xl);
+  --radius-full: 9999px;
 }

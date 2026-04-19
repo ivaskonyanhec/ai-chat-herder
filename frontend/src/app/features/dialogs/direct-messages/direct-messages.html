@@ -1,7 +1,7 @@
 <div class="flex h-full overflow-hidden bg-surface">
   <!-- Pane 1: Dialog List -->
-  <section class="w-80 flex flex-col bg-surface-container border-r border-surface-container-high shrink-0">
-    <div class="p-6 border-b border-surface-container-high">
+  <section class="w-80 flex flex-col bg-surface-container shrink-0">
+    <div class="p-6 bg-surface-container-high">
       <h2 class="text-lg font-bold text-on-surface mb-4">Messages</h2>
       <div class="relative">
         <input
@@ -61,7 +61,7 @@
       </div>
     } @else {
       <!-- Header -->
-      <div class="h-16 bg-surface-container border-b border-surface-container-high flex items-center px-6 gap-3 shrink-0">
+      <div class="h-16 bg-surface-container flex items-center px-6 gap-3 shrink-0">
         <div class="w-8 h-8 rounded-full bg-surface-container-high overflow-hidden flex items-center justify-center">
           @if (selectedDialog()!.otherAvatarUrl) {
             <img [src]="selectedDialog()!.otherAvatarUrl" class="w-full h-full object-cover" alt="" />
@@ -88,7 +88,7 @@
             @if (!msg.isDeleted) {
               <div [class]="msg.sender.id === user()?.id ? 'flex justify-end' : 'flex'">
                 <div
-                  class="max-w-xs lg:max-w-sm px-4 py-2.5 rounded-2xl text-sm"
+                  class="max-w-xs lg:max-w-sm px-4 py-2.5 rounded-xl text-sm"
                   [class]="msg.sender.id === user()?.id
                     ? 'bg-primary text-on-primary rounded-br-sm'
                     : 'bg-surface-container-lowest text-on-surface rounded-bl-sm'"
@@ -127,7 +127,7 @@
               </div>
             } @else {
               <div [class]="msg.sender.id === user()?.id ? 'flex justify-end' : 'flex'">
-                <div class="px-4 py-2 rounded-2xl text-xs text-on-surface-variant italic bg-surface-container">
+                <div class="px-4 py-2 rounded-xl text-xs text-on-surface-variant italic bg-surface-container">
                   Message deleted
                 </div>
               </div>
@@ -137,7 +137,7 @@
       </div>
 
       <!-- Compose -->
-      <div class="p-4 border-t border-surface-container-high shrink-0">
+      <div class="p-4 bg-surface-container-low shrink-0">
         @if (errorMessage()) {
           <p class="text-error text-xs mb-2">{{ errorMessage() }}</p>
         }
@@ -185,7 +185,7 @@
 
   <!-- Pane 3: Contact Info -->
   @if (selectedDialog()) {
-    <section class="w-72 flex flex-col bg-surface-container border-l border-surface-container-high shrink-0 overflow-y-auto p-6">
+    <section class="w-72 flex flex-col bg-surface-container shrink-0 overflow-y-auto p-6">
       <div class="flex flex-col items-center gap-4 text-center">
         <div class="w-20 h-20 rounded-full bg-surface-container-high overflow-hidden flex items-center justify-center">
           @if (selectedDialog()!.otherAvatarUrl) {
