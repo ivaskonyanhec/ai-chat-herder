@@ -1,7 +1,7 @@
-import { Component, OnInit, OnDestroy, computed, effect, inject, signal, untracked } from '@angular/core';
+import { Component, DestroyRef, OnInit, OnDestroy, effect, inject, signal, untracked } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { finalize } from 'rxjs';
-import { Button } from 'primeng/button';
+import { distinctUntilChanged, filter, finalize, map } from 'rxjs';
 import { Textarea } from 'primeng/textarea';
 import { FormsModule } from '@angular/forms';
 import { AuthSessionService } from '../../../core/auth/auth-session.service';
@@ -18,7 +18,7 @@ import type { AttachmentDto } from '../../../core/files/files.models';
 @Component({
   selector: 'app-room-chat',
   standalone: true,
-  imports: [Button, Textarea, FormsModule, RouterLink],
+  imports: [Textarea, FormsModule, RouterLink],
   templateUrl: './room-chat.html',
   styleUrl: './room-chat.scss',
 })
@@ -32,9 +32,10 @@ export class RoomChatComponent implements OnInit, OnDestroy {
   private readonly filesApi = inject(FilesApiService);
   private readonly notificationsApi = inject(NotificationsApiService);
   private readonly unread = inject(UnreadService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly user = this.authSession.user;
-  readonly roomId = computed(() => this.route.snapshot.params['id'] as string);
+  readonly roomId = signal(this.route.snapshot.params['id'] as string);
 
   readonly isLoading = signal(true);
   readonly errorMessage = signal('');
@@ -44,8 +45,11 @@ export class RoomChatComponent implements OnInit, OnDestroy {
   readonly isSending = signal(false);
   readonly isUploading = signal(false);
   readonly pendingAttachment = signal<AttachmentDto | null>(null);
+  readonly emojiPickerOpen = signal(false);
+  readonly quickEmojis = ['😀', '😂', '👍', '🙏', '❤️', '🎉', '🔥', '👀'];
   readonly members = signal<RoomMemberPresence[]>([]);
   readonly presenceMap = this.presence.presenceMap;
+  private joinedRoomId: string | null = null;
 
   constructor() {
     effect(() => {
@@ -53,10 +57,13 @@ export class RoomChatComponent implements OnInit, OnDestroy {
       if (!event) return;
 
       if (event.type === 'MessageReceived') {
-        this.messages.update(msgs => [...msgs, event.payload]);
+        this.messages.update(msgs => this.sortMessages([
+          ...msgs.filter(msg => msg.id !== event.payload.id),
+          event.payload,
+        ]));
       } else if (event.type === 'MessageEdited') {
         this.messages.update(msgs =>
-          msgs.map(m => m.id === event.payload.id ? event.payload : m)
+          this.sortMessages(msgs.map(m => m.id === event.payload.id ? event.payload : m))
         );
       } else if (event.type === 'MessageDeleted') {
         this.messages.update(msgs =>
@@ -105,16 +112,20 @@ export class RoomChatComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    const id = this.roomId();
-    void this.presence.joinRoom(id);
-    void this.chat.joinRoom(id);
-    this.loadRoom(id);
+    this.route.paramMap
+      .pipe(
+        map(params => params.get('id')),
+        filter((id): id is string => !!id),
+        distinctUntilChanged(),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(id => this.switchRoom(id));
   }
 
   ngOnDestroy(): void {
-    const id = this.roomId();
-    void this.presence.leaveRoom(id);
-    void this.chat.leaveRoom(id);
+    if (!this.joinedRoomId) return;
+    void this.presence.leaveRoom(this.joinedRoomId);
+    void this.chat.leaveRoom(this.joinedRoomId);
   }
 
   onFileSelected(event: Event): void {
@@ -136,6 +147,15 @@ export class RoomChatComponent implements OnInit, OnDestroy {
     this.pendingAttachment.set(null);
   }
 
+  toggleEmojiPicker(): void {
+    this.emojiPickerOpen.update(open => !open);
+  }
+
+  insertEmoji(emoji: string): void {
+    this.messageText.update(text => `${text}${emoji}`);
+    this.emojiPickerOpen.set(false);
+  }
+
   sendMessage(): void {
     const content = this.messageText().trim();
     const attachment = this.pendingAttachment();
@@ -147,6 +167,22 @@ export class RoomChatComponent implements OnInit, OnDestroy {
         this.pendingAttachment.set(null);
       })
       .finally(() => this.isSending.set(false));
+  }
+
+  canSendMessage(): boolean {
+    return (!!this.messageText().trim() || !!this.pendingAttachment()) && !this.isSending() && !this.isUploading();
+  }
+
+  handleComposerEnter(event: KeyboardEvent): void {
+    if (event.shiftKey) return;
+    event.preventDefault();
+    this.sendMessage();
+  }
+
+  resizeComposer(event: Event): void {
+    const textarea = event.target as HTMLTextAreaElement;
+    textarea.style.height = 'auto';
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 160)}px`;
   }
 
   downloadFile(attachmentId: string, fileName: string): void {
@@ -161,6 +197,29 @@ export class RoomChatComponent implements OnInit, OnDestroy {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  }
+
+  isOwnMessage(msg: MessageDto): boolean {
+    return msg.sender.id === this.user()?.id;
+  }
+
+  private switchRoom(id: string): void {
+    if (this.joinedRoomId && this.joinedRoomId !== id) {
+      void this.presence.leaveRoom(this.joinedRoomId);
+      void this.chat.leaveRoom(this.joinedRoomId);
+    }
+
+    this.joinedRoomId = id;
+    this.roomId.set(id);
+    this.room.set(null);
+    this.messages.set([]);
+    this.members.set([]);
+    this.pendingAttachment.set(null);
+    this.messageText.set('');
+    this.emojiPickerOpen.set(false);
+    void this.presence.joinRoom(id);
+    void this.chat.joinRoom(id);
+    this.loadRoom(id);
   }
 
   private uploadFile(file: File): void {
@@ -180,22 +239,38 @@ export class RoomChatComponent implements OnInit, OnDestroy {
 
     this.roomsApi.getRoom(id).subscribe({
       next: room => {
+        if (this.roomId() !== id) return;
         this.room.set(room);
         this.roomsApi.getMessages(id)
-          .pipe(finalize(() => this.isLoading.set(false)))
+          .pipe(finalize(() => {
+            if (this.roomId() === id) this.isLoading.set(false);
+          }))
           .subscribe({
             next: msgs => {
-              this.messages.set(msgs);
+              if (this.roomId() !== id) return;
+              this.messages.set(this.sortMessages(msgs));
               this.notificationsApi.markRoomRead(id).subscribe();
               this.unread.setCount('room', id, 0);
             },
-            error: () => this.errorMessage.set('Unable to load messages.'),
+            error: () => {
+              if (this.roomId() !== id) return;
+              this.errorMessage.set('Unable to load messages.');
+            },
           });
       },
       error: () => {
+        if (this.roomId() !== id) return;
         this.isLoading.set(false);
         this.errorMessage.set('Room not found or access denied.');
       },
     });
+  }
+
+  private sortMessages(messages: MessageDto[]): MessageDto[] {
+    return [...messages].sort((a, b) =>
+      a.sequenceNumber - b.sequenceNumber ||
+      new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime() ||
+      a.id.localeCompare(b.id)
+    );
   }
 }

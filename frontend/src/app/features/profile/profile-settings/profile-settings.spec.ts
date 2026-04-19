@@ -9,6 +9,7 @@ import { ProfileSettingsComponent } from './profile-settings';
 import { AuthApiService } from '../../../core/auth/auth-api.service';
 import { AuthSessionService } from '../../../core/auth/auth-session.service';
 import { UsersApiService } from '../../../core/users/users-api.service';
+import { FilesApiService } from '../../../core/files/files-api.service';
 import type { User } from '../../../core/auth/auth.models';
 
 @Component({ standalone: true, template: '' })
@@ -20,6 +21,8 @@ function setup() {
   const getMe = vi.fn().mockReturnValue(of(stubUser));
   const changePassword = vi.fn();
   const deleteAccount = vi.fn();
+  const uploadFile = vi.fn();
+  const patchMe = vi.fn();
   const clearSession = vi.fn();
 
   TestBed.configureTestingModule({
@@ -33,12 +36,13 @@ function setup() {
         provide: AuthSessionService,
         useValue: { user: signal<User | null>(stubUser), clearSession },
       },
-      { provide: UsersApiService, useValue: { getMe } },
+      { provide: UsersApiService, useValue: { getMe, patchMe } },
+      { provide: FilesApiService, useValue: { uploadFile, getFileUrl: (id: string) => `/api/files/${id}` } },
     ],
   });
 
   const component = TestBed.createComponent(ProfileSettingsComponent).componentInstance;
-  return { component, changePassword, deleteAccount, clearSession };
+  return { component, changePassword, deleteAccount, clearSession, uploadFile, patchMe };
 }
 
 describe('ProfileSettingsComponent', () => {
@@ -154,6 +158,59 @@ describe('ProfileSettingsComponent', () => {
       component.initiateAccountDeletion();
 
       expect(deleteAccount).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('onAvatarFileSelected()', () => {
+    it('uploads the selected image, patches avatarUrl, and updates the profile', () => {
+      const { component, uploadFile, patchMe } = setup();
+      const file = new File(['avatar-bytes'], 'avatar.png', { type: 'image/png' });
+      const updatedUser: User = { ...stubUser, avatarUrl: '/api/files/att-1' };
+      uploadFile.mockReturnValue(of({
+        id: 'att-1',
+        fileName: 'avatar.png',
+        contentType: 'image/png',
+        sizeBytes: file.size,
+        comment: null,
+      }));
+      patchMe.mockReturnValue(of(updatedUser));
+
+      component.onAvatarFileSelected(file);
+
+      expect(uploadFile).toHaveBeenCalledWith(file);
+      expect(patchMe).toHaveBeenCalledWith('/api/files/att-1');
+      expect(component.profile()).toEqual(updatedUser);
+      expect(component.avatarError()).toBe('');
+      expect(component.isUploadingAvatar()).toBe(false);
+    });
+
+    it('ignores duplicate selections while an avatar upload is in progress', () => {
+      const { component, uploadFile, patchMe } = setup();
+      const file = new File(['avatar-bytes'], 'avatar.png', { type: 'image/png' });
+      component.isUploadingAvatar.set(true);
+
+      component.onAvatarFileSelected(file);
+
+      expect(uploadFile).not.toHaveBeenCalled();
+      expect(patchMe).not.toHaveBeenCalled();
+    });
+
+    it('sets avatarError when upload or profile patch fails', () => {
+      const { component, uploadFile, patchMe } = setup();
+      const file = new File(['avatar-bytes'], 'avatar.png', { type: 'image/png' });
+      uploadFile.mockReturnValue(of({
+        id: 'att-1',
+        fileName: 'avatar.png',
+        contentType: 'image/png',
+        sizeBytes: file.size,
+        comment: null,
+      }));
+      patchMe.mockReturnValue(throwError(() => ({ status: 500 })));
+
+      component.onAvatarFileSelected(file);
+
+      expect(component.avatarError()).toBe('Avatar upload failed. Please try again.');
+      expect(component.isUploadingAvatar()).toBe(false);
     });
   });
 });

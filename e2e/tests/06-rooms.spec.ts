@@ -92,6 +92,33 @@ test.describe('Room catalog, membership, and invitations', () => {
     expect(members.map((m) => m.userId)).toContain(userB.id);
   });
 
+  test('accepted private room invitation appears in the browser sidebar without a reload', async ({
+    api,
+    userA,
+    userB,
+    userBPage,
+  }) => {
+    const roomName = `private-visible-${Date.now()}`;
+    const room = await api.createRoom(userA.accessToken, { name: roomName, visibility: 'Private' });
+    const ownerCtx = await api.authContext(userA.accessToken);
+    const invite = await ownerCtx.post(`/api/rooms/${room.id}/invitations`, {
+      data: { username: userB.username },
+    });
+    expect(invite.status(), await invite.text()).toBe(204);
+    await ownerCtx.dispose();
+
+    await userBPage.goto('/app/invitations');
+    await expect(userBPage.getByText(roomName)).toBeVisible({ timeout: 10_000 });
+    await expect(userBPage.locator('[data-testid="private-rooms-section"]')).not.toContainText(roomName);
+
+    await userBPage.getByRole('button', { name: 'Accept Invitation' }).click();
+
+    await expect(userBPage).toHaveURL(new RegExp(`/app/rooms/${room.id}$`), { timeout: 10_000 });
+    await expect(userBPage.locator('[data-testid="private-rooms-section"]')).toContainText(roomName, {
+      timeout: 10_000,
+    });
+  });
+
   test('owner can update room settings via PATCH and changes are reflected in room details', async ({ api, userA }) => {
     const room = await api.createRoom(userA.accessToken, { visibility: 'Public' });
     const updatedName = `updated-${Date.now()}`;

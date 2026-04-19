@@ -1,9 +1,10 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { finalize } from 'rxjs';
+import { finalize, switchMap } from 'rxjs';
 import { AuthApiService } from '../../../core/auth/auth-api.service';
 import { AuthSessionService } from '../../../core/auth/auth-session.service';
+import { FilesApiService } from '../../../core/files/files-api.service';
 import { UsersApiService } from '../../../core/users/users-api.service';
 import type { User } from '../../../core/auth/auth.models';
 
@@ -17,11 +18,14 @@ import type { User } from '../../../core/auth/auth.models';
 export class ProfileSettingsComponent {
   private readonly authApi = inject(AuthApiService);
   private readonly authSession = inject(AuthSessionService);
+  private readonly filesApi = inject(FilesApiService);
   private readonly usersApi = inject(UsersApiService);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly profile = signal<User | null>(this.authSession.user());
   readonly isLoadingProfile = signal(true);
+  readonly displayAvatarUrl = signal(this.authSession.user()?.avatarUrl || 'default-avatar.png');
 
   readonly currentPassword = signal('');
   readonly newPassword = signal('');
@@ -33,12 +37,43 @@ export class ProfileSettingsComponent {
   readonly isDeletingAccount = signal(false);
   readonly deleteError = signal('');
 
+  readonly isUploadingAvatar = signal(false);
+  readonly avatarError = signal('');
+
+  private objectAvatarUrl: string | null = null;
+
   constructor() {
+    this.updateDisplayAvatar(this.profile()?.avatarUrl ?? null);
     this.usersApi.getMe()
       .pipe(finalize(() => this.isLoadingProfile.set(false)))
       .subscribe({
-        next: user => this.profile.set(user),
+        next: user => {
+          this.profile.set(user);
+          this.updateDisplayAvatar(user.avatarUrl);
+        },
         error: () => { /* fall back to cached session user */ },
+      });
+    this.destroyRef.onDestroy(() => this.revokeObjectAvatarUrl());
+  }
+
+  onAvatarFileSelected(file: File | null): void {
+    if (!file || this.isUploadingAvatar()) return;
+
+    this.avatarError.set('');
+    this.isUploadingAvatar.set(true);
+    this.filesApi.uploadFile(file)
+      .pipe(
+        switchMap(attachment => this.usersApi.patchMe(this.filesApi.getFileUrl(attachment.id))),
+        finalize(() => this.isUploadingAvatar.set(false)),
+      )
+      .subscribe({
+        next: user => {
+          this.profile.set(user);
+          this.setObjectAvatarUrl(URL.createObjectURL(file));
+        },
+        error: () => {
+          this.avatarError.set('Avatar upload failed. Please try again.');
+        },
       });
   }
 
@@ -99,5 +134,36 @@ export class ProfileSettingsComponent {
           this.deleteError.set('Account deletion failed. Please try again.');
         },
       });
+  }
+
+  private updateDisplayAvatar(avatarUrl: string | null): void {
+    const attachmentId = this.getAttachmentId(avatarUrl);
+    if (!attachmentId) {
+      this.revokeObjectAvatarUrl();
+      this.displayAvatarUrl.set(avatarUrl || 'default-avatar.png');
+      return;
+    }
+
+    this.filesApi.getFileBlob(attachmentId).subscribe({
+      next: blob => this.setObjectAvatarUrl(URL.createObjectURL(blob)),
+      error: () => this.displayAvatarUrl.set('default-avatar.png'),
+    });
+  }
+
+  private setObjectAvatarUrl(url: string): void {
+    this.revokeObjectAvatarUrl();
+    this.objectAvatarUrl = url;
+    this.displayAvatarUrl.set(url);
+  }
+
+  private revokeObjectAvatarUrl(): void {
+    if (!this.objectAvatarUrl) return;
+    URL.revokeObjectURL(this.objectAvatarUrl);
+    this.objectAvatarUrl = null;
+  }
+
+  private getAttachmentId(avatarUrl: string | null): string | null {
+    const match = avatarUrl?.match(/^\/api\/files\/([^/?#]+)$/);
+    return match?.[1] ?? null;
   }
 }

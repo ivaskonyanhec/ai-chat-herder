@@ -48,4 +48,17 @@ describe('FilesApiService', () => {
   it('getFileUrl returns the correct API path', () => {
     expect(service.getFileUrl('abc-123')).toBe('/api/files/abc-123');
   });
+
+  it('getFileBlob fetches a file as a blob', () => {
+    let actual: Blob | undefined;
+
+    service.getFileBlob('abc-123').subscribe(blob => (actual = blob));
+
+    const req = controller.expectOne('/api/files/abc-123');
+    expect(req.request.method).toBe('GET');
+    expect(req.request.responseType).toBe('blob');
+    const expected = new Blob(['image-bytes'], { type: 'image/png' });
+    req.flush(expected);
+    expect(actual).toBe(expected);
+  });
 });

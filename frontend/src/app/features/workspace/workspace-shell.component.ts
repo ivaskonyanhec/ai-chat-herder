@@ -1,5 +1,7 @@
-import { Component, OnInit, OnDestroy, computed, inject, signal } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Component, DestroyRef, OnInit, OnDestroy, computed, inject, signal } from '@angular/core';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { filter } from 'rxjs';
 import { Button } from 'primeng/button';
 import { AuthApiService } from '../../core/auth/auth-api.service';
 import { AuthSessionService } from '../../core/auth/auth-session.service';
@@ -28,6 +30,7 @@ export class WorkspaceShellComponent implements OnInit, OnDestroy {
   private readonly notificationsApi = inject(NotificationsApiService);
   private readonly roomsApi = inject(RoomsApiService);
   private readonly friendsApi = inject(FriendsApiService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly user = this.authSession.user;
   readonly presenceMap = this.presence.presenceMap;
@@ -52,6 +55,12 @@ export class WorkspaceShellComponent implements OnInit, OnDestroy {
     void this.presence.connect();
     void this.chat.connect();
     this.bootstrapData();
+    this.router.events
+      .pipe(
+        filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(() => this.loadRooms());
   }
 
   ngOnDestroy(): void {
@@ -114,14 +123,18 @@ export class WorkspaceShellComponent implements OnInit, OnDestroy {
   }
 
   private bootstrapData(): void {
-    this.roomsApi.getMyRooms().subscribe({
-      next: rooms => this.myRooms.set(rooms),
-    });
+    this.loadRooms();
     this.notificationsApi.getUnreadCounts().subscribe({
       next: counts => counts.forEach(c => this.unread.setCount(c.contextType, c.contextId, c.count)),
     });
     this.friendsApi.getFriends().subscribe({
       next: friends => this.friends.set(friends),
+    });
+  }
+
+  private loadRooms(): void {
+    this.roomsApi.getMyRooms().subscribe({
+      next: rooms => this.myRooms.set(rooms),
     });
   }
 }

@@ -61,6 +61,29 @@ test.describe('Room chat', () => {
     await ctx.dispose();
   });
 
+  test('browser room history shows earliest messages at the top', async ({ userA, userAPage, api }) => {
+    const room = await api.createRoom(userA.accessToken, { visibility: 'Public' });
+    const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    const first = `browser-first-${suffix}`;
+    const second = `browser-second-${suffix}`;
+    const chat = await createHubConnection('/hubs/chat', userA.accessToken);
+
+    await chat.invoke('SendMessage', room.id, first, null, null);
+    await chat.invoke('SendMessage', room.id, second, null, null);
+    await chat.stop();
+
+    await userAPage.goto(`/app/rooms/${room.id}`);
+    await expect(userAPage.locator('[data-testid="message-text"]').filter({ hasText: first }))
+      .toBeVisible({ timeout: 10_000 });
+    await expect(userAPage.locator('[data-testid="message-text"]').filter({ hasText: second }))
+      .toBeVisible({ timeout: 10_000 });
+
+    const contents = (await userAPage.locator('[data-testid="message-text"]').allTextContents())
+      .map(text => text.trim());
+    expect(contents.indexOf(first)).toBeGreaterThanOrEqual(0);
+    expect(contents.indexOf(second)).toBeGreaterThan(contents.indexOf(first));
+  });
+
   test('message author can edit their own message and edited timestamp is returned', async ({ userA, api }) => {
     const room = await api.createRoom(userA.accessToken, { visibility: 'Public' });
     const chat = await createHubConnection('/hubs/chat', userA.accessToken);
@@ -161,6 +184,108 @@ test.describe('Room chat', () => {
     await expect(
       userAPage.locator('[data-testid="chat-area"] [data-testid="message-text"]').filter({ hasText: message }),
     ).toBeVisible({ timeout: 3_000 });
+  });
+
+  test('sidebar room selection reloads the reused chat component for the selected room', async ({ userA, userAPage, api }) => {
+    const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    const firstRoom = await api.createRoom(userA.accessToken, {
+      name: `switch-first-${suffix}`,
+      visibility: 'Public',
+    });
+    const secondRoom = await api.createRoom(userA.accessToken, {
+      name: `switch-second-${suffix}`,
+      visibility: 'Public',
+    });
+    const firstMessage = `first-room-message-${suffix}`;
+    const secondMessage = `second-room-message-${suffix}`;
+    const chat = await createHubConnection('/hubs/chat', userA.accessToken);
+    await chat.invoke('SendMessage', firstRoom.id, firstMessage, null, null);
+    await chat.invoke('SendMessage', secondRoom.id, secondMessage, null, null);
+    await chat.stop();
+
+    await userAPage.goto(`/app/rooms/${firstRoom.id}`);
+    await expect(userAPage.locator('[data-testid="chat-area"] [data-testid="message-text"]').filter({ hasText: firstMessage }))
+      .toBeVisible({ timeout: 10_000 });
+
+    await userAPage.locator('[data-testid="public-rooms-section"] a', { hasText: secondRoom.name }).click();
+
+    await expect(userAPage).toHaveURL(new RegExp(`/app/rooms/${secondRoom.id}$`));
+    await expect(userAPage.locator('[data-testid="chat-area"] [data-testid="message-text"]').filter({ hasText: secondMessage }))
+      .toBeVisible({ timeout: 10_000 });
+    await expect(userAPage.locator('[data-testid="chat-area"] [data-testid="message-text"]').filter({ hasText: firstMessage }))
+      .toHaveCount(0);
+  });
+
+  test('Slack-style composer supports Shift+Enter newline and Enter send', async ({ userA, userAPage, api }) => {
+    const room = await api.createRoom(userA.accessToken, { visibility: 'Public' });
+    const messagePrefix = `composer-${Date.now()}`;
+    const expectedMessage = `${messagePrefix}\nsecond line`;
+
+    await userAPage.goto(`/app/rooms/${room.id}`);
+    await expect(userAPage.locator('[data-testid="message-composer"]')).toBeVisible({ timeout: 10_000 });
+    await expect(userAPage.locator('[data-testid="send-message-btn"]')).toBeDisabled();
+
+    await userAPage.locator('[data-testid="message-input"]').fill(messagePrefix);
+    await expect(userAPage.locator('[data-testid="send-message-btn"]')).toBeEnabled();
+    await userAPage.locator('[data-testid="message-input"]').press('Shift+Enter');
+    await userAPage.locator('[data-testid="message-input"]').pressSequentially('second line');
+    await expect(userAPage.locator('[data-testid="message-input"]')).toHaveValue(expectedMessage);
+
+    await userAPage.locator('[data-testid="message-input"]').press('Enter');
+
+    await expect(userAPage.locator('[data-testid="message-input"]')).toHaveValue('', { timeout: 5_000 });
+    await expect(userAPage.locator('[data-testid="chat-area"] [data-testid="message-text"]').filter({ hasText: expectedMessage }))
+      .toBeVisible({ timeout: 5_000 });
+  });
+
+  test('Slack-style composer inserts and sends an emoji from the picker', async ({ userA, userAPage, api }) => {
+    const room = await api.createRoom(userA.accessToken, { visibility: 'Public' });
+    const prefix = `emoji-${Date.now()} `;
+    const expectedMessage = `${prefix}😀`;
+
+    await userAPage.goto(`/app/rooms/${room.id}`);
+    await expect(userAPage.locator('[data-testid="message-composer"]')).toBeVisible({ timeout: 10_000 });
+
+    await userAPage.locator('[data-testid="message-input"]').fill(prefix);
+    await userAPage.locator('[data-testid="emoji-picker-btn"]').click();
+    await expect(userAPage.locator('[data-testid="emoji-picker"]')).toBeVisible();
+    await userAPage.locator('[data-testid="emoji-option-0"]').click();
+
+    await expect(userAPage.locator('[data-testid="message-input"]')).toHaveValue(expectedMessage);
+    await userAPage.locator('[data-testid="send-message-btn"]').click();
+
+    await expect(userAPage.locator('[data-testid="message-input"]')).toHaveValue('', { timeout: 5_000 });
+    await expect(userAPage.locator('[data-testid="chat-area"] [data-testid="message-text"]').filter({ hasText: expectedMessage }))
+      .toBeVisible({ timeout: 5_000 });
+  });
+
+  test('browser UI aligns own messages right and other messages left', async ({ userA, userB, userAPage, api }) => {
+    const room = await createPublicRoomWithMembers(api, userA, [userB]);
+    const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    const ownMessage = `own-align-${suffix}`;
+    const otherMessage = `other-align-${suffix}`;
+
+    await userAPage.goto(`/app/rooms/${room.id}`);
+    await expect(userAPage.locator('[data-testid="message-input"]')).toBeVisible({ timeout: 10_000 });
+
+    await userAPage.locator('[data-testid="message-input"]').fill(ownMessage);
+    await userAPage.locator('[data-testid="send-message-btn"]').click();
+
+    const chat = await createHubConnection('/hubs/chat', userB.accessToken);
+    await chat.invoke('SendMessage', room.id, otherMessage, null, null);
+    await chat.stop();
+
+    const ownWrapper = userAPage
+      .locator('[data-testid="message-text"]')
+      .filter({ hasText: ownMessage })
+      .locator('xpath=ancestor::*[starts-with(@data-testid, "message-")][1]');
+    const otherWrapper = userAPage
+      .locator('[data-testid="message-text"]')
+      .filter({ hasText: otherMessage })
+      .locator('xpath=ancestor::*[starts-with(@data-testid, "message-")][1]');
+
+    await expect(ownWrapper).toHaveClass(/justify-end/, { timeout: 5_000 });
+    await expect(otherWrapper).toHaveClass(/justify-start/, { timeout: 5_000 });
   });
 
   test('reply/reference flow shows quoted message UI', async ({ userA, userB, userAPage, api }) => {

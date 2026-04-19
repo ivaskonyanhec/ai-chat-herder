@@ -12,6 +12,37 @@ test.describe('UAT: Profile Settings page', () => {
       .toHaveValue(userA.email, { timeout: 5_000 });
   });
 
+  test('avatar upload button uploads an image and updates the user profile', async ({ userAPage, userA, api }) => {
+    await userAPage.goto('/app/settings');
+    await expect(userAPage.locator('[data-testid="avatar-upload-btn"]')).toBeEnabled({ timeout: 10_000 });
+
+    await userAPage.setInputFiles('[data-testid="avatar-file-input"]', {
+      name: 'avatar.png',
+      mimeType: 'image/png',
+      buffer: Buffer.from([
+        0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+        0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52,
+        0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
+        0x08, 0x06, 0x00, 0x00, 0x00, 0x1f, 0x15, 0xc4,
+        0x89,
+      ]),
+    });
+
+    await expect(userAPage.locator('[data-testid="avatar-upload-btn"]')).toBeEnabled({ timeout: 10_000 });
+    await expect(userAPage.locator('[data-testid="profile-avatar"]')).toHaveAttribute('src', /^blob:/);
+
+    const ctx = await api.authContext(userA.accessToken);
+    const profile = await ctx.get('/api/users/me');
+    expect(profile.status(), await profile.text()).toBe(200);
+    const body = await profile.json();
+    expect(body.avatarUrl).toMatch(/^\/api\/files\/[0-9a-f-]{36}$/i);
+
+    const uploaded = await ctx.get(body.avatarUrl);
+    expect(uploaded.status(), await uploaded.text()).toBe(200);
+    expect(uploaded.headers()['content-type']).toContain('image/png');
+    await ctx.dispose();
+  });
+
   test('change-password shows validation error when new passwords do not match', async ({ userAPage }) => {
     await userAPage.goto('/app/settings');
     await expect(userAPage.locator('[data-testid="current-password"]')).toBeVisible({ timeout: 10_000 });

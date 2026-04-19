@@ -31,11 +31,21 @@ describe('UsersApiService', () => {
   });
 
   it('patches avatar URL', () => {
-    service.patchMe('https://example.com/avatar.jpg').subscribe();
+    const expected: User = {
+      id: 'u1',
+      username: 'alice',
+      email: 'alice@firm.com',
+      avatarUrl: 'https://example.com/avatar.jpg',
+    };
+    let actual: User | undefined;
+
+    service.patchMe('https://example.com/avatar.jpg').subscribe(u => (actual = u));
+
     const req = httpMock.expectOne('/api/users/me');
     expect(req.request.method).toBe('PATCH');
     expect(req.request.body).toEqual({ avatarUrl: 'https://example.com/avatar.jpg' });
-    req.flush(null);
+    req.flush(expected);
+    expect(actual).toEqual(expected);
   });
 
   it('fetches user by username', () => {

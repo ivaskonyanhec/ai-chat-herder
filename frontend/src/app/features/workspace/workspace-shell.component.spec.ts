@@ -12,6 +12,7 @@ import { UnreadService } from '../../core/signalr/unread.service';
 import { NotificationsApiService } from '../../core/notifications/notifications-api.service';
 import { RoomsApiService } from '../../core/rooms/rooms-api.service';
 import { FriendsApiService } from '../../core/friends/friends-api.service';
+import type { RoomDto } from '../../core/rooms/rooms.models';
 
 type HubStub = { connect: ReturnType<typeof vi.fn>; disconnect: ReturnType<typeof vi.fn>; presenceMap?: unknown };
 type AuthSessionStub = { user: Signal<null>; accessToken?: Signal<null>; clearSession: ReturnType<typeof vi.fn> };
@@ -77,6 +78,20 @@ describe('WorkspaceShellComponent', () => {
     expect(compiled.querySelector('[data-testid="go-to-rooms"]')).not.toBeNull();
     expect(compiled.querySelector('[data-testid="go-to-sessions"]')).not.toBeNull();
     expect(compiled.querySelector('router-outlet')).not.toBeNull();
+  });
+
+  it('renders the sign out action with visible surface contrast', () => {
+    const { providers } = buildProviders();
+    TestBed.configureTestingModule({ imports: [WorkspaceShellComponent], providers });
+    const fixture = TestBed.createComponent(WorkspaceShellComponent);
+    fixture.detectChanges();
+    const compiled: Element = fixture.nativeElement;
+    const logoutButton = [...compiled.querySelectorAll('button')]
+      .find(button => button.textContent?.includes('Sign out'));
+
+    expect(logoutButton).toBeTruthy();
+    expect(logoutButton?.className).toContain('bg-surface-container-high');
+    expect(logoutButton?.className).toContain('text-on-surface');
   });
 
   it('does not clear local auth state when logout fails', () => {
@@ -212,6 +227,57 @@ describe('WorkspaceShellComponent', () => {
     expect(compiled.querySelector('[data-testid="sidebar-contacts"]')).not.toBeNull();
     expect(compiled.querySelector('[data-testid="contact-alice"]')).not.toBeNull();
     expect(compiled.querySelector('[data-testid="contact-bob"]')).not.toBeNull();
+  });
+
+  it('renders public and private room rows with distinct icons instead of hash prefixes', async () => {
+    const rooms: RoomDto[] = [
+      {
+        id: 'public-room',
+        name: 'Lobby',
+        description: null,
+        visibility: 'Public',
+        ownerId: 'u1',
+        createdAt: '',
+        memberCount: 1,
+        callerRole: 'Owner',
+      },
+      {
+        id: 'private-room',
+        name: 'Planning',
+        description: null,
+        visibility: 'Private',
+        ownerId: 'u1',
+        createdAt: '',
+        memberCount: 1,
+        callerRole: 'Owner',
+      },
+    ];
+    const roomsApi = {
+      getMyRooms: vi.fn().mockReturnValue(of(rooms)),
+      createRoom: vi.fn(),
+    };
+    const { providers } = buildProviders();
+    const providersWithRooms = providers.map(p =>
+      'provide' in p && p.provide === RoomsApiService ? { provide: RoomsApiService, useValue: roomsApi } : p,
+    );
+    TestBed.configureTestingModule({ imports: [WorkspaceShellComponent], providers: providersWithRooms });
+    const fixture = TestBed.createComponent(WorkspaceShellComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const publicRow = fixture.nativeElement.querySelector('[data-testid="public-room-public-room"]') as HTMLElement;
+    const privateRow = fixture.nativeElement.querySelector('[data-testid="private-room-private-room"]') as HTMLElement;
+
+    expect(publicRow.textContent).toContain('Lobby');
+    expect(publicRow.textContent).not.toContain('#Lobby');
+    expect(publicRow.querySelector('[data-testid="public-room-icon"]')?.textContent?.trim()).toBe('public');
+    expect(publicRow.className).toContain('bg-surface-container/40');
+
+    expect(privateRow.textContent).toContain('Planning');
+    expect(privateRow.textContent).not.toContain('#Planning');
+    expect(privateRow.querySelector('[data-testid="private-room-icon"]')?.textContent?.trim()).toBe('lock');
+    expect(privateRow.className).toContain('bg-surface-container-high/70');
   });
 
   it('submitCreateRoom() sets createRoomError when API fails', async () => {

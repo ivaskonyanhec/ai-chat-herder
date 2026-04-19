@@ -29,8 +29,8 @@ test.describe('UAT: Create Room via sidebar button', () => {
     // Should navigate to /app/rooms/<new-id>
     await expect(userAPage).toHaveURL(/\/app\/rooms\/[a-f0-9-]+/, { timeout: 10_000 });
 
-    // The new room should appear in the sidebar list (scope to public-rooms-section to avoid matching the <h1> heading)
-    await expect(userAPage.locator('[data-testid="public-rooms-section"]').getByText(`#${roomName}`)).toBeVisible({ timeout: 5_000 });
+    // The new room should appear in the sidebar list (scope to public-rooms-section to avoid matching the heading)
+    await expect(userAPage.locator('[data-testid="public-rooms-section"]').getByText(roomName)).toBeVisible({ timeout: 5_000 });
 
     // The form should be dismissed
     await expect(userAPage.locator('[data-testid="create-room-form"]')).not.toBeVisible();
@@ -104,7 +104,7 @@ test.describe('UAT: Create Room via sidebar button', () => {
     await page.click('[data-testid="create-room-submit"]');
 
     await expect(page).toHaveURL(/\/app\/rooms\/[a-f0-9-]+/, { timeout: 10_000 });
-    await expect(page.getByRole('heading', { name: `#${roomName}` })).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByRole('heading', { name: roomName })).toBeVisible({ timeout: 5_000 });
 
     await context.close();
   });

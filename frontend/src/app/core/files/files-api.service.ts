@@ -19,9 +19,13 @@ export class FilesApiService {
     return `/api/files/${attachmentId}`;
   }
 
+  getFileBlob(attachmentId: string): Observable<Blob> {
+    return this.http.get(this.getFileUrl(attachmentId), { responseType: 'blob' });
+  }
+
   /** Fetches the file as a Blob and triggers a browser download. */
   downloadFile(attachmentId: string, fileName: string): void {
-    this.http.get(this.getFileUrl(attachmentId), { responseType: 'blob' }).subscribe(blob => {
+    this.getFileBlob(attachmentId).subscribe(blob => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;

@@ -11,8 +11,8 @@ export class UsersApiService {
     return this.http.get<User>('/api/users/me');
   }
 
-  patchMe(avatarUrl: string): Observable<void> {
-    return this.http.patch<void>('/api/users/me', { avatarUrl });
+  patchMe(avatarUrl: string): Observable<User> {
+    return this.http.patch<User>('/api/users/me', { avatarUrl });
   }
 
   getByUsername(username: string): Observable<User> {

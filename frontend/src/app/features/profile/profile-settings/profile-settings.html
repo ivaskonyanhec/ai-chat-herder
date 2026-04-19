@@ -15,22 +15,35 @@
                 <div class="w-32 h-32 rounded-full ring-4 ring-surface-container-high overflow-hidden">
                   <img
                     data-testid="profile-avatar"
-                    [src]="profile()?.avatarUrl || '/assets/default-avatar.svg'"
+                    [src]="displayAvatarUrl()"
                     alt="Current Avatar"
                     class="w-full h-full object-cover"
                   />
                 </div>
-                <!-- Avatar upload requires a public file-serving endpoint (not yet implemented) -->
+                <input
+                  #avatarInput
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  data-testid="avatar-file-input"
+                  (change)="onAvatarFileSelected(avatarInput.files?.item(0) ?? null); avatarInput.value = ''"
+                />
                 <button
-                  class="absolute bottom-1 right-1 bg-primary/40 text-white p-2 rounded-full shadow-lg cursor-not-allowed"
+                  class="absolute bottom-1 right-1 bg-primary text-white p-2 rounded-full shadow-lg hover:bg-primary-dim transition-colors disabled:opacity-50"
                   data-testid="avatar-upload-btn"
                   type="button"
-                  disabled
-                  title="Avatar upload coming soon"
+                  [disabled]="isUploadingAvatar()"
+                  title="Upload avatar"
+                  (click)="avatarInput.click()"
                 >
-                  <span class="material-symbols-outlined text-sm">photo_camera</span>
+                  <span class="material-symbols-outlined text-sm">
+                    {{ isUploadingAvatar() ? 'progress_activity' : 'photo_camera' }}
+                  </span>
                 </button>
               </div>
+              @if (avatarError()) {
+                <p class="text-error text-xs text-center" data-testid="avatar-error">{{ avatarError() }}</p>
+              }
               <div class="text-center">
                 <h3 class="text-lg font-bold text-on-surface tracking-tight" data-testid="profile-display-name">
                   {{ profile()?.username }}

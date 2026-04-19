@@ -6,7 +6,12 @@
     <!-- Chat Header -->
     <div class="h-16 px-6 flex items-center justify-between bg-surface-container-lowest shadow-sm z-10">
       <div class="flex items-center gap-3">
-        <h1 class="text-lg font-bold text-on-surface">#{{ room()?.name ?? '…' }}</h1>
+        <span
+          class="material-symbols-outlined text-primary"
+          data-testid="room-title-icon">
+          {{ room()?.visibility === 'Private' ? 'lock' : 'public' }}
+        </span>
+        <h1 class="text-lg font-bold text-on-surface" data-testid="room-title">{{ room()?.name ?? '…' }}</h1>
         @if (room()) {
           <span class="px-2 py-0.5 bg-surface-container text-on-surface-variant text-[10px] rounded uppercase font-bold tracking-widest">{{ room()!.visibility }}</span>
         }
@@ -40,17 +45,29 @@
         </div>
       } @else {
         @for (msg of messages(); track msg.id) {
-          <div class="flex gap-4 group" [attr.data-testid]="'message-' + msg.id">
-            @if (msg.sender.avatarUrl) {
-              <img [alt]="msg.sender.username" [src]="msg.sender.avatarUrl"
-                class="w-10 h-10 rounded-lg object-cover shrink-0" />
-            } @else {
-              <div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center shrink-0">
-                <span class="text-sm font-bold text-on-surface-variant">{{ msg.sender.username[0].toUpperCase() }}</span>
-              </div>
+          <div
+            class="flex gap-4 group"
+            [class.justify-end]="isOwnMessage(msg)"
+            [class.justify-start]="!isOwnMessage(msg)"
+            [attr.data-testid]="'message-' + msg.id">
+            @if (!isOwnMessage(msg)) {
+              @if (msg.sender.avatarUrl) {
+                <img [alt]="msg.sender.username" [src]="msg.sender.avatarUrl"
+                  class="w-10 h-10 rounded-lg object-cover shrink-0" />
+              } @else {
+                <div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center shrink-0">
+                  <span class="text-sm font-bold text-on-surface-variant">{{ msg.sender.username[0].toUpperCase() }}</span>
+                </div>
+              }
             }
-            <div class="flex-1 min-w-0">
-              <div class="flex items-baseline gap-2 mb-1">
+            <div
+              class="flex flex-col min-w-0 max-w-[min(42rem,85%)]"
+              [class.items-end]="isOwnMessage(msg)"
+              [class.items-start]="!isOwnMessage(msg)">
+              <div
+                class="flex items-baseline gap-2 mb-1"
+                [class.justify-end]="isOwnMessage(msg)"
+                [class.text-right]="isOwnMessage(msg)">
                 <span class="text-sm font-bold text-on-surface">{{ msg.sender.username }}</span>
                 <span class="text-[10px] text-outline tracking-wider">{{ formatTime(msg.sentAt) }}</span>
                 @if (msg.editedAt) {
@@ -58,7 +75,7 @@
                 }
               </div>
               @if (msg.isDeleted) {
-                <p class="text-sm text-on-surface-variant italic" data-testid="message-deleted">Message deleted.</p>
+                <p class="text-sm text-on-surface-variant italic px-4 py-2 bg-surface-container rounded-lg" data-testid="message-deleted">Message deleted.</p>
               } @else {
                 @if (msg.replyTo) {
                   <div class="border-l-2 border-primary/50 pl-2 mb-1 rounded-sm bg-surface-container/50"
@@ -67,7 +84,13 @@
                     <p class="text-xs text-on-surface-variant truncate max-w-sm">{{ msg.replyTo.content }}</p>
                   </div>
                 }
-                <p class="text-sm text-on-surface leading-relaxed max-w-2xl" data-testid="message-text">{{ msg.content }}</p>
+                <p
+                  class="text-sm leading-relaxed max-w-2xl px-4 py-2 rounded-lg"
+                  [class.bg-primary-container]="isOwnMessage(msg)"
+                  [class.text-on-primary-container]="isOwnMessage(msg)"
+                  [class.bg-surface-container]="!isOwnMessage(msg)"
+                  [class.text-on-surface]="!isOwnMessage(msg)"
+                  data-testid="message-text">{{ msg.content }}</p>
                 @if (msg.attachment) {
                   <div class="flex items-center gap-3 mt-2 px-3 py-2 bg-surface-container rounded-lg max-w-xs">
                     <span class="material-symbols-outlined text-on-surface-variant shrink-0">
@@ -94,47 +117,87 @@
       }
     </div>
 
-    <!-- Attachment preview -->
-    @if (pendingAttachment()) {
-      <div class="flex items-center gap-2 px-4 py-2 bg-primary-container/30 rounded-lg mx-4 mb-1 text-sm">
-        <span class="material-symbols-outlined text-sm text-primary">attach_file</span>
-        <span class="flex-1 truncate text-on-surface font-medium">{{ pendingAttachment()!.fileName }}</span>
-        <span class="text-xs text-on-surface-variant">{{ formatSize(pendingAttachment()!.sizeBytes) }}</span>
-        <button class="text-on-surface-variant hover:text-error" type="button" (click)="clearAttachment()">
-          <span class="material-symbols-outlined text-sm">close</span>
-        </button>
-      </div>
-    }
-    @if (isUploading()) {
-      <p class="px-4 pb-1 text-xs text-on-surface-variant">Uploading…</p>
-    }
-
     <!-- Composer -->
     <div class="p-4 bg-surface-container-low">
       <input type="file" #fileInput hidden (change)="onFileSelected($event)" />
-      <div class="flex gap-3 items-end">
-        <button type="button"
-                class="p-2 rounded-md hover:bg-surface-container text-on-surface-variant shrink-0"
-                [disabled]="isUploading()"
-                (click)="fileInput.click()">
-          <span class="material-symbols-outlined">attach_file</span>
-        </button>
+      <div
+        class="relative bg-surface-container-lowest rounded-lg shadow-sm ring-1 ring-outline-variant/30 focus-within:ring-2 focus-within:ring-primary transition-shadow"
+        data-testid="message-composer">
+        @if (emojiPickerOpen()) {
+          <div
+            class="absolute bottom-14 left-2 z-20 grid grid-cols-4 gap-1 rounded-lg bg-surface-container-lowest p-2 shadow-lg ring-1 ring-outline-variant/40"
+            data-testid="emoji-picker">
+            @for (emoji of quickEmojis; track emoji; let i = $index) {
+              <button
+                type="button"
+                class="w-9 h-9 rounded-md text-lg leading-none hover:bg-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary"
+                [attr.data-testid]="'emoji-option-' + i"
+                (click)="insertEmoji(emoji)">
+                {{ emoji }}
+              </button>
+            }
+          </div>
+        }
         <textarea
           pTextarea
           data-testid="message-input"
-          class="flex-1 resize-none bg-surface-container rounded-lg px-4 py-3 text-sm text-on-surface border-b-2 border-transparent focus:border-primary transition-colors min-h-[48px] max-h-32"
-          rows="1"
+          class="block w-full resize-none bg-transparent px-4 py-3 text-sm text-on-surface outline-none min-h-[72px] max-h-40"
+          rows="2"
           placeholder="Type a message…"
           [ngModel]="messageText()"
           (ngModelChange)="messageText.set($event)"
+          (input)="resizeComposer($event)"
           (paste)="onPaste($event)"
-          (keydown.enter)="$event.preventDefault(); sendMessage()"
+          (keydown.enter)="handleComposerEnter($any($event))"
         ></textarea>
-        <p-button
-          label="Send"
-          [disabled]="isSending() || isUploading()"
-          (onClick)="sendMessage()"
-        ></p-button>
+        <div class="min-h-12 px-2.5 py-2 bg-surface-container-low flex items-center justify-between gap-3">
+          <div class="flex items-center gap-2 min-w-0">
+            <button
+              type="button"
+              class="w-8 h-8 rounded-md flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high disabled:opacity-50 transition-colors"
+              data-testid="attach-file-btn"
+              [disabled]="isUploading()"
+              title="Attach file"
+              (click)="fileInput.click()">
+              <span class="material-symbols-outlined text-[19px]">add</span>
+            </button>
+            <button
+              type="button"
+              class="w-8 h-8 rounded-md flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"
+              data-testid="emoji-picker-btn"
+              title="Add emoji"
+              [attr.aria-expanded]="emojiPickerOpen()"
+              (click)="toggleEmojiPicker()">
+              <span class="material-symbols-outlined text-[19px]">mood</span>
+            </button>
+            @if (pendingAttachment()) {
+              <div class="h-8 max-w-xs px-2.5 rounded-md bg-primary-container/40 text-on-surface flex items-center gap-2 text-xs min-w-0">
+                <span class="material-symbols-outlined text-sm text-primary">attach_file</span>
+                <span class="truncate font-medium">{{ pendingAttachment()!.fileName }}</span>
+                <span class="text-on-surface-variant shrink-0">{{ formatSize(pendingAttachment()!.sizeBytes) }}</span>
+                <button
+                  class="text-on-surface-variant hover:text-error"
+                  type="button"
+                  title="Remove attachment"
+                  (click)="clearAttachment()">
+                  <span class="material-symbols-outlined text-sm">close</span>
+                </button>
+              </div>
+            }
+            @if (isUploading()) {
+              <span class="text-xs text-on-surface-variant">Uploading...</span>
+            }
+          </div>
+          <button
+            type="button"
+            class="w-8 h-8 rounded-md flex items-center justify-center bg-primary text-on-primary hover:bg-primary-dim disabled:bg-surface-container-high disabled:text-on-surface-variant disabled:cursor-not-allowed transition-colors"
+            data-testid="send-message-btn"
+            [disabled]="!canSendMessage()"
+            title="Send message"
+            (click)="sendMessage()">
+            <span class="material-symbols-outlined text-[18px]">send</span>
+          </button>
+        </div>
       </div>
     </div>
 
