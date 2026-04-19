@@ -109,8 +109,12 @@ public sealed class AuthEndpointsTests
         await AuthEndpointsHelper.DeleteAccount(
             Principal(userId), db, sessions, storage, presence, presenceHub, CancellationToken.None);
 
+        // Verify each connection ID was targeted exactly once
+        hubClients.Received(1).Client("conn-1");
+        hubClients.Received(1).Client("conn-2");
+        // Verify ForceDisconnect was sent (no stray args — the correct overload sends zero args)
         await clientProxy.Received(2).SendCoreAsync(
-            "ForceDisconnect", Arg.Any<object[]>(), Arg.Any<CancellationToken>());
+            "ForceDisconnect", Arg.Is<object[]>(a => a.Length == 0), Arg.Any<CancellationToken>());
     }
 }
 

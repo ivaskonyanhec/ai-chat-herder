@@ -313,17 +313,20 @@ public static class AuthEndpoints
                 .Select(m => m.Id)
                 .ToListAsync(ct);
 
-            var attachmentPaths = await db.Attachments
-                .Where(a => a.MessageId != null && msgIds.Contains(a.MessageId.Value))
-                .Select(a => a.StoragePath)
-                .ToListAsync(ct);
+            if (msgIds.Count > 0)
+            {
+                var attachmentPaths = await db.Attachments
+                    .Where(a => a.MessageId != null && msgIds.Contains(a.MessageId.Value))
+                    .Select(a => a.StoragePath)
+                    .ToListAsync(ct);
 
-            foreach (var path in attachmentPaths)
-                await storage.DeleteAsync(path, ct);
+                foreach (var path in attachmentPaths)
+                    await storage.DeleteAsync(path, ct);
 
-            await db.Attachments
-                .Where(a => a.MessageId != null && msgIds.Contains(a.MessageId.Value))
-                .ExecuteDeleteAsync(ct);
+                await db.Attachments
+                    .Where(a => a.MessageId != null && msgIds.Contains(a.MessageId.Value))
+                    .ExecuteDeleteAsync(ct);
+            }
             await db.Messages       .Where(m => m.RoomId == roomId) .ExecuteDeleteAsync(ct);
             await db.RoomBans       .Where(b => b.RoomId == roomId) .ExecuteDeleteAsync(ct);
             await db.RoomInvitations.Where(i => i.RoomId == roomId) .ExecuteDeleteAsync(ct);
@@ -348,17 +351,17 @@ public static class AuthEndpoints
             .Where(b => b.BlockerId == userId || b.BlockedUserId == userId)
             .ExecuteDeleteAsync(ct);
 
+        // Revoke all sessions so reconnect attempts are rejected
+        await sessions.RevokeAllAsync(userId, ct: ct);
+
         // Soft-delete preserves email + username to prevent re-registration
         user.DeletedAt = DateTime.UtcNow;
         await db.SaveChangesAsync(ct);
 
-        // Revoke all sessions so reconnect attempts are rejected
-        await sessions.RevokeAllAsync(userId, ct: ct);
-
         // Broadcast ForceDisconnect to all active SignalR connections
         var connIds = await presence.GetConnectionIdsAsync(userId, ct);
         foreach (var connId in connIds)
-            await presenceHub.Clients.Client(connId).SendAsync("ForceDisconnect", ct);
+            await presenceHub.Clients.Client(connId).SendAsync("ForceDisconnect", cancellationToken: ct);
 
         return Results.NoContent();
     }
