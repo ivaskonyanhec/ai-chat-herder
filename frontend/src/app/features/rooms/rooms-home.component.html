@@ -32,13 +32,13 @@
                 <p class="text-xs text-on-surface-variant line-clamp-2">{{ room.description }}</p>
               }
             </div>
-            <div class="flex items-center justify-between pt-2 border-t border-outline-variant/10">
+            <div class="flex items-center justify-between pt-2">
               <div class="flex items-center gap-1.5 text-xs text-on-surface-variant">
                 <span class="material-symbols-outlined" style="font-size:1rem">group</span>
                 <span>{{ room.memberCount }} members</span>
               </div>
               <button
-                class="px-4 py-1.5 bg-primary text-on-primary text-xs font-bold rounded-lg hover:bg-primary-dim transition-colors disabled:opacity-50"
+                class="px-4 py-1.5 bg-primary text-on-primary text-xs font-bold rounded-md hover:bg-primary-dim transition-colors disabled:opacity-50"
                 [disabled]="joiningRoomId() === room.id"
                 (click)="joinAndNavigate(room.id)"
               >

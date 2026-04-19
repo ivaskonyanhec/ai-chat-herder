@@ -13,14 +13,14 @@
 
           <!-- View Toggle -->
           <div class="flex gap-2 mb-4">
-            <button class="px-4 py-1.5 text-xs font-bold rounded-lg transition-colors"
+            <button class="px-4 py-1.5 text-xs font-bold rounded-md transition-colors"
                     [class.bg-primary]="view() === 'friends'"
                     [class.text-on-primary]="view() === 'friends'"
                     [class.bg-surface-container-low]="view() !== 'friends'"
                     [class.text-on-surface-variant]="view() !== 'friends'"
                     (click)="switchView('friends')">Friends
             </button>
-            <button class="px-4 py-1.5 text-xs font-bold rounded-lg transition-colors"
+            <button class="px-4 py-1.5 text-xs font-bold rounded-md transition-colors"
                     [class.bg-primary]="view() === 'blocked'"
                     [class.text-on-primary]="view() === 'blocked'"
                     [class.bg-surface-container-low]="view() !== 'blocked'"
@@ -86,12 +86,12 @@
                     </div>
                     <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
-                        class="flex-1 py-1.5 bg-primary text-on-primary text-xs font-bold rounded-lg hover:opacity-90 transition-colors disabled:opacity-50"
+                        class="flex-1 py-1.5 bg-primary text-on-primary text-xs font-bold rounded-md hover:opacity-90 transition-colors disabled:opacity-50"
                         [disabled]="openingChatId() === friend.userId"
                         (click)="openChat(friend.userId)">Chat
                       </button>
                       <button
-                        class="flex-1 py-1.5 bg-error-container text-on-error-container text-xs font-bold rounded-lg hover:opacity-90 transition-colors disabled:opacity-50"
+                        class="flex-1 py-1.5 bg-error-container text-on-error-container text-xs font-bold rounded-md hover:opacity-90 transition-colors disabled:opacity-50"
                         [disabled]="removingId() === friend.userId"
                         (click)="removeFriend(friend.userId)">Remove
                       </button>
@@ -126,7 +126,7 @@
                     </div>
                     <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
-                        class="flex-1 py-1.5 bg-surface-container text-on-surface text-xs font-bold rounded-lg hover:bg-surface-container-high transition-colors disabled:opacity-50"
+                        class="flex-1 py-1.5 bg-surface-container text-on-surface text-xs font-bold rounded-md hover:bg-surface-container-high transition-colors disabled:opacity-50"
                         [disabled]="unblockingId() === blocked.blockedUserId"
                         (click)="unblockUser(blocked.blockedUserId)">Unblock
                       </button>
@@ -153,7 +153,7 @@
                 <p class="text-xs text-on-surface-variant">No incoming friend requests.</p>
               } @else {
                 @for (request of incomingRequests(); track request.id) {
-                  <div class="flex items-start gap-3 pb-4 border-b border-surface-container last:border-b-0 last:pb-0">
+                  <div class="flex items-start gap-3 pb-4 last:pb-0">
                     <div class="w-10 h-10 rounded-full bg-surface-container overflow-hidden shrink-0">
                       @if (request.senderAvatarUrl) {
                         <img [ngSrc]="request.senderAvatarUrl" class="w-full h-full object-cover" alt="request sender"
@@ -226,7 +226,7 @@
                 <p class="text-xs text-primary font-semibold">{{ requestStatusMessage() }}</p>
               }
               <button
-                class="w-full bg-primary text-white text-xs font-bold py-3 rounded-lg flex items-center justify-center gap-2 hover:bg-primary-dim transition-all active:scale-[0.98] disabled:opacity-50"
+                class="w-full bg-primary text-white text-xs font-bold py-3 rounded-md flex items-center justify-center gap-2 hover:bg-primary-dim transition-all active:scale-[0.98] disabled:opacity-50"
                 type="submit"
                 [disabled]="sendingRequest()"
               >

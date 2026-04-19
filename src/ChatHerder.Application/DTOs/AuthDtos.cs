@@ -2,7 +2,7 @@ namespace ChatHerder.Application.DTOs;
 
 public sealed record RegisterRequest(string Username, string Email, string Password, bool KeepSignedIn);
 public sealed record LoginRequest(string Email, string Password, bool KeepSignedIn);
-public sealed record RefreshRequest(string RefreshToken);
+public sealed record RefreshRequest(string? RefreshToken);
 public sealed record ChangePasswordRequest(string CurrentPassword, string NewPassword);
 public sealed record ForgotPasswordRequest(string Email);
 public sealed record ResetPasswordRequest(string Token, string NewPassword);

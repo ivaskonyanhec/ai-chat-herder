@@ -117,6 +117,7 @@ export class ApiHelpers {
     });
     expect(reg.status(), await reg.text()).toBe(200);
     const body = await reg.json();
+    const refreshToken = extractRefreshCookie(reg.headers()['set-cookie']);
     await ctx.dispose();
 
     return {
@@ -125,7 +126,7 @@ export class ApiHelpers {
       password,
       username,
       accessToken: body.accessToken,
-      refreshToken: body.refreshToken,
+      refreshToken,
     };
   }
 
@@ -136,6 +137,7 @@ export class ApiHelpers {
     });
     expect(res.status(), await res.text()).toBe(200);
     const body = await res.json();
+    const refreshToken = extractRefreshCookie(res.headers()['set-cookie']);
     await ctx.dispose();
     return {
       id: body.user.id,
@@ -143,7 +145,7 @@ export class ApiHelpers {
       password,
       username: body.user.username,
       accessToken: body.accessToken,
-      refreshToken: body.refreshToken,
+      refreshToken,
     };
   }
 
@@ -396,4 +398,13 @@ export class ApiHelpers {
       extraHTTPHeaders: { Authorization: `Bearer ${accessToken}` },
     });
   }
+}
+
+function extractRefreshCookie(setCookie: string | undefined): string {
+  const cookie = setCookie
+    ?.split(/,(?=\s*chat_herder_refresh=)/)
+    .find(part => part.trimStart().startsWith('chat_herder_refresh='));
+  const value = cookie?.trim().split(';')[0]?.split('=')[1];
+  expect(value, 'chat_herder_refresh Set-Cookie value').toBeTruthy();
+  return decodeURIComponent(value!);
 }

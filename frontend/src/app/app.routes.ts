@@ -14,6 +14,7 @@ import { PlatformBansComponent } from './features/admin/platform-bans/platform-b
 import { ManageRoomComponent } from './features/rooms/manage-room/manage-room';
 import { DirectMessagesComponent } from './features/dialogs/direct-messages/direct-messages';
 import { BlockedUsersComponent } from './features/contacts/blocked-users/blocked-users';
+import { PrivateRoomsHomeComponent } from './features/rooms/private-rooms-home/private-rooms-home';
 
 export const routes: Routes = [
   {
@@ -39,6 +40,10 @@ export const routes: Routes = [
       {
         path: 'rooms',
         component: RoomsHomeComponent,
+      },
+      {
+        path: 'private-rooms',
+        component: PrivateRoomsHomeComponent,
       },
       {
         path: 'rooms/:id',

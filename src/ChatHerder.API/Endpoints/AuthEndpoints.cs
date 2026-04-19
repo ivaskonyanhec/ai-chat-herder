@@ -11,6 +11,8 @@ namespace ChatHerder.API.Endpoints;
 
 public static class AuthEndpoints
 {
+    private const string RefreshCookieName = "chat_herder_refresh";
+
     // 16 zero bytes (salt) + 32 zero bytes (hash) in self-describing base64 format.
     // Segments: Convert.ToBase64String(new byte[16]) = 22 A's + "==" (24 chars);
     //           Convert.ToBase64String(new byte[32]) = 43 A's + "="  (44 chars).
@@ -78,10 +80,11 @@ public static class AuthEndpoints
         await db.SaveChangesAsync(ct);
 
         await sessions.AddAsync(user.Id, sessionId, ct);
+        SetRefreshCookie(ctx, rawRefresh, session.ExpiresAt);
 
         return Results.Ok(new AuthResponse(
             AccessToken:  jwt.GenerateAccessToken(user.Id, sessionId),
-            RefreshToken: rawRefresh,
+            RefreshToken: string.Empty,
             User: new UserDto(user.Id, user.Username, user.Email, user.AvatarUrl)));
     }
 
@@ -124,22 +127,25 @@ public static class AuthEndpoints
         db.Sessions.Add(session);
         await db.SaveChangesAsync(ct);
         await sessions.AddAsync(user.Id, sessionId, ct);
+        SetRefreshCookie(ctx, rawRefresh, session.ExpiresAt);
 
         return Results.Ok(new AuthResponse(
             AccessToken:  jwt.GenerateAccessToken(user.Id, sessionId),
-            RefreshToken: rawRefresh,
+            RefreshToken: string.Empty,
             User: new UserDto(user.Id, user.Username, user.Email, user.AvatarUrl)));
     }
 
     // ── Logout ─────────────────────────────────────────────────────────────────
     private static async Task<IResult> Logout(
         ClaimsPrincipal principal,
+        HttpContext ctx,
         ISessionStore sessions,
         CancellationToken ct)
     {
         var userId    = Guid.Parse(principal.FindFirstValue("user_id")!);
         var sessionId = Guid.Parse(principal.FindFirstValue("session_id")!);
         await sessions.RevokeAsync(userId, sessionId, ct);
+        ClearRefreshCookie(ctx);
         return Results.NoContent();
     }
 
@@ -152,10 +158,14 @@ public static class AuthEndpoints
         HttpContext ctx,
         CancellationToken ct)
     {
-        if (string.IsNullOrWhiteSpace(req.RefreshToken))
+        var rawRequestRefresh = !string.IsNullOrWhiteSpace(req.RefreshToken)
+            ? req.RefreshToken
+            : ctx.Request.Cookies[RefreshCookieName];
+
+        if (string.IsNullOrWhiteSpace(rawRequestRefresh))
             return Results.BadRequest(new { error = "Refresh token is required." });
 
-        var tokenHash = jwt.HashRefreshToken(req.RefreshToken);
+        var tokenHash = jwt.HashRefreshToken(rawRequestRefresh);
         var session   = await db.Sessions
             .Include(s => s.User)
             .FirstOrDefaultAsync(s => s.RefreshToken == tokenHash
@@ -182,13 +192,41 @@ public static class AuthEndpoints
         db.Sessions.Add(newSession);
         await db.SaveChangesAsync(ct);
         await sessions.AddAsync(session.UserId, newSessionId, ct);
+        SetRefreshCookie(ctx, rawRefresh, newSession.ExpiresAt);
 
         var user = session.User;
         return Results.Ok(new AuthResponse(
             AccessToken:  jwt.GenerateAccessToken(session.UserId, newSessionId),
-            RefreshToken: rawRefresh,
+            RefreshToken: string.Empty,
             User: new UserDto(user.Id, user.Username, user.Email, user.AvatarUrl)));
     }
+
+    private static void SetRefreshCookie(HttpContext ctx, string refreshToken, DateTime expiresAt)
+    {
+        ctx.Response.Cookies.Append(RefreshCookieName, refreshToken, new CookieOptions
+        {
+            HttpOnly = true,
+            SameSite = SameSiteMode.Lax,
+            Secure = IsHttpsRequest(ctx),
+            Path = "/api/auth",
+            Expires = expiresAt,
+        });
+    }
+
+    private static void ClearRefreshCookie(HttpContext ctx)
+    {
+        ctx.Response.Cookies.Delete(RefreshCookieName, new CookieOptions
+        {
+            HttpOnly = true,
+            SameSite = SameSiteMode.Lax,
+            Secure = IsHttpsRequest(ctx),
+            Path = "/api/auth",
+        });
+    }
+
+    private static bool IsHttpsRequest(HttpContext ctx)
+        => ctx.Request.IsHttps
+           || string.Equals(ctx.Request.Headers["X-Forwarded-Proto"].ToString(), "https", StringComparison.OrdinalIgnoreCase);
 
     // ── Forgot Password ────────────────────────────────────────────────────────
     private static async Task<IResult> ForgotPassword(

@@ -15,7 +15,19 @@ export class AuthApiService {
     return this.http.post<AuthResponse>('/api/auth/register', payload);
   }
 
+  refresh(): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>('/api/auth/refresh', {}, { withCredentials: true });
+  }
+
   logout(): Observable<void> {
     return this.http.post<void>('/api/auth/logout', {});
+  }
+
+  changePassword(currentPassword: string, newPassword: string): Observable<void> {
+    return this.http.post<void>('/api/auth/change-password', { currentPassword, newPassword });
+  }
+
+  deleteAccount(): Observable<void> {
+    return this.http.delete<void>('/api/auth/account');
   }
 }

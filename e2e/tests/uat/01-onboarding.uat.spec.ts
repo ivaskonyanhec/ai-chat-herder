@@ -10,6 +10,7 @@ test.describe('UAT: Onboarding and identity', () => {
     await page.fill('[data-testid="register-username"]', identity.username);
     await page.fill('[data-testid="register-email"]', identity.email);
     await page.fill('[data-testid="register-password"]', identity.password);
+    await page.fill('[data-testid="register-confirm-password"]', identity.password);
     await page.click('[data-testid="register-submit"]');
     await expect(page.locator('[data-testid="main-chat"]')).toBeVisible({ timeout: 10_000 });
 
@@ -21,7 +22,7 @@ test.describe('UAT: Onboarding and identity', () => {
   });
 
   test('username cannot be changed through profile UI', async ({ userAPage }) => {
-    await userAPage.goto('/app/profile');
+    await userAPage.goto('/app/settings');
     // Profile settings renders a statically disabled input for the username field
     const usernameInput = userAPage.locator('input[disabled]').first();
     await expect(usernameInput).toBeVisible({ timeout: 10_000 });

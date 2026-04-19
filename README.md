@@ -5,9 +5,42 @@
 ![Angular 21](https://img.shields.io/badge/Angular-21-DD0031)
 ![E2E/UAT Playwright](https://img.shields.io/badge/E2E%2FUAT-Playwright-2EAD33)
 
-AI Chat Herder is a production-grade real-time chat application built on **.NET 10 Minimal APIs** and **Angular 21 Signals**. It supports public/private rooms, direct messages, friends, file sharing, moderation, persistent history, unread notifications, and multi-tab presence.
+---
 
-Target scale: 300 simultaneous users, up to 1,000 participants per room.
+## ⚡ Quick Start (Docker Compose)
+
+Prerequisites: Docker 25+, Docker Compose V2, 4 GB free RAM.
+
+### 1. Start the Application
+```bash
+cp .env.template .env
+# Fill in every <CHANGE_ME> value in .env
+docker compose up --build -d
+```
+The app is available at **http://localhost**.
+
+### 2. Run E2E & UAT Tests
+```bash
+# Run full suite (All 11+ spec files)
+docker compose --profile e2e up --build e2e
+
+# Run only UAT tests
+docker compose --profile e2e run --rm e2e npx playwright test tests/uat/
+```
+Reports land in `./e2e-reports/latest/html/index.html`.
+
+### 3. Run Load Tests (k6)
+```bash
+docker compose --profile load run load-tester
+```
+
+### 4. Manual Multi-Client Testing
+Simulate multiple independent users in separate browser windows:
+```bash
+# Requires Node.js and Playwright installed locally
+cd e2e && npm install && npx playwright install chromium
+npm run test:manual
+```
 
 ---
 
@@ -94,7 +127,7 @@ Useful status documents:
 | Styling | Tailwind CSS + PrimeNG primitives + CSS custom properties |
 | E2E/UAT | Playwright + TypeScript |
 | Load testing | k6 + SignalR WebSocket helpers |
-| Runtime | Podman Compose locally; Docker Compose in GitHub Actions |
+| Runtime | Docker Compose locally; Docker Compose in GitHub Actions |
 
 ---
 
@@ -121,59 +154,9 @@ Useful status documents:
 └── DEVELOPMENT_LOG.md
 ```
 
----
-
-## Quick Start With Podman
-
-Prerequisites: Podman 5+, `podman compose` support, 4 GB free RAM, 3 GB free disk.
-
-```bash
-cp .env.template .env
-# fill every <CHANGE_ME> value in .env
-podman compose up --build -d
-podman compose ps
-```
-
-This starts the five core services: PostgreSQL, Redis, RabbitMQ, backend API, and frontend Nginx. No test runners are included.
-
-| Endpoint | URL |
-|---|---|
-| App | `http://localhost` |
-| Alternate frontend port | `http://localhost:4200` |
-
-Backend traffic is proxied through the frontend Nginx container via `/api/*` and `/hubs/*`.
-
-> **RabbitMQ management UI** (`http://localhost:15672`) is exposed only when `docker-compose.override.yml` is present (local development). It is not bound in production or CI.
-
-For detailed container operations see `DOCKER_SETUP.md`.
-
----
-
-## Local Development
-
-Backend:
-
-```bash
-dotnet restore ChatHerder.sln
-dotnet build ChatHerder.sln
-dotnet test ChatHerder.sln
-```
-
-Frontend:
-
-```bash
-cd frontend
-npm install
-npm start
-```
-
-The Angular dev server uses `frontend/proxy.config.json` to forward `/api/*` and `/hubs/*` to the backend.
-
----
-
 ## Tests
 
-Each test suite is invoked independently. `podman compose up` never starts a test runner automatically.
+Each test suite is invoked independently. `docker compose up` never starts a test runner automatically.
 
 GitHub Actions runs the .NET unit suite, Angular unit suite, and Dockerized E2E/UAT suite on every push to `main`.
 
@@ -194,7 +177,7 @@ npm test
 
 ```bash
 # 1. Start the app (if not already running)
-podman compose up --build -d
+docker compose up --build -d
 
 # 2. Run the full suite
 npm --prefix e2e install
@@ -204,7 +187,7 @@ BASE_URL=http://localhost npm --prefix e2e run test:all
 **E2E / UAT — fully containerised (CI mode):**
 
 ```bash
-podman compose --profile e2e up --build e2e
+docker compose --profile e2e up --build e2e
 ```
 
 Reports land under `./e2e-reports/latest/`: `summary.md`, `manifest.json`, `results.json`, `junit.xml`, and `html/index.html`. Each run is also archived under `runs/e2e-uat-YYYYMMDDTHHMMSSZ/`.
@@ -212,7 +195,7 @@ Reports land under `./e2e-reports/latest/`: `summary.md`, `manifest.json`, `resu
 **Load test (k6 — requires the app to be running):**
 
 ```bash
-podman compose --profile load run load-tester
+docker compose --profile load run load-tester
 ```
 
 The harness lives in `tests/load/` and targets authenticated SignalR messaging and presence flows at 300 concurrent users.
@@ -284,7 +267,7 @@ Core frontend constraints:
 | `ARCHITECTURE.md` | Full system architecture and API design |
 | `DESIGN.md` | UI design system rules |
 | `AGENT.md` | Repository engineering rules for AI coding agents |
-| `DOCKER_SETUP.md` | Docker/Podman operations |
+| `DOCKER_SETUP.md` | Docker operations |
 | `DEVELOPMENT_LOG.md` | Chronological implementation log |
 | `TESTING_SETUP.md` | Playwright E2E `data-testid` contracts |
 | `e2e/README.md` | E2E/UAT runner details |

@@ -1,66 +1,41 @@
 <div class="flex flex-col h-full bg-surface-container-low overflow-hidden">
-  <!-- Page Title -->
   <div class="flex-1 overflow-y-auto p-6 md:p-10">
     <div class="max-w-5xl mx-auto space-y-8">
       <div class="space-y-1">
         <h2 class="text-3xl font-extrabold tracking-tighter text-on-surface">Account Settings</h2>
-        <p class="text-sm text-on-surface-variant font-medium">Manage your professional presence and workspace preferences.</p>
+        <p class="text-sm text-on-surface-variant font-medium">Manage your profile and security settings.</p>
       </div>
 
-      <!-- Bento Grid -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <!-- Profile Identity Sidebar -->
+        <!-- Identity Sidebar -->
         <section class="lg:col-span-4 space-y-6">
-          <!-- Identity Card -->
-          <div class="bg-surface-container-lowest rounded-xl p-8 shadow-sm">
+          <div class="bg-surface-container-lowest rounded-lg p-8 shadow-sm">
             <div class="flex flex-col items-center gap-6">
               <div class="relative">
                 <div class="w-32 h-32 rounded-full ring-4 ring-surface-container-high overflow-hidden">
                   <img
-                    [src]="profile()?.avatarUrl || 'https://lh3.googleusercontent.com/aida-public/AB6AXuB4BQF6R94p2c-RGScZkvhvtRCAwLkFZavcdhUaO_d33ro5mtIlXhx_w96jAw7gxTD7ZwQuvD8N22XqKRbYS8L1Ck1O6AG9kCH3V1XZT8fO7CEy6CDxtxCgOOsX6MashMBXeJhcwCpNTMOUIpGIn5Sgmb5tqFuTokhuKNryqP78rIuft1-mluiuQl0LLqS9VwGb_rjSEUYSUgMhC93CXM4pUnwRZT4EQDUEB69YWK3GND-FYiChdZq8HDBqI1oHlPCAF9Q6gE7P4zM'"
+                    data-testid="profile-avatar"
+                    [src]="profile()?.avatarUrl || '/assets/default-avatar.svg'"
                     alt="Current Avatar"
                     class="w-full h-full object-cover"
                   />
                 </div>
+                <!-- Avatar upload requires a public file-serving endpoint (not yet implemented) -->
                 <button
-                  class="absolute bottom-1 right-1 bg-primary text-white p-2 rounded-full shadow-lg hover:bg-primary-dim transition-transform active:scale-95"
+                  class="absolute bottom-1 right-1 bg-primary/40 text-white p-2 rounded-full shadow-lg cursor-not-allowed"
+                  data-testid="avatar-upload-btn"
                   type="button"
+                  disabled
+                  title="Avatar upload coming soon"
                 >
                   <span class="material-symbols-outlined text-sm">photo_camera</span>
                 </button>
               </div>
               <div class="text-center">
-                <h3 class="text-lg font-bold text-on-surface tracking-tight">{{ profile()?.username }}</h3>
-                <p class="text-xs text-on-surface-variant uppercase tracking-widest font-semibold mt-1">Lead Architect</p>
-              </div>
-              <div class="w-full pt-4 border-t border-surface-container flex justify-between items-center text-[11px] font-bold text-on-surface-variant uppercase tracking-tighter">
-                <span>Workspace ID: AW-9021</span>
-                <button class="text-primary hover:underline bg-transparent border-none cursor-pointer text-inherit font-inherit uppercase tracking-tighter">Verify Identity</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Theme Card -->
-          <div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm">
-            <h4 class="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant mb-4">Workspace Environment</h4>
-            <div class="space-y-4">
-              <div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low border border-surface-container-high">
-                <div class="flex items-center gap-3">
-                  <span class="material-symbols-outlined text-primary">light_mode</span>
-                  <span class="text-sm font-semibold">Light View</span>
-                </div>
-                <div class="w-10 h-5 bg-primary rounded-full relative cursor-pointer">
-                  <div class="absolute left-1 top-1 w-3 h-3 bg-white rounded-full"></div>
-                </div>
-              </div>
-              <div class="flex items-center justify-between p-3 rounded-lg hover:bg-surface-container transition-colors cursor-pointer">
-                <div class="flex items-center gap-3">
-                  <span class="material-symbols-outlined text-on-surface-variant">dark_mode</span>
-                  <span class="text-sm font-medium text-on-surface-variant">Deep Contrast</span>
-                </div>
-                <div class="w-10 h-5 bg-surface-container-highest rounded-full relative">
-                  <div class="absolute right-1 top-1 w-3 h-3 bg-white rounded-full"></div>
-                </div>
+                <h3 class="text-lg font-bold text-on-surface tracking-tight" data-testid="profile-display-name">
+                  {{ profile()?.username }}
+                </h3>
+                <p class="text-xs text-on-surface-variant mt-1">{{ profile()?.email }}</p>
               </div>
             </div>
           </div>
@@ -68,94 +43,117 @@
 
         <!-- Main Form Area -->
         <section class="lg:col-span-8 space-y-6">
-          <div class="bg-surface-container-lowest rounded-xl p-8 shadow-sm">
-            <form class="space-y-8">
-              <!-- Identity Details -->
-              <div class="space-y-6">
-                <div class="flex items-center gap-2 border-b border-surface-container pb-4">
-                  <span class="material-symbols-outlined text-primary">person</span>
-                  <h3 class="text-sm font-bold uppercase tracking-widest text-on-surface">Identity Details</h3>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div class="space-y-2">
-                    <label class="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">Display Name</label>
-                    <input
-                      class="w-full bg-surface-container-low border-none rounded-lg text-sm py-3 px-4 focus:ring-1 focus:ring-primary text-on-surface font-medium outline-none"
-                      type="text"
-                      [value]="profile()?.username"
-                    />
-                  </div>
-                  <div class="space-y-2">
-                    <label class="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">Professional Role</label>
-                    <input
-                      class="w-full bg-surface-container-low border-none rounded-lg text-sm py-3 px-4 focus:ring-1 focus:ring-primary text-on-surface font-medium outline-none"
-                      placeholder="e.g. Lead Developer"
-                      type="text"
-                    />
-                  </div>
+          <!-- Identity Details (read-only) -->
+          <div class="bg-surface-container-lowest rounded-lg p-8 shadow-sm">
+            <div class="space-y-6">
+              <div class="flex items-center gap-2 border-b border-surface-container pb-4">
+                <span class="material-symbols-outlined text-primary">person</span>
+                <h3 class="text-sm font-bold uppercase tracking-widest text-on-surface">Identity Details</h3>
+              </div>
+              <div class="space-y-2">
+                <label class="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">
+                  Display Name
+                </label>
+                <input
+                  class="w-full bg-surface-container-low border-none rounded-lg text-sm py-3 px-4 text-on-surface font-medium outline-none opacity-60 cursor-not-allowed"
+                  type="text"
+                  disabled
+                  [value]="profile()?.username ?? ''"
+                  data-testid="profile-username"
+                />
+                <p class="text-[10px] text-on-surface-variant italic">Username cannot be changed.</p>
+              </div>
+              <div class="space-y-2">
+                <label class="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">
+                  Email Address
+                </label>
+                <input
+                  class="w-full bg-surface-container-low border-none rounded-lg text-sm py-3 px-4 text-on-surface font-medium outline-none opacity-60 cursor-not-allowed"
+                  disabled
+                  type="email"
+                  [value]="profile()?.email ?? ''"
+                  data-testid="profile-email"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Change Password -->
+          <div class="bg-surface-container-lowest rounded-lg p-8 shadow-sm" data-testid="change-password-section">
+            <form class="space-y-6" (ngSubmit)="submitPasswordChange()">
+              <div class="flex items-center gap-2 border-b border-surface-container pb-4">
+                <span class="material-symbols-outlined text-primary">lock</span>
+                <h3 class="text-sm font-bold uppercase tracking-widest text-on-surface">Change Password</h3>
+              </div>
+              <div class="space-y-2">
+                <label class="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">
+                  Current Password
+                </label>
+                <input
+                  class="w-full bg-surface-container-low border-none rounded-lg text-sm py-3 px-4 focus:ring-1 focus:ring-primary text-on-surface font-medium outline-none"
+                  placeholder="••••••••••••"
+                  type="password"
+                  name="currentPassword"
+                  data-testid="current-password"
+                  [ngModel]="currentPassword()"
+                  (ngModelChange)="currentPassword.set($event)"
+                />
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-2">
+                  <label class="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">
+                    New Password
+                  </label>
+                  <input
+                    class="w-full bg-surface-container-low border-none rounded-lg text-sm py-3 px-4 focus:ring-1 focus:ring-primary text-on-surface font-medium outline-none"
+                    type="password"
+                    name="newPassword"
+                    data-testid="new-password"
+                    [ngModel]="newPassword()"
+                    (ngModelChange)="newPassword.set($event)"
+                  />
                 </div>
                 <div class="space-y-2">
-                  <label class="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">Email Address</label>
+                  <label class="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">
+                    Confirm Password
+                  </label>
                   <input
-                    class="w-full bg-surface-container-low border-none rounded-lg text-sm py-3 px-4 focus:ring-1 focus:ring-primary text-on-surface font-medium outline-none disabled:opacity-60 disabled:cursor-not-allowed"
-                    disabled
-                    type="email"
-                    [value]="profile()?.email"
+                    class="w-full bg-surface-container-low border-none rounded-lg text-sm py-3 px-4 focus:ring-1 focus:ring-primary text-on-surface font-medium outline-none"
+                    type="password"
+                    name="confirmPassword"
+                    data-testid="confirm-password"
+                    [ngModel]="confirmPassword()"
+                    (ngModelChange)="confirmPassword.set($event)"
                   />
-                  <p class="text-[10px] text-on-surface-variant italic">Contact administrator to modify workspace credentials.</p>
                 </div>
               </div>
-
-              <!-- Access Security -->
-              <div class="space-y-6 pt-4">
-                <div class="flex items-center gap-2 border-b border-surface-container pb-4">
-                  <span class="material-symbols-outlined text-primary">lock</span>
-                  <h3 class="text-sm font-bold uppercase tracking-widest text-on-surface">Access Security</h3>
-                </div>
-                <div class="space-y-6">
-                  <div class="space-y-2">
-                    <label class="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">Current Password</label>
-                    <input
-                      class="w-full bg-surface-container-low border-none rounded-lg text-sm py-3 px-4 focus:ring-1 focus:ring-primary text-on-surface font-medium outline-none"
-                      placeholder="••••••••••••"
-                      type="password"
-                    />
-                  </div>
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="space-y-2">
-                      <label class="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">New Password</label>
-                      <input
-                        class="w-full bg-surface-container-low border-none rounded-lg text-sm py-3 px-4 focus:ring-1 focus:ring-primary text-on-surface font-medium outline-none"
-                        type="password"
-                      />
-                    </div>
-                    <div class="space-y-2">
-                      <label class="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">Confirm Password</label>
-                      <input
-                        class="w-full bg-surface-container-low border-none rounded-lg text-sm py-3 px-4 focus:ring-1 focus:ring-primary text-on-surface font-medium outline-none"
-                        type="password"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Form Actions -->
-              <div class="flex justify-end gap-4 pt-6">
+              @if (passwordError()) {
+                <p class="text-error text-xs" data-testid="password-error">{{ passwordError() }}</p>
+              }
+              @if (passwordSuccess()) {
+                <p class="text-[var(--color-status-online,#22c55e)] text-xs" data-testid="password-success">
+                  {{ passwordSuccess() }}
+                </p>
+              }
+              <div class="flex justify-end gap-4 pt-2">
                 <button
                   class="px-6 py-2.5 text-xs font-bold uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors"
                   type="button"
-                >Discard Changes</button>
+                  data-testid="discard-password"
+                  (click)="currentPassword.set(''); newPassword.set(''); confirmPassword.set(''); passwordError.set(''); passwordSuccess.set('')"
+                >Discard</button>
                 <button
-                  class="px-10 py-2.5 bg-primary text-white text-xs font-bold uppercase tracking-widest rounded-lg hover:bg-primary-dim transition-all shadow-sm"
+                  class="px-10 py-2.5 bg-primary text-white text-xs font-bold uppercase tracking-widest rounded-lg hover:bg-primary-dim transition-all shadow-sm disabled:opacity-50"
                   type="submit"
-                >Save Profile</button>
+                  data-testid="save-password"
+                  [disabled]="isChangingPassword()"
+                >{{ isChangingPassword() ? 'Saving…' : 'Change Password' }}</button>
               </div>
             </form>
           </div>
 
           <!-- Danger Zone -->
-          <div class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm border border-error/20">
+          <div class="bg-surface-container-lowest rounded-lg overflow-hidden shadow-sm" data-testid="danger-zone">
             <div class="p-6 bg-error/5 flex items-start gap-4">
               <div class="p-2 bg-error-container text-on-error-container rounded-lg shrink-0">
                 <span class="material-symbols-outlined">warning</span>
@@ -163,13 +161,19 @@
               <div class="space-y-2 flex-1">
                 <h4 class="text-sm font-bold text-error tracking-tight">Critical Actions: Account Deletion</h4>
                 <p class="text-xs text-on-surface-variant leading-relaxed">
-                  Deleting your workspace account is an irreversible action. This will permanently remove your messages, files, and architectural contributions from the Main Office directory.
+                  Permanently removes your account, messages, and files. This cannot be undone.
                 </p>
+                @if (deleteError()) {
+                  <p class="text-error text-xs" data-testid="delete-error">{{ deleteError() }}</p>
+                }
                 <div class="pt-4">
                   <button
-                    class="px-6 py-2.5 border border-error text-error text-[10px] font-black uppercase tracking-widest rounded-md hover:bg-error hover:text-white transition-all duration-200"
+                    class="px-6 py-2.5 border border-error text-error text-[10px] font-black uppercase tracking-widest rounded-md hover:bg-error hover:text-white transition-all duration-200 disabled:opacity-50"
                     type="button"
-                  >Initiate Permanent Deletion</button>
+                    data-testid="delete-account-btn"
+                    [disabled]="isDeletingAccount()"
+                    (click)="initiateAccountDeletion()"
+                  >{{ isDeletingAccount() ? 'Deleting…' : 'Delete Account' }}</button>
                 </div>
               </div>
             </div>
@@ -178,19 +182,4 @@
       </div>
     </div>
   </div>
-
-  <!-- Footer Bar -->
-  <footer class="h-10 bg-surface-container-highest flex items-center px-6 justify-between shrink-0">
-    <div class="flex items-center gap-4">
-      <div class="flex items-center gap-1.5">
-        <span class="w-1.5 h-1.5 bg-status-online rounded-full"></span>
-        <span class="text-[9px] font-bold uppercase tracking-tighter text-on-surface-variant">System Latency: 14ms</span>
-      </div>
-      <div class="w-px h-3 bg-outline-variant/30"></div>
-      <span class="text-[9px] font-bold uppercase tracking-tighter text-on-surface-variant">Archived Threads: 1,204</span>
-    </div>
-    <div class="text-[9px] font-bold uppercase tracking-tighter text-on-surface-variant">
-      &copy; 2024 Architectural Workspace Inc.
-    </div>
-  </footer>
 </div>

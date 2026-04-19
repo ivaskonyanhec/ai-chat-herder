@@ -10,6 +10,7 @@ test.describe('Authentication', () => {
     await page.fill('[data-testid="register-username"]', user.username);
     await page.fill('[data-testid="register-email"]', user.email);
     await page.fill('[data-testid="register-password"]', user.password);
+    await page.fill('[data-testid="register-confirm-password"]', user.password);
     await page.click('[data-testid="register-submit"]');
 
     await expect(page.locator('[data-testid="main-chat"]')).toBeVisible({ timeout: 10_000 });

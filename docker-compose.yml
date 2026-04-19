@@ -50,7 +50,7 @@ services:
     networks:
       - chatnet
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      test: ["CMD", "rabbitmq-diagnostics", "check_running"]
       interval: 15s
       timeout: 10s
       retries: 5
@@ -156,7 +156,7 @@ services:
       - chatnet
 
   # ── Load Test Runner (k6 + SignalR WebSocket) ───────────────────────────────
-  # Not started in normal operation. Run with: podman compose --profile load run load-tester
+  # Not started in normal operation. Run with: docker compose --profile load run load-tester
   load-tester:
     image: grafana/k6
     profiles:

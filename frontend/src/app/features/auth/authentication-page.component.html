@@ -57,7 +57,7 @@
         </button>
         <button
           type="button"
-          class="px-6 py-2 text-sm font-medium transition-colors"
+          class="px-6 py-2 text-sm font-bold transition-colors"
           [class.bg-surface-container-lowest]="mode() === 'register'"
           [class.shadow-sm]="mode() === 'register'"
           [class.text-primary]="mode() === 'register'"
@@ -141,7 +141,7 @@
             </div>
             <button
               data-testid="login-submit"
-              class="w-full py-4 bg-primary text-on-primary font-bold rounded-lg hover:bg-primary-dim active:scale-[0.98] transition-all flex items-center justify-center gap-2 group shadow-lg shadow-primary/10"
+              class="w-full py-4 bg-primary text-on-primary font-bold rounded-md hover:bg-primary-dim active:scale-[0.98] transition-all flex items-center justify-center gap-2 group shadow-lg shadow-primary/10"
               type="submit"
             >
               {{ isSubmitting() ? 'Signing In…' : 'Sign In' }}
@@ -165,7 +165,7 @@
             </div>
             <button
               type="button"
-              class="px-5 py-2.5 bg-surface-container-lowest text-primary text-xs font-bold rounded-lg border border-outline-variant/20 hover:bg-white transition-colors"
+              class="px-5 py-2.5 bg-surface-container-lowest text-primary text-xs font-bold rounded-md border border-outline-variant/20 hover:bg-white transition-colors"
               (click)="setMode('register')"
             >Create Account
             </button>
@@ -229,18 +229,31 @@
                 }
               </div>
               <div class="space-y-1">
-                <label class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Keep signed
-                  in</label>
-                <div class="flex items-center h-12">
-                  <input type="checkbox" formControlName="keepSignedIn"
-                         class="h-4 w-4 rounded border-outline-variant text-primary"/>
-                </div>
+                <label class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Confirm Password</label>
+                <input
+                  pInputText
+                  [invalid]="registerFieldHasError('confirmPassword') || registerPasswordMismatch()"
+                  data-testid="register-confirm-password"
+                  class="w-full px-4 py-3 bg-surface-container-low border-none focus:ring-0 rounded-lg text-sm border-b-2 border-transparent focus:border-primary"
+                  type="password"
+                  formControlName="confirmPassword"
+                  placeholder="••••••••"
+                />
+                @if (registerPasswordMismatch()) {
+                  <span class="text-xs text-error">Passwords do not match.</span>
+                }
               </div>
+            </div>
+            <div class="flex items-center space-x-3">
+              <input class="h-4 w-4 rounded border-outline-variant text-primary focus:ring-primary/20"
+                     id="register-keep-signed-in" type="checkbox" formControlName="keepSignedIn"/>
+              <label class="text-xs text-on-surface-variant font-medium select-none" for="register-keep-signed-in">Keep me signed
+                in on this device</label>
             </div>
             <div class="pt-4">
               <button
                 data-testid="register-submit"
-                class="w-full py-4 bg-primary text-on-primary font-bold rounded-lg hover:bg-primary-dim transition-all"
+                class="w-full py-4 bg-primary text-on-primary font-bold rounded-md hover:bg-primary-dim transition-all"
                 type="submit"
               >{{ isSubmitting() ? 'Creating Account…' : 'Complete Registration' }}
               </button>

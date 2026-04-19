@@ -31,7 +31,6 @@ export interface RegisterRequest {
 
 export interface StoredSession {
   accessToken: string;
-  refreshToken?: string;
   user?: User;
   keepSignedIn?: boolean;
 }

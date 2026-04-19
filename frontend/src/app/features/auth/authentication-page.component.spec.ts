@@ -34,6 +34,25 @@ describe('AuthenticationPageComponent', () => {
     expect(compiled.querySelector('[data-testid="register-username"]')).not.toBeNull();
     expect(compiled.querySelector('[data-testid="register-email"]')).not.toBeNull();
     expect(compiled.querySelector('[data-testid="register-password"]')).not.toBeNull();
+    expect(compiled.querySelector('[data-testid="register-confirm-password"]')).not.toBeNull();
     expect(compiled.querySelector('[data-testid="register-submit"]')).not.toBeNull();
+  });
+
+  it('register form is invalid when passwords do not match', () => {
+    const fixture = TestBed.createComponent(AuthenticationPageComponent);
+    fixture.detectChanges();
+    const comp = fixture.componentInstance;
+    comp.registerForm.setValue({ username: 'alice', email: 'a@b.com', password: 'pass1234', confirmPassword: 'different', keepSignedIn: true });
+    expect(comp.registerForm.invalid).toBe(true);
+    expect(comp.registerForm.hasError('passwordMismatch')).toBe(true);
+  });
+
+  it('register form is valid when passwords match', () => {
+    const fixture = TestBed.createComponent(AuthenticationPageComponent);
+    fixture.detectChanges();
+    const comp = fixture.componentInstance;
+    comp.registerForm.setValue({ username: 'alice', email: 'a@b.com', password: 'pass1234', confirmPassword: 'pass1234', keepSignedIn: true });
+    expect(comp.registerForm.valid).toBe(true);
+    expect(comp.registerForm.hasError('passwordMismatch')).toBe(false);
   });
 });

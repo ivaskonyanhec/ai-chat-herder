@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, computed, effect, inject, signal, untracked } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { Button } from 'primeng/button';
 import { Textarea } from 'primeng/textarea';
@@ -18,7 +18,7 @@ import type { AttachmentDto } from '../../../core/files/files.models';
 @Component({
   selector: 'app-room-chat',
   standalone: true,
-  imports: [Button, Textarea, FormsModule],
+  imports: [Button, Textarea, FormsModule, RouterLink],
   templateUrl: './room-chat.html',
   styleUrl: './room-chat.scss',
 })

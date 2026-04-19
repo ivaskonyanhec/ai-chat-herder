@@ -3,8 +3,22 @@ import { TestUser } from './api.helpers';
 
 const persistentStorageKey = 'chat-herder.session.persistent';
 const accessTokenStorageKey = 'access_token';
+const refreshCookieName = 'chat_herder_refresh';
 
 export async function bootstrapAuthenticatedContext(context: BrowserContext, user: TestUser): Promise<void> {
+  const baseUrl = process.env.BASE_URL ?? 'http://localhost';
+  await context.addCookies([
+    {
+      name: refreshCookieName,
+      value: user.refreshToken,
+      url: `${baseUrl}/api/auth/refresh`,
+      httpOnly: true,
+      sameSite: 'Lax',
+      secure: baseUrl.startsWith('https://'),
+      expires: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60,
+    },
+  ]);
+
   await context.addInitScript(
     ({ accessToken, persistedSession, atKey, psKey }) => {
       window.localStorage.setItem(atKey, accessToken);

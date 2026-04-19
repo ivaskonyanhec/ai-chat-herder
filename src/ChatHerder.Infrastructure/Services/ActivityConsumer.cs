@@ -24,6 +24,26 @@ public sealed class ActivityConsumer(
         var uri = config["RabbitMQ:Uri"]
             ?? throw new InvalidOperationException("RabbitMQ:Uri is not configured.");
 
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            try
+            {
+                await RunConsumerAsync(uri, stoppingToken);
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                return;
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "ActivityConsumer: RabbitMQ connection lost, retrying in 5 s");
+                await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken).ConfigureAwait(false);
+            }
+        }
+    }
+
+    private async Task RunConsumerAsync(string uri, CancellationToken stoppingToken)
+    {
         var factory = new ConnectionFactory { Uri = new Uri(uri) };
         await using var connection = await factory.CreateConnectionAsync(stoppingToken);
         var channel = await connection.CreateChannelAsync(cancellationToken: stoppingToken);

@@ -85,6 +85,38 @@ describe('RoomChatComponent', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
 
+  it('shows manage room link when caller is Owner', async () => {
+    const ownerRoom: RoomDto = { ...mockRoom, callerRole: 'Owner' };
+    const { providers } = buildProviders();
+    const ownedProviders = providers.map(p =>
+      'provide' in p && p.provide === RoomsApiService
+        ? { provide: RoomsApiService, useValue: { getRoom: () => of(ownerRoom), getMessages: () => of([]) } }
+        : p,
+    );
+    await TestBed.configureTestingModule({ imports: [RoomChatComponent], providers: ownedProviders }).compileComponents();
+    const fixture = TestBed.createComponent(RoomChatComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[data-testid="manage-room-link"]')).not.toBeNull();
+  });
+
+  it('hides manage room link when caller is Member', async () => {
+    const memberRoom: RoomDto = { ...mockRoom, callerRole: 'Member' };
+    const { providers } = buildProviders();
+    const memberProviders = providers.map(p =>
+      'provide' in p && p.provide === RoomsApiService
+        ? { provide: RoomsApiService, useValue: { getRoom: () => of(memberRoom), getMessages: () => of([]) } }
+        : p,
+    );
+    await TestBed.configureTestingModule({ imports: [RoomChatComponent], providers: memberProviders }).compileComponents();
+    const fixture = TestBed.createComponent(RoomChatComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[data-testid="manage-room-link"]')).toBeNull();
+  });
+
   it('renders member sidebar with status dots from roomMembersSnapshot', async () => {
     const { providers } = buildProviders(mockSnapshot);
     await TestBed.configureTestingModule({ imports: [RoomChatComponent], providers }).compileComponents();

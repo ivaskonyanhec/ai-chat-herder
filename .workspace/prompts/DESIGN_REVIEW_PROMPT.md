@@ -22,6 +22,10 @@ Consistency: Check margins, padding, and font sizes across all pages (Login, Das
 
 Mobile Readiness: Verify that the sidebar collapses or adapts on smaller viewports.
 
+What about fonts and font sizes? Buttons are they align with mocks? Checkboxes and radio buttons? Other components?
+
+Are there any overlaps etc? Careful gradients and fades should be in place! Background images if any also should be transfered from design templates
+
 3. Procedure
 
 Inspect the generated HTML and SCSS/Tailwind files.

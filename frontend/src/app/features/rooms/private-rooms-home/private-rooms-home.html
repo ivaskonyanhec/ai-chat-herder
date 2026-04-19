@@ -1,0 +1,45 @@
+<section class="flex-1 overflow-y-auto p-8 bg-surface" data-testid="private-rooms-home">
+  <div class="max-w-7xl mx-auto">
+    <div class="mb-10">
+      <h1 class="text-3xl font-extrabold tracking-tight text-on-surface mb-2">Private Rooms</h1>
+      <p class="text-on-surface-variant max-w-2xl">Your private room memberships — accessible by invitation only.</p>
+    </div>
+
+    @if (isLoading()) {
+      <div class="flex justify-center py-24">
+        <span class="material-symbols-outlined text-4xl text-outline animate-spin">progress_activity</span>
+      </div>
+    } @else if (errorMessage()) {
+      <p class="text-error text-sm bg-error-container/20 rounded-xl px-6 py-4">{{ errorMessage() }}</p>
+    } @else if (privateRooms().length === 0) {
+      <div class="text-center py-24">
+        <span class="material-symbols-outlined text-5xl text-outline mb-4 block">lock</span>
+        <p class="text-on-surface-variant">You have no private room memberships. Ask a room owner for an invitation.</p>
+      </div>
+    } @else {
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @for (room of privateRooms(); track room.id) {
+          <a [routerLink]="['/app/rooms', room.id]"
+             class="bg-surface-container-lowest rounded-xl p-6 flex flex-col gap-4 hover:shadow-sm transition-shadow">
+            <div class="flex items-start justify-between gap-3">
+              <div class="w-10 h-10 bg-surface-container flex items-center justify-center rounded-lg shrink-0">
+                <span class="material-symbols-outlined text-on-surface-variant" style="font-size:1.25rem">lock</span>
+              </div>
+              <span class="text-[10px] font-bold uppercase tracking-widest text-outline bg-surface-container px-2 py-0.5 rounded-full">Private</span>
+            </div>
+            <div class="flex-1">
+              <h3 class="font-bold text-on-surface mb-1">{{ room.name }}</h3>
+              @if (room.description) {
+                <p class="text-xs text-on-surface-variant line-clamp-2">{{ room.description }}</p>
+              }
+            </div>
+            <div class="flex items-center gap-1.5 text-xs text-on-surface-variant pt-2">
+              <span class="material-symbols-outlined" style="font-size:1rem">group</span>
+              <span>{{ room.memberCount }} members</span>
+            </div>
+          </a>
+        }
+      </div>
+    }
+  </div>
+</section>

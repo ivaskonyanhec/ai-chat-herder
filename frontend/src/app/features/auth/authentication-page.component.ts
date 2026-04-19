@@ -1,5 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { ReactiveFormsModule, NonNullableFormBuilder, Validators } from '@angular/forms';
+import { AbstractControl, ReactiveFormsModule, NonNullableFormBuilder, ValidationErrors, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import { InputText } from 'primeng/inputtext';
@@ -8,6 +8,12 @@ import { AuthSessionService } from '../../core/auth/auth-session.service';
 import { AuthResponse } from '../../core/auth/auth.models';
 
 type AuthMode = 'login' | 'register';
+
+function passwordMatchValidator(control: AbstractControl): ValidationErrors | null {
+  const password = control.get('password')?.value as string;
+  const confirm = control.get('confirmPassword')?.value as string;
+  return password === confirm ? null : { passwordMismatch: true };
+}
 
 @Component({
   selector: 'app-authentication-page',
@@ -33,8 +39,9 @@ export class AuthenticationPageComponent {
     username: ['', [Validators.required, Validators.minLength(1), Validators.maxLength(32)]],
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(8)]],
+    confirmPassword: ['', Validators.required],
     keepSignedIn: [true],
-  });
+  }, { validators: passwordMatchValidator });
   readonly eyebrowLabel = computed(() =>
     this.mode() === 'login' ? 'Operational Access' : 'New Workspace Access',
   );
@@ -76,8 +83,9 @@ export class AuthenticationPageComponent {
     this.errorMessage.set('');
     this.isSubmitting.set(true);
 
+    const { confirmPassword: _ignored, ...payload } = this.registerForm.getRawValue();
     this.authApi
-      .register(this.registerForm.getRawValue())
+      .register(payload)
       .pipe(finalize(() => this.isSubmitting.set(false)))
       .subscribe({
         next: (response) => this.completeAuthentication(response),
@@ -101,9 +109,14 @@ export class AuthenticationPageComponent {
     return control.invalid && (control.dirty || control.touched);
   }
 
-  registerFieldHasError(controlName: 'username' | 'email' | 'password'): boolean {
+  registerFieldHasError(controlName: 'username' | 'email' | 'password' | 'confirmPassword'): boolean {
     const control = this.registerForm.controls[controlName];
     return control.invalid && (control.dirty || control.touched);
+  }
+
+  registerPasswordMismatch(): boolean {
+    const confirm = this.registerForm.controls.confirmPassword;
+    return this.registerForm.hasError('passwordMismatch') && (confirm.dirty || confirm.touched);
   }
 
   private completeAuthentication(response: AuthResponse): void {

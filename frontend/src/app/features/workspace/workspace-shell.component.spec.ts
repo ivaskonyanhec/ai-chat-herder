@@ -11,8 +11,9 @@ import { ChatService } from '../../core/signalr/chat.service';
 import { UnreadService } from '../../core/signalr/unread.service';
 import { NotificationsApiService } from '../../core/notifications/notifications-api.service';
 import { RoomsApiService } from '../../core/rooms/rooms-api.service';
+import { FriendsApiService } from '../../core/friends/friends-api.service';
 
-type HubStub = { connect: ReturnType<typeof vi.fn>; disconnect: ReturnType<typeof vi.fn> };
+type HubStub = { connect: ReturnType<typeof vi.fn>; disconnect: ReturnType<typeof vi.fn>; presenceMap?: unknown };
 type AuthSessionStub = { user: Signal<null>; accessToken?: Signal<null>; clearSession: ReturnType<typeof vi.fn> };
 type AuthApiStub = { logout: ReturnType<typeof vi.fn> };
 
@@ -34,6 +35,7 @@ function buildProviders(overrides: {
   const presenceService: HubStub = overrides.presenceService ?? {
     connect: vi.fn().mockResolvedValue(undefined),
     disconnect: vi.fn().mockResolvedValue(undefined),
+    presenceMap: signal(new Map()).asReadonly(),
   };
   const chatService: HubStub = overrides.chatService ?? {
     connect: vi.fn().mockResolvedValue(undefined),
@@ -48,6 +50,7 @@ function buildProviders(overrides: {
       { provide: PresenceService, useValue: presenceService },
       { provide: ChatService, useValue: chatService },
       { provide: NotificationsApiService, useValue: { getUnreadCounts: vi.fn().mockReturnValue(of([])) } },
+      { provide: FriendsApiService, useValue: { getFriends: vi.fn().mockReturnValue(of([])) } },
       {
         provide: RoomsApiService,
         useValue: {
@@ -187,6 +190,28 @@ describe('WorkspaceShellComponent', () => {
     await fixture.whenStable();
     expect(comp.isCreatingRoom()).toBe(false);
     expect(navigateSpy).toHaveBeenCalledWith(['/app/rooms', 'new-room-1']);
+  });
+
+  it('renders contacts section in sidebar when friends are loaded', async () => {
+    const friends = [
+      { friendshipId: 'f1', userId: 'u10', username: 'alice', avatarUrl: null, friendSince: '' },
+      { friendshipId: 'f2', userId: 'u11', username: 'bob', avatarUrl: null, friendSince: '' },
+    ];
+    const { providers } = buildProviders();
+    const friendsStub = { getFriends: vi.fn().mockReturnValue(of(friends)) };
+    const providersWithFriends = providers.map(p =>
+      'provide' in p && p.provide === FriendsApiService
+        ? { provide: FriendsApiService, useValue: friendsStub }
+        : p,
+    );
+    TestBed.configureTestingModule({ imports: [WorkspaceShellComponent], providers: providersWithFriends });
+    const fixture = TestBed.createComponent(WorkspaceShellComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const compiled: Element = fixture.nativeElement;
+    expect(compiled.querySelector('[data-testid="sidebar-contacts"]')).not.toBeNull();
+    expect(compiled.querySelector('[data-testid="contact-alice"]')).not.toBeNull();
+    expect(compiled.querySelector('[data-testid="contact-bob"]')).not.toBeNull();
   });
 
   it('submitCreateRoom() sets createRoomError when API fails', async () => {

@@ -1,6 +1,8 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HubConnection } from '@microsoft/signalr';
+import { firstValueFrom } from 'rxjs';
 import { HUB_CONNECTION_FACTORY } from './hub-connection.factory';
+import { AuthRefreshService } from '../auth/auth-refresh.service';
 import { AuthSessionService } from '../auth/auth-session.service';
 import { UnreadService } from './unread.service';
 import type {
@@ -20,6 +22,7 @@ import type {
 export class ChatService {
   private readonly factory = inject(HUB_CONNECTION_FACTORY);
   private readonly authSession = inject(AuthSessionService);
+  private readonly authRefresh = inject(AuthRefreshService);
   private readonly unread = inject(UnreadService);
 
   private connection: HubConnection | null = null;
@@ -37,11 +40,19 @@ export class ChatService {
     const token = this.authSession.accessToken();
     if (!token || this.connection) return;
 
-    this.connection = this.factory('/hubs/chat', () => this.authSession.accessToken() ?? '');
+    this.connection = this.factory('/hubs/chat', () => this.getAccessTokenForHub());
     this.registerHandlers(this.connection);
     this.connectPromise = this.connection.start();
     await this.connectPromise;
     this.connectPromise = null;
+  }
+
+  private async getAccessTokenForHub(): Promise<string> {
+    if (this.authSession.isAccessTokenExpired()) {
+      await firstValueFrom(this.authRefresh.refreshAccessToken());
+    }
+
+    return this.authSession.accessToken() ?? '';
   }
 
   async disconnect(): Promise<void> {

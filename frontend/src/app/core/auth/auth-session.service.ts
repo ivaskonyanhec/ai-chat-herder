@@ -29,6 +29,16 @@ export class AuthSessionService {
     this.windowStorage('sessionStorage')?.removeItem(accessTokenStorageKey);
   }
 
+  isAccessTokenExpired(skewMs = 30_000): boolean {
+    const token = this.accessToken();
+    if (!token) {
+      return true;
+    }
+
+    const expiresAt = this.readJwtExpirationMs(token);
+    return expiresAt === null || expiresAt <= Date.now() + skewMs;
+  }
+
   private readInitialSession(): StoredSession | null {
     return this.readStoredSession('localStorage', persistentStorageKey, true)
       ?? this.readStoredSession('sessionStorage', sessionStorageKey, false)
@@ -124,5 +134,26 @@ export class AuthSessionService {
   private windowStorage(kind: 'localStorage' | 'sessionStorage'): Storage | null {
     const defaultView = this.document.defaultView;
     return defaultView ? defaultView[kind] : null;
+  }
+
+  private readJwtExpirationMs(token: string): number | null {
+    const parts = token.split('.');
+    if (parts.length < 2) {
+      return null;
+    }
+
+    try {
+      const normalized = parts[1].replaceAll('-', '+').replaceAll('_', '/');
+      const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
+      const rawPayload = this.document.defaultView?.atob(padded);
+      if (!rawPayload) {
+        return null;
+      }
+
+      const payload = JSON.parse(rawPayload) as Record<string, unknown>; // justification: decoded JWT payload
+      return typeof payload['exp'] === 'number' ? payload['exp'] * 1000 : null;
+    } catch {
+      return null;
+    }
   }
 }

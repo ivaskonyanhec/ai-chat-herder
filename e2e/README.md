@@ -5,7 +5,7 @@ Playwright + TypeScript tests for requirement-driven E2E and UAT coverage.
 ## Local Run
 
 ```bash
-podman compose up --build -d
+docker compose up --build -d
 cd e2e
 npm install
 npx playwright install chromium --with-deps
@@ -18,13 +18,13 @@ From the repository root, the same full suite can be run with one command:
 BASE_URL=http://localhost npm --prefix e2e run test:all
 ```
 
-## Podman Run
+## Docker Run
 
 ```bash
-podman compose --profile e2e up --build e2e
+docker compose --profile e2e up --build e2e
 ```
 
-GitHub Actions uses Docker Compose on the hosted runner, but local container commands assume Podman.
+GitHub Actions uses Docker Compose on the hosted runner, and local container commands also use Docker Compose.
 
 ## Reports
 

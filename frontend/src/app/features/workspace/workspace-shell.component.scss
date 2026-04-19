@@ -1,1 +1,13 @@
-/* Styling via Tailwind utility classes in the HTML template */
+/* Responsive sidebar: hidden on mobile, always visible on md+ */
+.workspace-sidebar {
+  display: none;
+  flex-direction: column;
+
+  @media (min-width: 768px) {
+    display: flex;
+  }
+
+  &--open {
+    display: flex;
+  }
+}

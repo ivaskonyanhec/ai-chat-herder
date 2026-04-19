@@ -1,8 +1,10 @@
 import { TestBed } from '@angular/core/testing';
+import { of } from 'rxjs';
 import { vi } from 'vitest';
 import { HubConnection } from '@microsoft/signalr';
 import { PresenceService } from './presence.service';
 import { HUB_CONNECTION_FACTORY } from './hub-connection.factory';
+import { AuthRefreshService } from '../auth/auth-refresh.service';
 import { AuthSessionService } from '../auth/auth-session.service';
 
 function buildMockConnection(initialState = 'Connected') {
@@ -32,6 +34,7 @@ describe('PresenceService', () => {
     const mockFactory = vi.fn().mockReturnValue(mockConn);
     const mockAuthSession = {
       accessToken: vi.fn().mockReturnValue('test-token'),
+      isAccessTokenExpired: vi.fn().mockReturnValue(false),
       clearSession: vi.fn(),
     };
 
@@ -40,6 +43,7 @@ describe('PresenceService', () => {
         PresenceService,
         { provide: HUB_CONNECTION_FACTORY, useValue: mockFactory },
         { provide: AuthSessionService, useValue: mockAuthSession },
+        { provide: AuthRefreshService, useValue: { refreshAccessToken: vi.fn() } },
       ],
     });
 
@@ -110,8 +114,13 @@ describe('PresenceService – startup race (joinRoom before connect)', () => {
         { provide: HUB_CONNECTION_FACTORY, useValue: vi.fn().mockReturnValue(conn) },
         {
           provide: AuthSessionService,
-          useValue: { accessToken: vi.fn().mockReturnValue('t'), clearSession: vi.fn() },
+          useValue: {
+            accessToken: vi.fn().mockReturnValue('t'),
+            isAccessTokenExpired: vi.fn().mockReturnValue(false),
+            clearSession: vi.fn(),
+          },
         },
+        { provide: AuthRefreshService, useValue: { refreshAccessToken: vi.fn() } },
       ],
     });
     svc = TestBed.inject(PresenceService);
@@ -130,5 +139,45 @@ describe('PresenceService – startup race (joinRoom before connect)', () => {
     await svc.connect();
 
     expect(conn.invoke).toHaveBeenCalledWith('JoinRoom', 'room-race');
+  });
+});
+
+describe('PresenceService – expired access token', () => {
+  it('uses an async token factory that refreshes before SignalR negotiation when the stored token is expired', async () => {
+    const conn = buildMockConnection();
+    const refreshAccessToken = vi.fn().mockReturnValue(of('fresh-token'));
+    const accessToken = vi.fn()
+      .mockReturnValueOnce('expired-token')
+      .mockReturnValue('fresh-token');
+    TestBed.configureTestingModule({
+      providers: [
+        PresenceService,
+        {
+          provide: HUB_CONNECTION_FACTORY,
+          useValue: vi.fn((_url: string, getToken: () => string | Promise<string>) => {
+            conn.start = vi.fn(async () => {
+              await getToken();
+            });
+            return conn;
+          }),
+        },
+        {
+          provide: AuthSessionService,
+          useValue: {
+            accessToken,
+            isAccessTokenExpired: vi.fn().mockReturnValue(true),
+            clearSession: vi.fn(),
+          },
+        },
+        { provide: AuthRefreshService, useValue: { refreshAccessToken } },
+      ],
+    });
+
+    const svc = TestBed.inject(PresenceService);
+    await svc.connect();
+
+    expect(refreshAccessToken).toHaveBeenCalledTimes(1);
+    expect(conn.start).toHaveBeenCalledTimes(1);
+    await svc.disconnect();
   });
 });

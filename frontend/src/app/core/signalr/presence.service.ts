@@ -1,7 +1,9 @@
 import { Injectable, inject, isDevMode, signal } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { HubConnection, HubConnectionState } from '@microsoft/signalr';
+import { firstValueFrom } from 'rxjs';
 import { HUB_CONNECTION_FACTORY } from './hub-connection.factory';
+import { AuthRefreshService } from '../auth/auth-refresh.service';
 import { AuthSessionService } from '../auth/auth-session.service';
 import type {
   PresenceStatus,
@@ -21,6 +23,7 @@ const THROTTLE_MS = 1_000;
 export class PresenceService {
   private readonly factory = inject(HUB_CONNECTION_FACTORY);
   private readonly authSession = inject(AuthSessionService);
+  private readonly authRefresh = inject(AuthRefreshService);
   private readonly document = inject(DOCUMENT);
 
   private connection: HubConnection | null = null;
@@ -50,7 +53,7 @@ export class PresenceService {
     const token = this.authSession.accessToken();
     if (!token || this.connection) return;
 
-    this.connection = this.factory('/hubs/presence', () => this.authSession.accessToken() ?? '');
+    this.connection = this.factory('/hubs/presence', () => this.getAccessTokenForHub());
     this.registerHandlers(this.connection);
 
     this.connection.onreconnected(() => {
@@ -71,6 +74,14 @@ export class PresenceService {
     this.startHeartbeat();
     this.startAfkTracking();
     this.rejoinAllRooms();
+  }
+
+  private async getAccessTokenForHub(): Promise<string> {
+    if (this.authSession.isAccessTokenExpired()) {
+      await firstValueFrom(this.authRefresh.refreshAccessToken());
+    }
+
+    return this.authSession.accessToken() ?? '';
   }
 
   async disconnect(): Promise<void> {
