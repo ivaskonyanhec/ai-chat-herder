@@ -201,14 +201,36 @@
             <form class="space-y-4" (ngSubmit)="sendFriendRequest()">
               <div class="space-y-1">
                 <label class="text-[10px] font-bold text-outline uppercase tracking-wider">Username</label>
-                <input
-                  class="w-full bg-surface-container-lowest border-none rounded p-3 text-xs focus:ring-1 focus:ring-primary/20"
-                  [ngModel]="newRequestUsername()"
-                  (ngModelChange)="newRequestUsername.set($event)"
-                  name="newRequestUsername"
-                  placeholder="&#64;handle"
-                  type="text"
-                />
+                <div class="relative">
+                  <input
+                    class="w-full bg-surface-container-lowest border-none rounded p-3 text-xs focus:ring-1 focus:ring-primary/20"
+                    [ngModel]="newRequestUsername()"
+                    (ngModelChange)="onUsernameInput($event)"
+                    name="newRequestUsername"
+                    placeholder="&#64;handle"
+                    type="text"
+                    autocomplete="off"
+                  />
+                  @if (isSearchingUsers()) {
+                    <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline text-sm animate-spin">
+                      progress_activity
+                    </span>
+                  }
+                  @if (userSuggestions().length > 0) {
+                    <ul class="absolute left-0 right-0 top-full mt-1 bg-surface-container-lowest rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto border border-outline-variant/10">
+                      @for (user of userSuggestions(); track user.id) {
+                        <li class="flex items-center gap-3 px-4 py-2.5 hover:bg-surface-container cursor-pointer text-sm"
+                            [attr.data-testid]="'user-suggestion-' + user.username"
+                            (mousedown)="selectSuggestion(user)">
+                          <div class="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center shrink-0">
+                            <span class="text-[10px] font-bold text-on-surface-variant">{{ user.username[0].toUpperCase() }}</span>
+                          </div>
+                          <span class="truncate text-on-surface">{{ user.username }}</span>
+                        </li>
+                      }
+                    </ul>
+                  }
+                </div>
               </div>
               <div class="space-y-1">
                 <label class="text-[10px] font-bold text-outline uppercase tracking-wider">Personalized Message

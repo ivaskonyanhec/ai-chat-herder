@@ -154,4 +154,53 @@ describe('ContactsHomeComponent', () => {
 
     expect(component.filteredFriends().map(friend => friend.username)).toEqual(['alice']);
   });
+
+  it('onUsernameInput with 2+ chars returns suggestions excluding existing friends', async () => {
+    const friends: FriendDto[] = [
+      { friendshipId: 'f1', userId: 'u1', username: 'alice', avatarUrl: null, friendSince: '' },
+    ];
+
+    fixture.detectChanges();
+    http.expectOne('/api/friends').flush(friends);
+    http.expectOne('/api/friends/requests').flush([]);
+    await fixture.whenStable();
+
+    component.onUsernameInput('al');
+
+    const searchReq = http.expectOne(r => r.url.includes('/api/users/search'));
+    searchReq.flush([
+      { id: 'u1', username: 'alice', avatarUrl: null },
+      { id: 'u2', username: 'albert', avatarUrl: null },
+    ]);
+    await fixture.whenStable();
+
+    expect(component.userSuggestions()).toHaveLength(1);
+    expect(component.userSuggestions()[0].username).toBe('albert');
+  });
+
+  it('selectSuggestion fills username input and clears dropdown', async () => {
+    fixture.detectChanges();
+    http.expectOne('/api/friends').flush([]);
+    http.expectOne('/api/friends/requests').flush([]);
+    await fixture.whenStable();
+
+    component.userSuggestions.set([{ id: 'u2', username: 'bob', avatarUrl: null }]);
+    component.selectSuggestion({ id: 'u2', username: 'bob', avatarUrl: null });
+
+    expect(component.newRequestUsername()).toBe('bob');
+    expect(component.userSuggestions()).toHaveLength(0);
+  });
+
+  it('onUsernameInput with < 2 chars clears suggestions without calling API', async () => {
+    fixture.detectChanges();
+    http.expectOne('/api/friends').flush([]);
+    http.expectOne('/api/friends/requests').flush([]);
+    await fixture.whenStable();
+
+    component.userSuggestions.set([{ id: 'u2', username: 'bob', avatarUrl: null }]);
+    component.onUsernameInput('a');
+
+    http.expectNone(r => r.url.includes('/api/users/search'));
+    expect(component.userSuggestions()).toHaveLength(0);
+  });
 });
