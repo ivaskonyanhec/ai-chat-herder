@@ -7,6 +7,7 @@ import { routes } from './app.routes';
 import { AuthApiService } from './core/auth/auth-api.service';
 import { AuthSessionService } from './core/auth/auth-session.service';
 import { FriendsApiService } from './core/friends/friends-api.service';
+import { InvitationsApiService } from './core/invitations/invitations-api.service';
 import { NotificationsApiService } from './core/notifications/notifications-api.service';
 import { RoomsApiService } from './core/rooms/rooms-api.service';
 import { SessionsApiService } from './core/session/sessions-api.service';
@@ -92,6 +93,7 @@ function configureRouterTestBed(): Router {
       { provide: NotificationsApiService, useValue: notificationsApi },
       { provide: RoomsApiService, useValue: roomsApi },
       { provide: FriendsApiService, useValue: { getFriends: vi.fn().mockReturnValue(of([])) } },
+      { provide: InvitationsApiService, useValue: { getMyInvitations: vi.fn().mockReturnValue(of([])) } },
     ],
   });
 
