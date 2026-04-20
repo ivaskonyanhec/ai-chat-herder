@@ -176,6 +176,96 @@ public sealed class DialogsEndpointsTests
         var updated = await db.PersonalDialogMessages.FindAsync(msg.Id);
         Assert.NotNull(updated!.DeletedAt);
     }
+
+    [Fact]
+    public async Task CreateDialog_Returns403_WhenNotFriends()
+    {
+        await using var db = BuildContext();
+        var user1 = new User { Username = "alice", Email = "alice@test.com", PasswordHash = "x" };
+        var user2 = new User { Username = "bob",   Email = "bob@test.com",   PasswordHash = "x" };
+        db.Users.AddRange(user1, user2);
+        await db.SaveChangesAsync();
+
+        var result = await DialogsEndpointsHelper.CreateDialog(
+            new CreateDialogRequest(user2.Id), MakePrincipal(user1.Id), db, CancellationToken.None);
+
+        Assert.Equal(403, GetStatusCode(result));
+    }
+
+    [Fact]
+    public async Task CreateDialog_ReturnsBadRequest_WhenSelf()
+    {
+        await using var db = BuildContext();
+        var user1 = new User { Username = "alice", Email = "alice@test.com", PasswordHash = "x" };
+        db.Users.Add(user1);
+        await db.SaveChangesAsync();
+
+        var result = await DialogsEndpointsHelper.CreateDialog(
+            new CreateDialogRequest(user1.Id), MakePrincipal(user1.Id), db, CancellationToken.None);
+
+        Assert.Equal(400, GetStatusCode(result));
+    }
+
+    [Fact]
+    public async Task EditDmMessage_Returns403_WhenNotSender()
+    {
+        await using var db = BuildContext();
+        var user1 = new User { Username = "alice", Email = "alice@test.com", PasswordHash = "x" };
+        var user2 = new User { Username = "bob",   Email = "bob@test.com",   PasswordHash = "x" };
+        db.Users.AddRange(user1, user2);
+        var (u1, u2) = user1.Id < user2.Id ? (user1.Id, user2.Id) : (user2.Id, user1.Id);
+        var dialog = new PersonalDialog { User1Id = u1, User2Id = u2 };
+        db.PersonalDialogs.Add(dialog);
+        var msg = new PersonalDialogMessage
+            { DialogId = dialog.Id, AuthorId = user1.Id, Content = "original", SequenceNumber = 1 };
+        db.PersonalDialogMessages.Add(msg);
+        await db.SaveChangesAsync();
+
+        var result = await DialogsEndpointsHelper.EditDmMessage(
+            msg.Id, new EditDmMessageRequest("hijack"), MakePrincipal(user2.Id), db, CancellationToken.None);
+
+        Assert.Equal(403, GetStatusCode(result));
+    }
+
+    [Fact]
+    public async Task DeleteDmMessage_Returns403_WhenNotSender()
+    {
+        await using var db = BuildContext();
+        var user1 = new User { Username = "alice", Email = "alice@test.com", PasswordHash = "x" };
+        var user2 = new User { Username = "bob",   Email = "bob@test.com",   PasswordHash = "x" };
+        db.Users.AddRange(user1, user2);
+        var (u1, u2) = user1.Id < user2.Id ? (user1.Id, user2.Id) : (user2.Id, user1.Id);
+        var dialog = new PersonalDialog { User1Id = u1, User2Id = u2 };
+        db.PersonalDialogs.Add(dialog);
+        var msg = new PersonalDialogMessage
+            { DialogId = dialog.Id, AuthorId = user1.Id, Content = "original", SequenceNumber = 1 };
+        db.PersonalDialogMessages.Add(msg);
+        await db.SaveChangesAsync();
+
+        var result = await DialogsEndpointsHelper.DeleteDmMessage(
+            msg.Id, MakePrincipal(user2.Id), db, CancellationToken.None);
+
+        Assert.Equal(403, GetStatusCode(result));
+    }
+
+    [Fact]
+    public async Task GetMessages_Returns403_WhenNotParticipant()
+    {
+        await using var db = BuildContext();
+        var user1 = new User { Username = "alice", Email = "alice@test.com", PasswordHash = "x" };
+        var user2 = new User { Username = "bob",   Email = "bob@test.com",   PasswordHash = "x" };
+        var user3 = new User { Username = "carol", Email = "carol@test.com", PasswordHash = "x" };
+        db.Users.AddRange(user1, user2, user3);
+        var (u1, u2) = user1.Id < user2.Id ? (user1.Id, user2.Id) : (user2.Id, user1.Id);
+        var dialog = new PersonalDialog { User1Id = u1, User2Id = u2 };
+        db.PersonalDialogs.Add(dialog);
+        await db.SaveChangesAsync();
+
+        var result = await DialogsEndpointsHelper.GetMessages(
+            dialog.Id, MakePrincipal(user3.Id), db, null, 50, CancellationToken.None);
+
+        Assert.Equal(403, GetStatusCode(result));
+    }
 }
 
 internal static class DialogsEndpointsHelper

@@ -3,13 +3,6 @@
   <section class="w-80 flex flex-col bg-surface-container shrink-0">
     <div class="p-6 bg-surface-container-high">
       <h2 class="text-lg font-bold text-on-surface mb-4">Messages</h2>
-      <div class="relative">
-        <input
-          class="w-full bg-surface-container-low border-none rounded-lg text-sm px-4 py-2 focus:ring-1 focus:ring-primary/30"
-          placeholder="Search conversations..."
-          type="text"
-        />
-      </div>
     </div>
 
     <div class="flex-1 overflow-y-auto">
@@ -103,7 +96,7 @@
                       <p class="text-xs truncate max-w-[14rem]" [innerHTML]="renderContent(msg.replyTo.content)"></p>
                     </div>
                   }
-                  <p [innerHTML]="renderContent(msg.content)"></p>
+                  <p data-testid="dm-message-text" [innerHTML]="renderContent(msg.content)"></p>
                   @if (msg.attachment) {
                     <div class="flex items-center gap-3 mt-2 px-3 py-2 bg-surface-container rounded-lg max-w-xs">
                       <span class="material-symbols-outlined text-on-surface-variant shrink-0">
@@ -111,9 +104,6 @@
                       </span>
                       <div class="flex-1 min-w-0">
                         <p class="text-sm font-medium text-on-surface truncate">{{ msg.attachment.fileName }}</p>
-                        @if (msg.attachment.comment) {
-                          <p class="text-xs text-on-surface-variant">{{ msg.attachment.comment }}</p>
-                        }
                         <p class="text-xs text-on-surface-variant">{{ formatSize(msg.attachment.sizeBytes) }}</p>
                       </div>
                       <button type="button"
@@ -127,7 +117,6 @@
                     <p class="text-[9px] opacity-60 mt-0.5">edited</p>
                   }
                 </div>
-                <!-- Hover action bar -->
                 <div class="absolute top-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 bg-surface-container-high rounded-lg px-1 py-0.5 shadow-sm"
                      [class.right-full]="msg.sender.id === user()?.id"
                      [class.left-full]="msg.sender.id !== user()?.id"
@@ -159,7 +148,7 @@
         }
         <input type="file" #dmFileInput hidden (change)="onFileSelected($event)" />
         @if (pendingAttachment()) {
-          <div class="flex items-center gap-2 px-4 py-2 bg-primary-container/30 rounded-lg mx-0 mb-2 text-sm">
+          <div class="flex items-center gap-2 px-4 py-2 bg-primary-container/30 rounded-lg mb-2 text-sm">
             <span class="material-symbols-outlined text-sm text-primary">attach_file</span>
             <span class="flex-1 truncate font-medium">{{ pendingAttachment()!.fileName }}</span>
             <span class="text-xs text-on-surface-variant">{{ formatSize(pendingAttachment()!.sizeBytes) }}</span>
@@ -170,7 +159,7 @@
         }
         <div class="rounded-xl bg-surface-container-low border border-outline-variant/30 focus-within:ring-1 focus-within:ring-primary/30">
           @if (replyingTo()) {
-            <div class="flex items-center justify-between px-4 py-2 bg-primary-container/40 border-l-2 border-primary rounded-t-lg"
+            <div class="flex items-center justify-between px-4 py-2 bg-primary-container/40 border-l-2 border-primary rounded-t-xl"
                  data-testid="reply-banner">
               <div class="min-w-0">
                 <p class="text-xs font-bold text-primary flex items-center gap-1">
@@ -187,46 +176,29 @@
               </button>
             </div>
           }
-          <div #composerEl
-               contenteditable="true"
-               class="block w-full resize-none bg-transparent px-4 py-3 text-sm text-on-surface outline-none min-h-[72px] max-h-40 overflow-y-auto"
-               data-testid="message-input"
-               [attr.aria-label]="'Type a message'"
-               (input)="onComposerInput($event)"
-               (paste)="onPaste($event)"
-               (keydown)="handleComposerKeydown($event)">
-          </div>
-          <!-- Toolbar -->
+          <textarea
+            class="block w-full resize-none bg-transparent px-4 py-3 text-sm text-on-surface outline-none min-h-[72px] max-h-40 overflow-y-auto"
+            data-testid="dm-message-input"
+            placeholder="Message..."
+            rows="1"
+            [ngModel]="composerValue()"
+            (ngModelChange)="composerValue.set($event)"
+            (keydown)="handleComposerKeydown($event)"
+          ></textarea>
           <div class="flex items-center gap-1 px-3 py-2 border-t border-outline-variant/20">
             <button type="button"
-                    class="w-8 h-8 rounded-md flex items-center justify-center text-sm font-bold text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"
-                    data-testid="composer-bold"
-                    title="Bold (Ctrl+B)"
-                    (mousedown)="$event.preventDefault()"
-                    (click)="applyBold()"><strong>B</strong></button>
-            <button type="button"
-                    class="w-8 h-8 rounded-md flex items-center justify-center text-sm italic text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"
-                    data-testid="composer-italic"
-                    title="Italic (Ctrl+I)"
-                    (mousedown)="$event.preventDefault()"
-                    (click)="applyItalic()">I</button>
-            <button type="button"
-                    class="w-8 h-8 rounded-md flex items-center justify-center text-xs font-mono text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"
-                    data-testid="composer-code"
-                    title="Code (Ctrl+`)"
-                    (mousedown)="$event.preventDefault()"
-                    (click)="applyCode()">&lt;/&gt;</button>
-            <div class="flex-1"></div>
-            <button type="button"
-                    class="p-2 rounded-lg hover:bg-surface-container text-on-surface-variant"
+                    class="p-2 rounded-lg hover:bg-surface-container text-on-surface-variant disabled:opacity-50"
                     [disabled]="isUploading()"
+                    title="Attach file"
                     (click)="dmFileInput.click()">
               <span class="material-symbols-outlined">attach_file</span>
             </button>
+            <div class="flex-1"></div>
             <button
-              class="px-4 py-2 bg-primary text-on-primary text-sm font-bold rounded-lg hover:bg-primary-dim transition-colors disabled:opacity-50"
+              class="px-4 py-2 bg-primary text-on-primary text-sm font-bold rounded-lg hover:bg-primary-dim transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               data-testid="dm-send-btn"
-              [disabled]="!canSendMessage() || selectedDialog()!.isFrozen"
+              type="button"
+              [disabled]="!canSendMessage()"
               (click)="sendMessage()"
             >
               <span class="material-symbols-outlined" style="font-size:1.25rem">send</span>
@@ -250,6 +222,9 @@
         </div>
         <div>
           <h3 class="font-bold text-on-surface">{{ selectedDialog()!.otherUsername }}</h3>
+          @if (selectedDialog()!.isFrozen) {
+            <p class="text-xs text-error mt-1">Conversation frozen</p>
+          }
         </div>
       </div>
     </section>

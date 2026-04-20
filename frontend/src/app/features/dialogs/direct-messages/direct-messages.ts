@@ -1,14 +1,16 @@
-import { Component, effect, inject, signal, ElementRef, viewChild } from '@angular/core';
+import { Component, DestroyRef, ElementRef, effect, inject, signal, viewChild } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute } from '@angular/router';
 import { finalize } from 'rxjs';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { FormsModule } from '@angular/forms';
 import { AuthSessionService } from '../../../core/auth/auth-session.service';
 import { DialogsApiService } from '../../../core/dialogs/dialogs-api.service';
 import { ChatService } from '../../../core/signalr/chat.service';
 import { FilesApiService } from '../../../core/files/files-api.service';
 import { NotificationsApiService } from '../../../core/notifications/notifications-api.service';
 import { UnreadService } from '../../../core/signalr/unread.service';
-import { PresenceService } from '../../../core/signalr/presence.service';
-import { parseInlineMarkdown, serializeToMarkdown } from '../../../shared/utils/inline-markdown';
+import { parseInlineMarkdown } from '../../../shared/utils/inline-markdown';
 import type { DialogDto } from '../../../core/dialogs/dialogs.models';
 import type { DialogMessageDto } from '../../../core/signalr/hub.models';
 import type { AttachmentDto } from '../../../core/files/files.models';
@@ -16,19 +18,20 @@ import type { AttachmentDto } from '../../../core/files/files.models';
 @Component({
   selector: 'app-direct-messages',
   standalone: true,
-  imports: [],
+  imports: [FormsModule],
   templateUrl: './direct-messages.html',
   styleUrl: './direct-messages.scss',
 })
 export class DirectMessagesComponent {
+  private readonly route = inject(ActivatedRoute);
   private readonly authSession = inject(AuthSessionService);
   private readonly dialogsApi = inject(DialogsApiService);
   private readonly chat = inject(ChatService);
   private readonly filesApi = inject(FilesApiService);
   private readonly notificationsApi = inject(NotificationsApiService);
   private readonly unread = inject(UnreadService);
-  private readonly presence = inject(PresenceService);
   private readonly sanitizer = inject(DomSanitizer);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly user = this.authSession.user;
   readonly isLoadingDialogs = signal(true);
@@ -40,13 +43,18 @@ export class DirectMessagesComponent {
   readonly isSending = signal(false);
   readonly isUploading = signal(false);
   readonly pendingAttachment = signal<AttachmentDto | null>(null);
-
-  readonly composerEl = viewChild<ElementRef<HTMLDivElement>>('composerEl');
-  readonly composerEmpty = signal(true);
+  readonly composerValue = signal('');
   readonly replyingTo = signal<DialogMessageDto | null>(null);
 
+  readonly fileInputEl = viewChild<ElementRef<HTMLInputElement>>('dmFileInput');
+
   constructor() {
-    this.loadDialogs();
+    this.route.paramMap
+      .pipe(takeUntilDestroyed())
+      .subscribe(params => {
+        const id = params.get('id');
+        this.loadDialogs(id ?? null);
+      });
 
     effect(() => {
       const event = this.chat.lastDmEvent();
@@ -67,65 +75,48 @@ export class DirectMessagesComponent {
 
   selectDialog(dialog: DialogDto): void {
     const prev = this.selectedDialog();
+    if (prev?.id === dialog.id) return;
     if (prev) {
-      void this.presence.leaveDialog(prev.id);
       void this.chat.leaveDialog(prev.id);
     }
     this.selectedDialog.set(dialog);
-    void this.presence.joinDialog(dialog.id);
     void this.chat.joinDialog(dialog.id);
+    this.replyingTo.set(null);
+    this.composerValue.set('');
     this.loadMessages(dialog.id);
   }
 
-  onComposerInput(event: Event): void {
-    const el = event.target as HTMLDivElement;
-    this.composerEmpty.set(!el.textContent?.trim());
+  canSendMessage(): boolean {
+    const dialog = this.selectedDialog();
+    return (!!this.composerValue().trim() || !!this.pendingAttachment())
+      && !this.isSending() && !!dialog && !dialog.isFrozen;
   }
 
-  applyBold(): void { document.execCommand('bold'); }
-  applyItalic(): void { document.execCommand('italic'); }
+  sendMessage(): void {
+    const content = this.composerValue().trim();
+    const attachment = this.pendingAttachment();
+    const dialog = this.selectedDialog();
+    if ((!content && !attachment) || !dialog || this.isSending()) return;
 
-  applyCode(): void {
-    const sel = window.getSelection();
-    if (!sel || sel.rangeCount === 0) return;
-    const range = sel.getRangeAt(0);
-    const code = document.createElement('code');
-    try { range.surroundContents(code); } catch { /* partial selection */ }
+    this.isSending.set(true);
+    void this.chat.sendDirectMessage(dialog.id, content, this.replyingTo()?.id ?? null, attachment?.id ?? null)
+      .then(() => {
+        this.composerValue.set('');
+        this.replyingTo.set(null);
+        this.pendingAttachment.set(null);
+      })
+      .finally(() => { this.isSending.set(false); });
   }
 
   handleComposerKeydown(event: KeyboardEvent): void {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
       this.sendMessage();
-      return;
     }
-    if (event.ctrlKey || event.metaKey) {
-      if (event.key === 'b') { event.preventDefault(); this.applyBold(); }
-      if (event.key === 'i') { event.preventDefault(); this.applyItalic(); }
-      if (event.key === '`') { event.preventDefault(); this.applyCode(); }
-    }
-  }
-
-  clearComposer(): void {
-    const el = this.composerEl()?.nativeElement;
-    if (el) el.innerHTML = '';
-    this.composerEmpty.set(true);
-  }
-
-  onPaste(event: ClipboardEvent): void {
-    const file = event.clipboardData?.files[0];
-    if (file) {
-      event.preventDefault();
-      this.uploadFile(file);
-      return;
-    }
-    const text = event.clipboardData?.getData('text/plain');
-    if (text) { event.preventDefault(); document.execCommand('insertText', false, text); }
   }
 
   startReply(msg: DialogMessageDto): void {
     this.replyingTo.set(msg);
-    setTimeout(() => this.composerEl()?.nativeElement.focus(), 0);
   }
 
   cancelReply(): void { this.replyingTo.set(null); }
@@ -135,26 +126,6 @@ export class DirectMessagesComponent {
     return this.sanitizer.bypassSecurityTrustHtml(parseInlineMarkdown(content));
   }
 
-  canSendMessage(): boolean {
-    return !this.composerEmpty() && !this.isSending();
-  }
-
-  sendMessage(): void {
-    const content = serializeToMarkdown(this.composerEl()?.nativeElement.innerHTML ?? '');
-    const attachment = this.pendingAttachment();
-    const dialog = this.selectedDialog();
-    if ((!content && !attachment) || !dialog || this.isSending()) return;
-
-    this.isSending.set(true);
-    void this.chat.sendDirectMessage(dialog.id, content, this.replyingTo()?.id ?? null, attachment?.id ?? null)
-      .then(() => {
-        this.clearComposer();
-        this.replyingTo.set(null);
-        this.pendingAttachment.set(null);
-      })
-      .finally(() => { this.isSending.set(false); });
-  }
-
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
@@ -162,9 +133,7 @@ export class DirectMessagesComponent {
     input.value = '';
   }
 
-  clearAttachment(): void {
-    this.pendingAttachment.set(null);
-  }
+  clearAttachment(): void { this.pendingAttachment.set(null); }
 
   downloadFile(attachmentId: string, fileName: string): void {
     this.filesApi.downloadFile(attachmentId, fileName);
@@ -187,12 +156,18 @@ export class DirectMessagesComponent {
       });
   }
 
-  private loadDialogs(): void {
+  private loadDialogs(autoSelectId: string | null): void {
     this.isLoadingDialogs.set(true);
     this.dialogsApi.getDialogs()
-      .pipe(finalize(() => this.isLoadingDialogs.set(false)))
+      .pipe(finalize(() => this.isLoadingDialogs.set(false)), takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: dialogs => this.dialogs.set(dialogs),
+        next: dialogs => {
+          this.dialogs.set(dialogs);
+          if (autoSelectId) {
+            const target = dialogs.find(d => d.id === autoSelectId);
+            if (target) this.selectDialog(target);
+          }
+        },
         error: () => this.errorMessage.set('Unable to load conversations.'),
       });
   }
@@ -200,7 +175,7 @@ export class DirectMessagesComponent {
   private loadMessages(dialogId: string): void {
     this.isLoadingMessages.set(true);
     this.dialogsApi.getMessages(dialogId)
-      .pipe(finalize(() => this.isLoadingMessages.set(false)))
+      .pipe(finalize(() => this.isLoadingMessages.set(false)), takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: messages => {
           this.messages.set([...messages].reverse());

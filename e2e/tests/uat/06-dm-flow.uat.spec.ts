@@ -1,19 +1,5 @@
 import { test, expect } from '../../fixtures/test-fixtures';
-import type { ApiHelpers } from '../../helpers/api.helpers';
-
-async function becomeFriends(
-  api: ApiHelpers,
-  senderToken: string,
-  receiverToken: string,
-  receiverUsername: string,
-  senderId: string,
-): Promise<void> {
-  await api.sendFriendRequest(senderToken, receiverUsername, 'UAT DM setup');
-  const requests = await api.getFriendRequests(receiverToken);
-  const request = requests.find(r => r.senderId === senderId);
-  if (!request?.id) throw new Error('Friend request not found');
-  await api.acceptFriendRequest(receiverToken, request.id);
-}
+import { becomeFriends } from '../../helpers/friends.helpers';
 
 test.describe('UAT: Direct messaging UX', () => {
   test('friends can exchange a DM through the browser UI and it persists in history', async ({

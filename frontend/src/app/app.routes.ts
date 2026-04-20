@@ -74,6 +74,10 @@ export const routes: Routes = [
         component: RoomInvitationsComponent,
       },
       {
+        path: 'messages',
+        component: DirectMessagesComponent,
+      },
+      {
         path: 'messages/:id',
         component: DirectMessagesComponent,
       },

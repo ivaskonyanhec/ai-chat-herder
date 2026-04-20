@@ -3,6 +3,7 @@ import { signal } from '@angular/core';
 import { of } from 'rxjs';
 import { describe, it, expect, vi } from 'vitest';
 import { BrowserModule } from '@angular/platform-browser';
+import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { DirectMessagesComponent } from './direct-messages';
 import { AuthSessionService } from '../../../core/auth/auth-session.service';
 import { DialogsApiService } from '../../../core/dialogs/dialogs-api.service';
@@ -10,7 +11,6 @@ import { ChatService } from '../../../core/signalr/chat.service';
 import { FilesApiService } from '../../../core/files/files-api.service';
 import { NotificationsApiService } from '../../../core/notifications/notifications-api.service';
 import { UnreadService } from '../../../core/signalr/unread.service';
-import { PresenceService } from '../../../core/signalr/presence.service';
 import type { DialogDto } from '../../../core/dialogs/dialogs.models';
 
 const mockDialog = (id: string): DialogDto => ({
@@ -22,20 +22,20 @@ const mockDialog = (id: string): DialogDto => ({
   createdAt: new Date().toISOString(),
 });
 
-function buildTestBed(presenceOverride?: Partial<{ joinDialog: ReturnType<typeof vi.fn>; leaveDialog: ReturnType<typeof vi.fn> }>) {
-  const joinDialog  = presenceOverride?.joinDialog  ?? vi.fn().mockResolvedValue(undefined);
-  const leaveDialog = presenceOverride?.leaveDialog ?? vi.fn().mockResolvedValue(undefined);
+function buildTestBed(chatOverride?: Partial<{ joinDialog: ReturnType<typeof vi.fn>; leaveDialog: ReturnType<typeof vi.fn> }>) {
+  const joinDialog  = chatOverride?.joinDialog  ?? vi.fn().mockResolvedValue(undefined);
+  const leaveDialog = chatOverride?.leaveDialog ?? vi.fn().mockResolvedValue(undefined);
 
   TestBed.configureTestingModule({
     imports: [BrowserModule, DirectMessagesComponent],
     providers: [
       { provide: AuthSessionService,      useValue: { user: signal(null) } },
       { provide: DialogsApiService,       useValue: { getDialogs: () => of([]), getMessages: () => of([]) } },
-      { provide: ChatService,             useValue: { lastDmEvent: signal(null), joinDialog: vi.fn().mockResolvedValue(undefined), leaveDialog: vi.fn().mockResolvedValue(undefined) } },
+      { provide: ChatService,             useValue: { lastDmEvent: signal(null), joinDialog, leaveDialog } },
       { provide: FilesApiService,         useValue: { uploadFile: () => of(), downloadFile: () => {} } },
       { provide: NotificationsApiService, useValue: { markDialogRead: () => of(void 0) } },
       { provide: UnreadService,           useValue: { setCount: vi.fn() } },
-      { provide: PresenceService,         useValue: { joinDialog, leaveDialog } },
+      { provide: ActivatedRoute,          useValue: { paramMap: of(convertToParamMap({})) } },
     ],
   });
   return { joinDialog, leaveDialog };
@@ -48,7 +48,7 @@ describe('DirectMessagesComponent', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('calls joinDialog when selecting a dialog', () => {
+  it('calls ChatService.joinDialog when selecting a dialog', () => {
     const { joinDialog } = buildTestBed();
     const fixture = TestBed.createComponent(DirectMessagesComponent);
     fixture.detectChanges();
@@ -58,7 +58,7 @@ describe('DirectMessagesComponent', () => {
     expect(joinDialog).toHaveBeenCalledWith('dialog-1');
   });
 
-  it('calls leaveDialog on previous dialog when switching', () => {
+  it('calls ChatService.leaveDialog on previous dialog when switching', () => {
     const { joinDialog, leaveDialog } = buildTestBed();
     const fixture = TestBed.createComponent(DirectMessagesComponent);
     fixture.detectChanges();
@@ -80,5 +80,39 @@ describe('DirectMessagesComponent', () => {
     buildTestBed();
     const fixture = TestBed.createComponent(DirectMessagesComponent);
     expect(fixture.componentInstance.isLoadingDialogs()).toBe(false);
+  });
+
+  it('canSendMessage returns false when composer is empty', () => {
+    buildTestBed();
+    const fixture = TestBed.createComponent(DirectMessagesComponent);
+    fixture.componentInstance.selectDialog(mockDialog('dialog-1'));
+    fixture.componentInstance.composerValue.set('');
+    expect(fixture.componentInstance.canSendMessage()).toBe(false);
+  });
+
+  it('canSendMessage returns false when dialog is frozen', () => {
+    buildTestBed();
+    const fixture = TestBed.createComponent(DirectMessagesComponent);
+    const frozen: DialogDto = { ...mockDialog('dialog-frozen'), isFrozen: true };
+    fixture.componentInstance.selectDialog(frozen);
+    fixture.componentInstance.composerValue.set('hello');
+    expect(fixture.componentInstance.canSendMessage()).toBe(false);
+  });
+
+  it('canSendMessage returns true when composer has text and dialog is not frozen', () => {
+    buildTestBed();
+    const fixture = TestBed.createComponent(DirectMessagesComponent);
+    fixture.componentInstance.selectDialog(mockDialog('dialog-1'));
+    fixture.componentInstance.composerValue.set('hello');
+    expect(fixture.componentInstance.canSendMessage()).toBe(true);
+  });
+
+  it('canSendMessage returns true when attachment is pending and composer is empty', () => {
+    buildTestBed();
+    const fixture = TestBed.createComponent(DirectMessagesComponent);
+    fixture.componentInstance.selectDialog(mockDialog('dialog-1'));
+    fixture.componentInstance.composerValue.set('');
+    fixture.componentInstance.pendingAttachment.set({ id: 'att-1', fileName: 'file.png', contentType: 'image/png', sizeBytes: 1024, comment: null });
+    expect(fixture.componentInstance.canSendMessage()).toBe(true);
   });
 });
