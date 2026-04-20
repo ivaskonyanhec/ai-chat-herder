@@ -4,14 +4,6 @@ Format: `[Timestamp] | Task | Reasoning | Changes`
 
 ---
 
-## 2026-04-20 — T205 Sidebar Redesign, Navbar Avatar Fix, Icon Picker
-
----
-
-`[2026-04-20 T205]` | **Sidebar redesign + navbar avatar fix + predefined icon picker** | Sidebar collapsed state showed generic icons; navbar used broken `<img src>` for auth-gated `/api/files/{id}` URLs; no avatar icon picker existed | Added shared `AvatarComponent` (auth-aware blob fetch, `icon:*` scheme, initials fallback); fixed navbar avatar; widened mini-sidebar to `w-16` with colored initials circles for rooms; added per-item sidebar hide (`hiddenSidebarItems` signal + localStorage); added 12-icon picker in profile settings storing `icon:<name>` via existing `PATCH /api/users/me`; added `data-testid` contracts for all new elements; 5 Angular unit tests (AvatarComponent) + 5 workspace-shell unit tests + 3 e2e tests + 3 UAT tests
-
----
-
 ## 2026-04-18 — Architecture Planning Session
 
 ---
