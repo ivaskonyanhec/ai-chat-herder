@@ -12,7 +12,11 @@ test.describe('Avatar icons & sidebar hide', () => {
     await userAPage.click('[data-testid="avatar-icon-picker-btn"]');
 
     await expect(userAPage.locator('[data-testid="icon-picker"]')).toBeVisible({ timeout: 3_000 });
+    const patchDone = userAPage.waitForResponse(
+      r => r.url().includes('/api/users/me') && r.request().method() === 'PATCH'
+    );
     await userAPage.click('[data-testid="icon-option-star"]');
+    await patchDone;
 
     // Picker closes after selection
     await expect(userAPage.locator('[data-testid="icon-picker"]')).toBeHidden({ timeout: 5_000 });
@@ -50,7 +54,7 @@ test.describe('Avatar icons & sidebar hide', () => {
 
     // Hover the room item to reveal the hide button (uses CSS group-hover)
     await userAPage.hover(`[data-testid="public-room-${room.id}"]`);
-    await expect(userAPage.locator(`[data-testid="hide-room-${room.id}"]`)).toBeVisible({ timeout: 2_000 });
+    await expect(userAPage.locator(`[data-testid="hide-room-${room.id}"]`)).toBeVisible({ timeout: 3_000 });
     await userAPage.click(`[data-testid="hide-room-${room.id}"]`);
 
     // Room disappears from the sidebar

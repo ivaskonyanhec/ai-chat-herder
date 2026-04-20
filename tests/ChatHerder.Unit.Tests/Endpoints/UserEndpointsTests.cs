@@ -170,7 +170,7 @@ public sealed class UserEndpointsTests
     }
 
     [Fact]
-    public async Task PatchMe_Returns400_WhenAvatarUrlIsIconScheme()
+    public async Task PatchMe_ReturnsOk_WhenAvatarUrlIsIconScheme()
     {
         await using var db = BuildContext();
         var user = new User { Username = "alice", Email = "alice@test.com", PasswordHash = "x" };
@@ -180,8 +180,7 @@ public sealed class UserEndpointsTests
         var req = new UpdateMeRequest("icon:star");
         var result = await UserEndpointsTestHelper.PatchMe(req, MakePrincipal(user.Id), db, CancellationToken.None);
 
-        var statusCode = result.GetType().GetProperty("StatusCode")?.GetValue(result);
-        Assert.Equal(400, statusCode);
+        Assert.IsType<Ok<UserDto>>(result);
     }
 
     [Fact]
