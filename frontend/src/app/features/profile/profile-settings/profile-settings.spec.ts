@@ -17,6 +17,9 @@ class StubAuthComponent {}
 
 const stubUser: User = { id: 'u1', username: 'alice', email: 'alice@example.com', avatarUrl: null };
 
+let mockUsersApi: { getMe: ReturnType<typeof vi.fn>; patchMe: ReturnType<typeof vi.fn> };
+let mockAuthSession: { user: ReturnType<typeof signal<User | null>>; clearSession: ReturnType<typeof vi.fn>; updateAvatarUrl: ReturnType<typeof vi.fn> };
+
 function setup() {
   const getMe = vi.fn().mockReturnValue(of(stubUser));
   const changePassword = vi.fn();
@@ -34,10 +37,10 @@ function setup() {
       { provide: AuthApiService, useValue: { changePassword, deleteAccount } },
       {
         provide: AuthSessionService,
-        useValue: { user: signal<User | null>(stubUser), clearSession },
+        useValue: { user: signal<User | null>(stubUser), clearSession, updateAvatarUrl: vi.fn() },
       },
       { provide: UsersApiService, useValue: { getMe, patchMe } },
-      { provide: FilesApiService, useValue: { uploadFile, getFileUrl: (id: string) => `/api/files/${id}` } },
+      { provide: FilesApiService, useValue: { uploadFile, getFileUrl: (id: string) => `/api/files/${id}`, getFileBlob: vi.fn().mockReturnValue(of(new Blob())) } },
     ],
   });
 
@@ -211,6 +214,74 @@ describe('ProfileSettingsComponent', () => {
 
       expect(component.avatarError()).toBe('Avatar upload failed. Please try again.');
       expect(component.isUploadingAvatar()).toBe(false);
+    });
+  });
+
+  describe('selectIcon', () => {
+    beforeEach(() => {
+      mockUsersApi = {
+        getMe: vi.fn().mockReturnValue(of(stubUser)),
+        patchMe: vi.fn().mockReturnValue(of({ ...stubUser, avatarUrl: 'icon:star' })),
+      };
+      mockAuthSession = {
+        user: signal<User | null>(stubUser),
+        clearSession: vi.fn(),
+        updateAvatarUrl: vi.fn(),
+      };
+
+      TestBed.configureTestingModule({
+        imports: [ProfileSettingsComponent],
+        providers: [
+          provideHttpClient(),
+          provideHttpClientTesting(),
+          provideRouter([{ path: 'auth', component: StubAuthComponent }]),
+          { provide: AuthApiService, useValue: { changePassword: vi.fn(), deleteAccount: vi.fn() } },
+          { provide: AuthSessionService, useValue: mockAuthSession },
+          { provide: UsersApiService, useValue: mockUsersApi },
+          { provide: FilesApiService, useValue: { uploadFile: vi.fn(), getFileUrl: (id: string) => `/api/files/${id}`, getFileBlob: vi.fn().mockReturnValue(of(new Blob())) } },
+        ],
+      });
+    });
+
+    it('calls patchMe with icon:name URL', () => {
+      const fixture = TestBed.createComponent(ProfileSettingsComponent);
+      fixture.componentInstance.selectIcon('star');
+      expect(mockUsersApi.patchMe).toHaveBeenCalledWith('icon:star');
+    });
+
+    it('updates profile signal and closes picker on success', async () => {
+      const updated: User = { ...stubUser, avatarUrl: 'icon:star' };
+      mockUsersApi.patchMe.mockReturnValue(of(updated));
+      const fixture = TestBed.createComponent(ProfileSettingsComponent);
+      fixture.componentInstance.showIconPicker.set(true);
+      fixture.componentInstance.selectIcon('star');
+      await fixture.whenStable();
+      expect(fixture.componentInstance.profile()?.avatarUrl).toBe('icon:star');
+      expect(fixture.componentInstance.showIconPicker()).toBe(false);
+    });
+
+    it('calls authSession.updateAvatarUrl with icon URL on success', async () => {
+      const updated: User = { ...stubUser, avatarUrl: 'icon:bolt' };
+      mockUsersApi.patchMe.mockReturnValue(of(updated));
+      const fixture = TestBed.createComponent(ProfileSettingsComponent);
+      fixture.componentInstance.selectIcon('bolt');
+      await fixture.whenStable();
+      expect(mockAuthSession.updateAvatarUrl).toHaveBeenCalledWith('icon:bolt');
+    });
+
+    it('sets avatarError on patchMe failure', async () => {
+      mockUsersApi.patchMe.mockReturnValue(throwError(() => new Error('fail')));
+      const fixture = TestBed.createComponent(ProfileSettingsComponent);
+      fixture.componentInstance.selectIcon('star');
+      await fixture.whenStable();
+      expect(fixture.componentInstance.avatarError()).toBeTruthy();
+    });
+
+    it('does nothing when isUploadingAvatar is true', () => {
+      const fixture = TestBed.createComponent(ProfileSettingsComponent);
+      fixture.componentInstance.isUploadingAvatar.set(true);
+      fixture.componentInstance.selectIcon('star');
+      expect(mockUsersApi.patchMe).not.toHaveBeenCalled();
     });
   });
 });

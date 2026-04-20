@@ -7,11 +7,12 @@ import { AuthSessionService } from '../../../core/auth/auth-session.service';
 import { FilesApiService } from '../../../core/files/files-api.service';
 import { UsersApiService } from '../../../core/users/users-api.service';
 import type { User } from '../../../core/auth/auth.models';
+import { AvatarComponent } from '../../../shared/avatar/avatar.component';
 
 @Component({
   selector: 'app-profile-settings',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, AvatarComponent],
   templateUrl: './profile-settings.html',
   styleUrl: './profile-settings.scss',
 })
@@ -39,6 +40,14 @@ export class ProfileSettingsComponent {
 
   readonly isUploadingAvatar = signal(false);
   readonly avatarError = signal('');
+
+  readonly PREDEFINED_ICONS = [
+    'person', 'face', 'emoji_emotions', 'psychology',
+    'rocket_launch', 'star', 'bolt', 'favorite',
+    'pets', 'explore', 'palette', 'headphones',
+  ] as const;
+
+  readonly showIconPicker = signal(false);
 
   private objectAvatarUrl: string | null = null;
 
@@ -73,6 +82,27 @@ export class ProfileSettingsComponent {
         },
         error: () => {
           this.avatarError.set('Avatar upload failed. Please try again.');
+        },
+      });
+  }
+
+  selectIcon(iconName: string): void {
+    if (this.isUploadingAvatar()) return;
+    this.avatarError.set('');
+    this.isUploadingAvatar.set(true);
+    const url = `icon:${iconName}`;
+    this.usersApi.patchMe(url)
+      .pipe(finalize(() => this.isUploadingAvatar.set(false)))
+      .subscribe({
+        next: user => {
+          this.profile.set(user);
+          this.authSession.updateAvatarUrl(url);
+          this.revokeObjectAvatarUrl();
+          this.displayAvatarUrl.set(url);
+          this.showIconPicker.set(false);
+        },
+        error: () => {
+          this.avatarError.set('Failed to set icon. Please try again.');
         },
       });
   }
@@ -137,6 +167,11 @@ export class ProfileSettingsComponent {
   }
 
   private updateDisplayAvatar(avatarUrl: string | null): void {
+    if (avatarUrl?.startsWith('icon:')) {
+      this.revokeObjectAvatarUrl();
+      this.displayAvatarUrl.set(avatarUrl);
+      return;
+    }
     const attachmentId = this.getAttachmentId(avatarUrl);
     if (!attachmentId) {
       this.revokeObjectAvatarUrl();
