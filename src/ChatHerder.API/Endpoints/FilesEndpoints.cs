@@ -13,6 +13,30 @@ public static class FilesEndpoints
     private const long MaxImageBytes = 3L  * 1024 * 1024;  // 3 MB
     private const long MaxFileBytes  = 20L * 1024 * 1024;  // 20 MB
 
+    private static readonly HashSet<string> BlockedMimeTypes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "text/html",
+        "text/javascript",
+        "application/javascript",
+        "application/x-javascript",
+        "application/x-php",
+        "text/x-php",
+        "application/x-httpd-php",
+        "image/svg+xml",
+        "application/xml",
+        "text/xml",
+    };
+
+    private static readonly (byte[] Magic, int? Offset)[] ImageSignatures =
+    [
+        ([0xFF, 0xD8, 0xFF], null),                                         // JPEG
+        ([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A], null),         // PNG
+        ([0x47, 0x49, 0x46, 0x38], null),                                   // GIF87a/GIF89a
+        ([0x42, 0x4D], null),                                               // BMP
+        ([0x00, 0x00, 0x01, 0x00], null),                                   // ICO
+        ([0x52, 0x49, 0x46, 0x46], null),                                   // WebP (RIFF header)
+    ];
+
     public static RouteGroupBuilder MapFilesEndpoints(this RouteGroupBuilder group)
     {
         group.MapPost("/upload", UploadFile).RequireAuthorization().DisableAntiforgery();
@@ -43,10 +67,22 @@ public static class FilesEndpoints
         if (file is null)
             return Results.BadRequest(new { error = "No file provided." });
 
+        if (BlockedMimeTypes.Contains(file.ContentType))
+            return Results.BadRequest(new { error = $"File type '{file.ContentType}' is not permitted." });
+
         var isImage = file.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase);
         var limit   = isImage ? MaxImageBytes : MaxFileBytes;
         if (file.Length > limit)
             return Results.StatusCode(StatusCodes.Status413RequestEntityTooLarge);
+
+        if (isImage)
+        {
+            await using var readStream = file.OpenReadStream();
+            var header = new byte[16];
+            var read   = await readStream.ReadAsync(header.AsMemory(0, header.Length), ct);
+            if (!IsKnownImageSignature(header.AsSpan(0, read)))
+                return Results.BadRequest(new { error = "File content does not match the declared image type." });
+        }
 
         await using var stream = file.OpenReadStream();
         var relPath = await storage.SaveAsync(stream, file.FileName, ct);
@@ -67,6 +103,16 @@ public static class FilesEndpoints
             $"/api/files/{attachment.Id}",
             new AttachmentDto(attachment.Id, attachment.FileName, attachment.ContentType,
                               attachment.SizeBytes, attachment.Comment));
+    }
+
+    internal static bool IsKnownImageSignature(ReadOnlySpan<byte> header)
+    {
+        foreach (var (magic, _) in ImageSignatures)
+        {
+            if (header.Length >= magic.Length && header.StartsWith(magic))
+                return true;
+        }
+        return false;
     }
 
     private static async Task<IResult> GetFile(
@@ -110,7 +156,6 @@ public static class FilesEndpoints
         }
         else
         {
-            // Unlinked orphan — only the uploader may preview
             if (attachment.UploadedByUserId != callerId)
                 return Results.StatusCode(StatusCodes.Status403Forbidden);
         }

@@ -269,6 +269,89 @@ public sealed class FilesEndpointsTests
         var statusCode = result.GetType().GetProperty("StatusCode")?.GetValue(result);
         Assert.Equal(403, statusCode);
     }
+
+    [Theory]
+    [InlineData("text/html")]
+    [InlineData("application/javascript")]
+    [InlineData("text/javascript")]
+    [InlineData("application/x-php")]
+    [InlineData("image/svg+xml")]
+    [InlineData("application/x-httpd-php")]
+    public async Task UploadFile_Returns400_WhenMimeTypeIsBlocked(string contentType)
+    {
+        await using var db = BuildContext();
+        var storage = Substitute.For<IFileStorage>();
+        var file = MockFile(contentType, 1024L, "malicious.file");
+
+        var result = await FilesEndpointsHelper.UploadFile(file, null, Principal(Guid.NewGuid()), db, storage, CancellationToken.None);
+
+        var statusCode = result.GetType().GetProperty("StatusCode")?.GetValue(result);
+        Assert.Equal(400, statusCode);
+    }
+
+    [Fact]
+    public async Task UploadFile_Returns400_WhenContentTypeClaimsImageButMagicBytesDoNotMatch()
+    {
+        await using var db = BuildContext();
+        var storage = Substitute.For<IFileStorage>();
+
+        // File claims image/jpeg but first bytes are HTML — mismatch
+        var maliciousContent = "<html><script>alert(1)</script></html>"u8.ToArray();
+        var file = Substitute.For<IFormFile>();
+        file.ContentType.Returns("image/jpeg");
+        file.FileName.Returns("evil.jpg");
+        file.Length.Returns((long)maliciousContent.Length);
+        file.OpenReadStream().Returns(new MemoryStream(maliciousContent));
+
+        var result = await FilesEndpointsHelper.UploadFile(file, null, Principal(Guid.NewGuid()), db, storage, CancellationToken.None);
+
+        var statusCode = result.GetType().GetProperty("StatusCode")?.GetValue(result);
+        Assert.Equal(400, statusCode);
+    }
+
+    [Fact]
+    public async Task UploadFile_Returns201_WhenImageHasValidJpegMagicBytes()
+    {
+        await using var db = BuildContext();
+        var storage = Substitute.For<IFileStorage>();
+        storage.SaveAsync(Arg.Any<Stream>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+               .Returns("abc/photo.jpg");
+
+        // JPEG magic: FF D8 FF
+        var jpegMagic = new byte[] { 0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x01, 0x01, 0x00, 0x00, 0x01 };
+        var file = Substitute.For<IFormFile>();
+        file.ContentType.Returns("image/jpeg");
+        file.FileName.Returns("photo.jpg");
+        file.Length.Returns((long)jpegMagic.Length);
+        file.OpenReadStream().Returns(new MemoryStream(jpegMagic));
+
+        var result = await FilesEndpointsHelper.UploadFile(file, null, Principal(Guid.NewGuid()), db, storage, CancellationToken.None);
+
+        var statusCode = result.GetType().GetProperty("StatusCode")?.GetValue(result);
+        Assert.Equal(201, statusCode);
+    }
+
+    [Fact]
+    public async Task UploadFile_Returns201_WhenImageHasValidPngMagicBytes()
+    {
+        await using var db = BuildContext();
+        var storage = Substitute.For<IFileStorage>();
+        storage.SaveAsync(Arg.Any<Stream>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+               .Returns("abc/image.png");
+
+        // PNG magic: 89 50 4E 47 0D 0A 1A 0A
+        var pngMagic = new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52 };
+        var file = Substitute.For<IFormFile>();
+        file.ContentType.Returns("image/png");
+        file.FileName.Returns("image.png");
+        file.Length.Returns((long)pngMagic.Length);
+        file.OpenReadStream().Returns(new MemoryStream(pngMagic));
+
+        var result = await FilesEndpointsHelper.UploadFile(file, null, Principal(Guid.NewGuid()), db, storage, CancellationToken.None);
+
+        var statusCode = result.GetType().GetProperty("StatusCode")?.GetValue(result);
+        Assert.Equal(201, statusCode);
+    }
 }
 
 internal static class FilesEndpointsHelper
