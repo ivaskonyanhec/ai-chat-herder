@@ -63,6 +63,25 @@ export class WorkspaceShellComponent implements OnInit, OnDestroy {
   readonly pendingInvitationCount = signal(0);
   readonly searchQuery = signal('');
 
+  readonly hiddenSidebarItems = signal<string[]>(
+    JSON.parse(localStorage.getItem('sidebar_hidden') ?? '[]') as string[]
+  );
+
+  readonly visiblePublicRooms = computed(() => {
+    const hidden = this.hiddenSidebarItems();
+    return this.publicRooms().filter(r => !hidden.includes('room:' + r.id));
+  });
+
+  readonly visiblePrivateRooms = computed(() => {
+    const hidden = this.hiddenSidebarItems();
+    return this.privateRooms().filter(r => !hidden.includes('room:' + r.id));
+  });
+
+  readonly visibleFriends = computed(() => {
+    const hidden = this.hiddenSidebarItems();
+    return this.friends().filter(f => !hidden.includes('contact:' + f.userId));
+  });
+
   constructor() {
     effect(() => {
       if (this.presence.addedToRoom()) this.loadRooms();
@@ -128,6 +147,19 @@ export class WorkspaceShellComponent implements OnInit, OnDestroy {
       localStorage.setItem('sidebar_collapsed', String(next));
       return next;
     });
+  }
+
+  toggleHideItem(key: string): void {
+    this.hiddenSidebarItems.update(items => {
+      const next = items.includes(key) ? items.filter(k => k !== key) : [...items, key];
+      localStorage.setItem('sidebar_hidden', JSON.stringify(next));
+      return next;
+    });
+  }
+
+  resetHiddenItems(): void {
+    this.hiddenSidebarItems.set([]);
+    localStorage.removeItem('sidebar_hidden');
   }
 
   openCreateRoom(): void {

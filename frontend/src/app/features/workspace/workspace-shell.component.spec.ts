@@ -12,9 +12,10 @@ import { UnreadService } from '../../core/signalr/unread.service';
 import { NotificationsApiService } from '../../core/notifications/notifications-api.service';
 import { RoomsApiService } from '../../core/rooms/rooms-api.service';
 import { FriendsApiService } from '../../core/friends/friends-api.service';
+import { InvitationsApiService } from '../../core/invitations/invitations-api.service';
+import { FilesApiService } from '../../core/files/files-api.service';
 import type { RoomDto } from '../../core/rooms/rooms.models';
 import type { RoomInvitationReceivedEvent } from '../../core/signalr/hub.models';
-import { InvitationsApiService } from '../../core/invitations/invitations-api.service';
 
 type HubStub = { connect: ReturnType<typeof vi.fn>; disconnect: ReturnType<typeof vi.fn>; presenceMap?: unknown; addedToRoom?: unknown; invitationReceived?: unknown };
 type AuthSessionStub = { user: Signal<null>; accessToken?: Signal<null>; clearSession: ReturnType<typeof vi.fn> };
@@ -449,5 +450,68 @@ describe('WorkspaceShellComponent', () => {
       component.toggleSidebar();
       expect(localStorage.getItem('sidebar_collapsed')).toBe('false');
     });
+  });
+});
+
+function buildHideTestBed() {
+  TestBed.configureTestingModule({
+    imports: [WorkspaceShellComponent],
+    providers: [
+      provideRouter([]),
+      { provide: AuthSessionService, useValue: { user: signal(null), isAuthenticated: signal(true), updateAvatarUrl: vi.fn() } },
+      { provide: AuthApiService, useValue: { logout: () => of(void 0) } },
+      { provide: PresenceService, useValue: { connect: vi.fn(), disconnect: vi.fn(), presenceMap: signal(new Map()), addedToRoom: signal(null), invitationReceived: signal(null) } },
+      { provide: ChatService, useValue: { connect: vi.fn(), disconnect: vi.fn(), lastDmEvent: signal(null) } },
+      { provide: UnreadService, useValue: { unreadCounts: signal({}), getCount: () => 0, setCount: vi.fn(), clearAll: vi.fn() } },
+      { provide: NotificationsApiService, useValue: { getUnreadCounts: () => of([]) } },
+      { provide: RoomsApiService, useValue: { getMyRooms: () => of([]) } },
+      { provide: FriendsApiService, useValue: { getFriends: () => of([]) } },
+      { provide: InvitationsApiService, useValue: { getMyInvitations: () => of([]) } },
+      { provide: FilesApiService, useValue: { getFileBlob: () => of(new Blob()) } },
+    ],
+  });
+}
+
+describe('WorkspaceShellComponent — hide logic', () => {
+  beforeEach(() => {
+    localStorage.removeItem('sidebar_hidden');
+  });
+
+  it('starts with no hidden items', () => {
+    buildHideTestBed();
+    const fixture = TestBed.createComponent(WorkspaceShellComponent);
+    expect(fixture.componentInstance.hiddenSidebarItems()).toEqual([]);
+  });
+
+  it('toggleHideItem adds a key to hidden items', () => {
+    buildHideTestBed();
+    const comp = TestBed.createComponent(WorkspaceShellComponent).componentInstance;
+    comp.toggleHideItem('room:abc');
+    expect(comp.hiddenSidebarItems()).toContain('room:abc');
+  });
+
+  it('toggleHideItem removes a key that is already hidden', () => {
+    buildHideTestBed();
+    const comp = TestBed.createComponent(WorkspaceShellComponent).componentInstance;
+    comp.toggleHideItem('room:abc');
+    comp.toggleHideItem('room:abc');
+    expect(comp.hiddenSidebarItems()).not.toContain('room:abc');
+  });
+
+  it('resetHiddenItems clears all hidden keys', () => {
+    buildHideTestBed();
+    const comp = TestBed.createComponent(WorkspaceShellComponent).componentInstance;
+    comp.toggleHideItem('room:abc');
+    comp.toggleHideItem('contact:xyz');
+    comp.resetHiddenItems();
+    expect(comp.hiddenSidebarItems()).toEqual([]);
+  });
+
+  it('persists hidden items to localStorage', () => {
+    buildHideTestBed();
+    const comp = TestBed.createComponent(WorkspaceShellComponent).componentInstance;
+    comp.toggleHideItem('room:def');
+    const stored = JSON.parse(localStorage.getItem('sidebar_hidden') ?? '[]');
+    expect(stored).toContain('room:def');
   });
 });
