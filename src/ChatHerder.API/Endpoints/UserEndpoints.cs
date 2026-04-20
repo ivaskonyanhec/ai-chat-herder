@@ -58,9 +58,15 @@ public static class UserEndpoints
             if (req.AvatarUrl.Length > 2048)
                 return Results.BadRequest(new { error = "Avatar URL must be ≤ 2048 characters." });
 
-            if (!Uri.TryCreate(req.AvatarUrl, UriKind.Absolute, out var uri) ||
-                !string.Equals(uri.Scheme, "https", StringComparison.OrdinalIgnoreCase))
-                return Results.BadRequest(new { error = "Avatar URL must use the HTTPS scheme." });
+            // Allow: /api/files/{id} relative paths (uploaded avatar — internally trusted)
+            // Allow: https:// absolute URLs (external CDN avatar)
+            // Reject: everything else (javascript:, data:, http:, bare strings, etc.)
+            var isAllowedRelative = req.AvatarUrl.StartsWith("/api/files/", StringComparison.OrdinalIgnoreCase);
+            var isAllowedAbsolute = Uri.TryCreate(req.AvatarUrl, UriKind.Absolute, out var uri) &&
+                                    string.Equals(uri.Scheme, "https", StringComparison.OrdinalIgnoreCase);
+
+            if (!isAllowedRelative && !isAllowedAbsolute)
+                return Results.BadRequest(new { error = "Avatar URL must be an HTTPS URL or an uploaded file path (/api/files/...)." });
 
             user.AvatarUrl = req.AvatarUrl;
         }

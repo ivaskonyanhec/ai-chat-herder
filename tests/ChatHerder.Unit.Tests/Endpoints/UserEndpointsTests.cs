@@ -105,7 +105,22 @@ public sealed class UserEndpointsTests
         db.Users.Add(user);
         await db.SaveChangesAsync();
 
-        var req = new UpdateMeRequest("http://example.com/avatar.png");
+        var req = new UpdateMeRequest("http://evil.com/img.png");
+        var result = await UserEndpointsTestHelper.PatchMe(req, MakePrincipal(user.Id), db, CancellationToken.None);
+
+        var statusCode = result.GetType().GetProperty("StatusCode")?.GetValue(result);
+        Assert.Equal(400, statusCode);
+    }
+
+    [Fact]
+    public async Task PatchMe_Returns400_WhenAvatarUrlIsPlainBadValue()
+    {
+        await using var db = BuildContext();
+        var user = new User { Username = "alice", Email = "alice@test.com", PasswordHash = "x" };
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
+
+        var req = new UpdateMeRequest("badvalue");
         var result = await UserEndpointsTestHelper.PatchMe(req, MakePrincipal(user.Id), db, CancellationToken.None);
 
         var statusCode = result.GetType().GetProperty("StatusCode")?.GetValue(result);
@@ -124,6 +139,49 @@ public sealed class UserEndpointsTests
         var result = await UserEndpointsTestHelper.PatchMe(req, MakePrincipal(user.Id), db, CancellationToken.None);
 
         Assert.IsType<Ok<UserDto>>(result);
+    }
+
+    [Fact]
+    public async Task PatchMe_ReturnsOk_WhenAvatarUrlIsInternalFilePath()
+    {
+        await using var db = BuildContext();
+        var user = new User { Username = "alice", Email = "alice@test.com", PasswordHash = "x" };
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
+
+        var req = new UpdateMeRequest("/api/files/some-id");
+        var result = await UserEndpointsTestHelper.PatchMe(req, MakePrincipal(user.Id), db, CancellationToken.None);
+
+        Assert.IsType<Ok<UserDto>>(result);
+    }
+
+    [Fact]
+    public async Task PatchMe_ReturnsOk_WhenAvatarUrlIsRelativeFilePath()
+    {
+        await using var db = BuildContext();
+        var user = new User { Username = "alice", Email = "alice@test.com", PasswordHash = "x" };
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
+
+        var req = new UpdateMeRequest($"/api/files/{Guid.NewGuid()}");
+        var result = await UserEndpointsTestHelper.PatchMe(req, MakePrincipal(user.Id), db, CancellationToken.None);
+
+        Assert.IsType<Ok<UserDto>>(result);
+    }
+
+    [Fact]
+    public async Task PatchMe_Returns400_WhenAvatarUrlIsIconScheme()
+    {
+        await using var db = BuildContext();
+        var user = new User { Username = "alice", Email = "alice@test.com", PasswordHash = "x" };
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
+
+        var req = new UpdateMeRequest("icon:star");
+        var result = await UserEndpointsTestHelper.PatchMe(req, MakePrincipal(user.Id), db, CancellationToken.None);
+
+        var statusCode = result.GetType().GetProperty("StatusCode")?.GetValue(result);
+        Assert.Equal(400, statusCode);
     }
 
     [Fact]
