@@ -1,0 +1,45 @@
+<!-- frontend/src/app/shared/avatar/avatar.component.html -->
+<div class="rounded-full overflow-hidden flex items-center justify-center shrink-0 select-none"
+     [style.width.px]="sizePx()"
+     [style.height.px]="sizePx()">
+  @switch (mode()) {
+    @case ('initials') {
+      <div data-testid="avatar-initials"
+           class="w-full h-full flex items-center justify-center text-white font-bold"
+           [style.background-color]="bgColor()"
+           [style.font-size.px]="textSizePx()">
+        {{ initials() }}
+      </div>
+    }
+    @case ('icon') {
+      <div class="w-full h-full flex items-center justify-center text-white"
+           [style.background-color]="bgColor()">
+        <span class="material-symbols-outlined"
+              data-testid="avatar-icon"
+              [style.font-size.px]="textSizePx()">{{ iconName() }}</span>
+      </div>
+    }
+    @case ('blob') {
+      @if (objectUrl()) {
+        <img data-testid="avatar-img"
+             [src]="objectUrl()!"
+             [alt]="username()"
+             class="w-full h-full object-cover" />
+      } @else {
+        <!-- loading: show initials until blob resolves -->
+        <div data-testid="avatar-initials"
+             class="w-full h-full flex items-center justify-center text-white font-bold"
+             [style.background-color]="bgColor()"
+             [style.font-size.px]="textSizePx()">
+          {{ initials() }}
+        </div>
+      }
+    }
+    @case ('img') {
+      <img data-testid="avatar-img"
+           [src]="avatarUrl()!"
+           [alt]="username()"
+           class="w-full h-full object-cover" />
+    }
+  }
+</div>
