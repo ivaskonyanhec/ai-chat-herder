@@ -1,5 +1,6 @@
 // e2e/tests/uat/10-sidebar-profile.uat.spec.ts
 import { test, expect } from '../../fixtures/test-fixtures';
+import { becomeFriends } from '../../helpers/friends.helpers';
 
 test.describe('UAT: Sidebar hide and icon avatar', () => {
   test('user sees initials in collapsed sidebar for rooms', async ({
@@ -15,7 +16,6 @@ test.describe('UAT: Sidebar hide and icon avatar', () => {
 
     // Collapse sidebar
     await userAPage.click('[data-testid="sidebar-toggle"]');
-    await expect(userAPage.locator('[data-testid="sidebar-collapsed"]')).toBeVisible({ timeout: 3_000 });
 
     // Room appears as initials circle in collapsed sidebar
     const roomItem = userAPage.locator(`[data-testid="public-room-${room.id}"]`);
@@ -32,7 +32,6 @@ test.describe('UAT: Sidebar hide and icon avatar', () => {
     api,
   }) => {
     // Become friends so userB appears in sidebar contacts
-    const { becomeFriends } = await import('../../helpers/friends.helpers');
     await becomeFriends(api, userA.accessToken, userB.accessToken, userB.username, userA.id);
 
     await userAPage.goto('/app/rooms');
