@@ -31,7 +31,7 @@ public sealed class FilesEndpointsTests
         file.ContentType.Returns(contentType);
         file.Length.Returns(sizeBytes);
         file.FileName.Returns(name);
-        file.OpenReadStream().Returns(new MemoryStream(new byte[sizeBytes > 100 ? 100 : (int)sizeBytes]));
+        file.OpenReadStream().Returns(_ => new MemoryStream(new byte[sizeBytes > 100 ? 100 : (int)sizeBytes]));
         return file;
     }
 

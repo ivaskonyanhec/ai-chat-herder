@@ -75,16 +75,17 @@ public static class FilesEndpoints
         if (file.Length > limit)
             return Results.StatusCode(StatusCodes.Status413RequestEntityTooLarge);
 
+        await using var stream = file.OpenReadStream();
+
         if (isImage)
         {
-            await using var readStream = file.OpenReadStream();
             var header = new byte[16];
-            var read   = await readStream.ReadAsync(header.AsMemory(0, header.Length), ct);
+            var read   = await stream.ReadAsync(header.AsMemory(0, header.Length), ct);
             if (!IsKnownImageSignature(header.AsSpan(0, read)))
                 return Results.BadRequest(new { error = "File content does not match the declared image type." });
+            if (stream.CanSeek) stream.Position = 0;
         }
 
-        await using var stream = file.OpenReadStream();
         var relPath = await storage.SaveAsync(stream, file.FileName, ct);
 
         var attachment = new Attachment
