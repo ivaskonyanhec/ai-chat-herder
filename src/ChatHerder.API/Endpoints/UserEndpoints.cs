@@ -27,6 +27,9 @@ public static class UserEndpoints
         CancellationToken ct)
         => SearchUsers(q, limit, p, db, ct);
 
+    internal static Task<IResult> GetByUsernameInternal(string name, AppDbContext db, CancellationToken ct)
+        => GetByUsername(name, db, ct);
+
     private static async Task<IResult> GetMe(
         ClaimsPrincipal principal,
         AppDbContext db,
@@ -69,7 +72,7 @@ public static class UserEndpoints
         var user = await db.Users
             .FirstOrDefaultAsync(u => u.Username == name && u.DeletedAt == null, ct);
         if (user is null) return Results.NotFound();
-        return Results.Ok(new UserDto(user.Id, user.Username, user.Email, user.AvatarUrl));
+        return Results.Ok(new UserSearchResultDto(user.Id, user.Username, user.AvatarUrl));
     }
 
     private static async Task<IResult> SearchUsers(

@@ -34,6 +34,8 @@ export class AuthSessionService {
       if (!s?.user) return s;
       return { ...s, user: { ...s.user, avatarUrl } };
     });
+    const current = this.sessionState();
+    if (current) this.persistSession(current, current.keepSignedIn ?? false);
   }
 
   isAccessTokenExpired(skewMs = 30_000): boolean {

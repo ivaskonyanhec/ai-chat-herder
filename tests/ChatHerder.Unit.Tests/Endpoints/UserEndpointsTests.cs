@@ -84,6 +84,32 @@ public sealed class UserEndpointsTests
         var ok = Assert.IsType<Ok<List<UserSearchResultDto>>>(result);
         Assert.Equal(["Alice", "alina"], ok.Value!.Select(u => u.Username));
     }
+
+    [Fact]
+    public async Task GetByUsername_ReturnsPublicDto_WithoutEmail()
+    {
+        await using var db = BuildContext();
+        var user = new User { Username = "alice", Email = "alice@secret.com", PasswordHash = "x" };
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
+
+        var result = await UserEndpointsTestHelper.GetByUsername("alice", db, CancellationToken.None);
+
+        var ok = Assert.IsType<Ok<UserSearchResultDto>>(result);
+        Assert.Equal("alice", ok.Value!.Username);
+        Assert.Equal(user.Id, ok.Value.Id);
+    }
+
+    [Fact]
+    public async Task GetByUsername_Returns404_WhenUserDoesNotExist()
+    {
+        await using var db = BuildContext();
+
+        var result = await UserEndpointsTestHelper.GetByUsername("nobody", db, CancellationToken.None);
+
+        var statusCode = result.GetType().GetProperty("StatusCode")?.GetValue(result);
+        Assert.Equal(404, statusCode);
+    }
 }
 
 internal static class UserEndpointsTestHelper
@@ -96,4 +122,7 @@ internal static class UserEndpointsTestHelper
 
     public static Task<IResult> SearchUsers(string q, int limit, ClaimsPrincipal p, AppDbContext db, CancellationToken ct)
         => ChatHerder.API.Endpoints.UserEndpoints.SearchUsersInternal(q, limit, p, db, ct);
+
+    public static Task<IResult> GetByUsername(string name, AppDbContext db, CancellationToken ct)
+        => ChatHerder.API.Endpoints.UserEndpoints.GetByUsernameInternal(name, db, ct);
 }
