@@ -174,6 +174,13 @@ export class ApiHelpers {
     await ctx.dispose();
   }
 
+  async joinRoom(accessToken: string, roomId: string): Promise<void> {
+    const ctx = await this.authContext(accessToken);
+    const res = await ctx.post(`/api/rooms/${roomId}/join`);
+    if (res.status() !== 200 && res.status() !== 204) throw new Error(`joinRoom failed: ${res.status()} ${await res.text()}`);
+    await ctx.dispose();
+  }
+
   async banMember(roomId: string, userId: string, adminToken: string, reason = 'E2E ban'): Promise<void> {
     const ctx = await this.authContext(adminToken);
     const res = await ctx.post(`/api/rooms/${roomId}/members/${userId}/ban`, {
