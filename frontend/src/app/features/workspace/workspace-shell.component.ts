@@ -3,6 +3,7 @@ import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } fro
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter } from 'rxjs';
 import { Button } from 'primeng/button';
+import { AvatarComponent } from '../../shared/avatar/avatar.component';
 import { AuthApiService } from '../../core/auth/auth-api.service';
 import { AuthSessionService } from '../../core/auth/auth-session.service';
 import { PresenceService } from '../../core/signalr/presence.service';
@@ -17,7 +18,7 @@ import type { FriendDto } from '../../core/friends/friends.models';
 
 @Component({
   selector: 'app-workspace-shell',
-  imports: [RouterLink, RouterLinkActive, RouterOutlet, Button],
+  imports: [RouterLink, RouterLinkActive, RouterOutlet, Button, AvatarComponent],
   templateUrl: './workspace-shell.component.html',
   styleUrl: './workspace-shell.component.scss',
 })

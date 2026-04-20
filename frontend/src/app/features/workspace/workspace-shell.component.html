@@ -26,11 +26,14 @@
         <span class="material-symbols-outlined">settings</span>
       </a>
       <span class="p-2 text-on-primary/70 hover:text-on-primary transition-colors hover:bg-on-primary/10 rounded-full cursor-pointer material-symbols-outlined">help</span>
-      <img
-        [src]="user()?.avatarUrl || 'https://lh3.googleusercontent.com/aida-public/AB6AXuBoE1AAIFrnyj9F8mxOop8uxCsIRdOxzhWtnxjn7NugcZYLy5I0Dpd7Xa9meXu5UDQAGvY5xt3Hb0oHZJ-RtruBAq2ha-SdwkN6yVjMRlK6os9_26BZMepR6qZxG_G6zRuAyXw4qT1BseTQJxDpjswRqkQCvFbbaVFsomxcZ6ubiGBy4IaGBVjd0ikVTb_cBNYZO7nZkxH8LEctIAAHPuiio0Qfy3pKTJkOdZSHFJE_AxtUk0itobW_nenKACmDvvyl5JeG7Of_yMQ'"
-        alt="User profile"
-        class="h-8 w-8 rounded-full border border-on-primary/30 object-cover"
-      />
+      <a routerLink="/app/settings" class="rounded-full border border-on-primary/30 hover:opacity-80 transition-opacity"
+         data-testid="navbar-avatar">
+        <app-avatar
+          [avatarUrl]="user()?.avatarUrl ?? null"
+          [username]="user()?.username ?? '?'"
+          [sizePx]="32"
+        />
+      </a>
       <button class="md:hidden p-2 text-on-primary/70 hover:text-on-primary transition-colors hover:bg-on-primary/10 rounded-md"
               type="button"
               (click)="toggleSidebar()"

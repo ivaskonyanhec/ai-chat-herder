@@ -29,6 +29,13 @@ export class AuthSessionService {
     this.windowStorage('sessionStorage')?.removeItem(accessTokenStorageKey);
   }
 
+  updateAvatarUrl(avatarUrl: string | null): void {
+    this.sessionState.update(s => {
+      if (!s?.user) return s;
+      return { ...s, user: { ...s.user, avatarUrl } };
+    });
+  }
+
   isAccessTokenExpired(skewMs = 30_000): boolean {
     const token = this.accessToken();
     if (!token) {
