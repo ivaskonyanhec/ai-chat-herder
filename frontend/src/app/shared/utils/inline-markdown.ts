@@ -32,7 +32,7 @@ export function serializeToMarkdown(html: string): string {
 }
 
 export function markersToHtml(text: string): string {
-  return text
+  return escapeHtml(text)
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/_(.+?)_/g, '<em>$1</em>')
     .replace(/`(.+?)`/g, '<code>$1</code>')

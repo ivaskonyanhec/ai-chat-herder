@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { Component, Signal, signal } from '@angular/core';
 import { provideRouter, Router } from '@angular/router';
 import { throwError, of } from 'rxjs';
-import { vi } from 'vitest';
+import { afterEach, vi } from 'vitest';
 import { WorkspaceShellComponent } from './workspace-shell.component';
 import { AuthApiService } from '../../core/auth/auth-api.service';
 import { AuthSessionService } from '../../core/auth/auth-session.service';
@@ -474,6 +474,10 @@ function buildHideTestBed() {
 
 describe('WorkspaceShellComponent — hide logic', () => {
   beforeEach(() => {
+    localStorage.removeItem('sidebar_hidden');
+  });
+
+  afterEach(() => {
     localStorage.removeItem('sidebar_hidden');
   });
 

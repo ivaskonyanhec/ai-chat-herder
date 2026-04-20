@@ -64,7 +64,14 @@ export class WorkspaceShellComponent implements OnInit, OnDestroy {
   readonly searchQuery = signal('');
 
   readonly hiddenSidebarItems = signal<string[]>(
-    JSON.parse(localStorage.getItem('sidebar_hidden') ?? '[]') as string[]
+    (() => {
+      try {
+        const parsed: unknown = JSON.parse(localStorage.getItem('sidebar_hidden') ?? '[]');
+        return Array.isArray(parsed) ? (parsed as string[]) : [];
+      } catch {
+        return [];
+      }
+    })()
   );
 
   readonly visiblePublicRooms = computed(() => {

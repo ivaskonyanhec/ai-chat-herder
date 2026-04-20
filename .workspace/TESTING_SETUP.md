@@ -245,6 +245,8 @@ Angular components must add these attributes for the selectors to resolve:
 | `data-testid="dialog-item-{id}"` | DirectMessagesComponent | 06-dm-flow (dialog list button per conversation) |
 | `data-testid="dm-message-input"` | DirectMessagesComponent | 06-dm-flow (DM message text input) |
 | `data-testid="dm-send-btn"` | DirectMessagesComponent | 06-dm-flow (send message button in DM composer) |
+| `data-testid="hide-room-{roomId}"` | WorkspaceShellComponent | sidebar hide (hover button to hide a room; expanded state) |
+| `data-testid="reset-hidden-items"` | WorkspaceShellComponent | sidebar hide (restore all hidden items; expanded state, shown when items are hidden) |
 
 ---
 

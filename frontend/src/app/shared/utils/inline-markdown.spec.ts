@@ -81,4 +81,20 @@ describe('markersToHtml', () => {
   it('converts newlines to <br>', () => {
     expect(markersToHtml('line1\nline2')).toBe('line1<br>line2');
   });
+
+  it('escapes raw HTML before applying markdown to prevent XSS', () => {
+    expect(markersToHtml('<script>alert(1)</script>')).toBe(
+      '&lt;script&gt;alert(1)&lt;/script&gt;'
+    );
+  });
+
+  it('escapes HTML in markdown payload — **<img onerror=x>** does not inject an img tag', () => {
+    expect(markersToHtml('**<img onerror=alert(1)>**')).toBe(
+      '<strong>&lt;img onerror=alert(1)&gt;</strong>'
+    );
+  });
+
+  it('escapes ampersands and quotes', () => {
+    expect(markersToHtml('a & b "quoted"')).toBe('a &amp; b &quot;quoted&quot;');
+  });
 });
