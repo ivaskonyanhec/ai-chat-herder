@@ -78,6 +78,7 @@ export class ProfileSettingsComponent {
       .subscribe({
         next: user => {
           this.profile.set(user);
+          this.authSession.updateAvatarUrl(user.avatarUrl ?? null);
           this.setObjectAvatarUrl(URL.createObjectURL(file));
         },
         error: () => {

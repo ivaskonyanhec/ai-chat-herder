@@ -71,15 +71,7 @@
                   <div
                     class="group relative bg-surface-container-lowest rounded-xl p-4 border border-outline-variant/10 hover:shadow-sm transition-shadow">
                     <div class="flex items-center gap-3 mb-3">
-                      <div class="w-10 h-10 rounded-full bg-surface-container overflow-hidden shrink-0">
-                        @if (friend.avatarUrl) {
-                          <img [src]="friend.avatarUrl" class="w-full h-full object-cover" alt=""/>
-                        } @else {
-                          <div class="w-full h-full flex items-center justify-center">
-                            <span class="material-symbols-outlined text-on-surface-variant" style="font-size:1.25rem">person</span>
-                          </div>
-                        }
-                      </div>
+                      <app-avatar [avatarUrl]="friend.avatarUrl ?? null" [username]="friend.username" [sizePx]="40" />
                       <div class="flex-1 min-w-0">
                         <p class="font-bold text-on-surface text-sm truncate">{{ friend.username }}</p>
                       </div>
@@ -109,17 +101,7 @@
                   <div
                     class="group relative bg-surface-container-lowest rounded-xl p-4 border border-outline-variant/10 hover:shadow-sm transition-shadow">
                     <div class="flex items-center gap-3 mb-3">
-                      <div class="w-10 h-10 rounded-full bg-surface-container overflow-hidden shrink-0">
-                        @if (blocked.blockedAvatarUrl) {
-                          <img [ngSrc]="blocked.blockedAvatarUrl" class="w-full h-full object-cover" alt="blocked user"
-                               width="40"
-                               height="40"/>
-                        } @else {
-                          <div class="w-full h-full flex items-center justify-center">
-                            <span class="material-symbols-outlined text-on-surface-variant" style="font-size:1.25rem">person</span>
-                          </div>
-                        }
-                      </div>
+                      <app-avatar [avatarUrl]="blocked.blockedAvatarUrl ?? null" [username]="blocked.blockedUsername" [sizePx]="40" />
                       <div class="flex-1 min-w-0">
                         <p class="font-bold text-on-surface text-sm truncate">{{ blocked.blockedUsername }}</p>
                       </div>
@@ -154,17 +136,7 @@
               } @else {
                 @for (request of incomingRequests(); track request.id) {
                   <div class="flex items-start gap-3 pb-4 last:pb-0">
-                    <div class="w-10 h-10 rounded-full bg-surface-container overflow-hidden shrink-0">
-                      @if (request.senderAvatarUrl) {
-                        <img [ngSrc]="request.senderAvatarUrl" class="w-full h-full object-cover" alt="request sender"
-                             width="40"
-                             height="40"/>
-                      } @else {
-                        <div class="w-full h-full flex items-center justify-center">
-                          <span class="material-symbols-outlined text-on-surface-variant" style="font-size:1.25rem">person</span>
-                        </div>
-                      }
-                    </div>
+                    <app-avatar [avatarUrl]="request.senderAvatarUrl ?? null" [username]="request.senderUsername" [sizePx]="40" />
                     <div class="flex-1">
                       <div class="flex justify-between gap-3">
                         <span class="text-xs font-bold text-on-surface truncate">{{ request.senderUsername }}</span>

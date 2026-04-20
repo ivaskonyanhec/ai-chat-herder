@@ -109,13 +109,7 @@
                    [attr.data-testid]="'member-row-' + member.userId">
                 <div class="flex items-center gap-3">
                   <div class="relative">
-                    @if (member.avatarUrl) {
-                      <img [src]="member.avatarUrl" class="w-10 h-10 rounded-full object-cover" alt="" />
-                    } @else {
-                      <div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center">
-                        <span class="material-symbols-outlined text-on-surface-variant">person</span>
-                      </div>
-                    }
+                    <app-avatar [avatarUrl]="member.avatarUrl ?? null" [username]="member.username" [sizePx]="40" />
                     <span class="absolute bottom-0 right-0 w-2 h-2 border-2 border-surface-container-lowest rounded-full"
                           [class.bg-status-online]="member.presenceStatus === 'online'"
                           [class.bg-status-afk]="member.presenceStatus === 'afk'"
@@ -224,13 +218,7 @@
                     class="w-full flex items-center gap-3 px-3 py-2 text-left text-sm text-on-surface hover:bg-surface-container-high"
                     [attr.data-testid]="'invite-user-suggestion-' + suggestion.username"
                     (click)="selectInviteSuggestion(suggestion)">
-                    @if (suggestion.avatarUrl) {
-                      <img [src]="suggestion.avatarUrl" [alt]="suggestion.username" class="w-6 h-6 rounded-full object-cover" />
-                    } @else {
-                      <span class="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center text-[10px] font-bold text-on-surface-variant">
-                        {{ suggestion.username[0].toUpperCase() }}
-                      </span>
-                    }
+                    <app-avatar [avatarUrl]="suggestion.avatarUrl ?? null" [username]="suggestion.username" [sizePx]="24" />
                     <span class="truncate">{{ suggestion.username }}</span>
                   </button>
                 }

@@ -1,3 +1,4 @@
+import { DOCUMENT } from '@angular/common';
 import { Component, DestroyRef, OnInit, OnDestroy, computed, effect, inject, signal, untracked } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -34,6 +35,7 @@ export class WorkspaceShellComponent implements OnInit, OnDestroy {
   private readonly friendsApi = inject(FriendsApiService);
   private readonly invitationsApi = inject(InvitationsApiService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly document = inject(DOCUMENT);
 
   readonly user = this.authSession.user;
   readonly presenceMap = this.presence.presenceMap;
@@ -58,7 +60,7 @@ export class WorkspaceShellComponent implements OnInit, OnDestroy {
   readonly privateRoomsExpanded = signal(true);
   readonly sidebarOpen = signal(false);
   readonly sidebarCollapsed = signal<boolean>(
-    localStorage.getItem('sidebar_collapsed') === 'true'
+    this.document.defaultView?.localStorage?.getItem('sidebar_collapsed') === 'true'
   );
   readonly pendingInvitationCount = signal(0);
   readonly searchQuery = signal('');
@@ -66,7 +68,7 @@ export class WorkspaceShellComponent implements OnInit, OnDestroy {
   readonly hiddenSidebarItems = signal<string[]>(
     (() => {
       try {
-        const parsed: unknown = JSON.parse(localStorage.getItem('sidebar_hidden') ?? '[]');
+        const parsed: unknown = JSON.parse(this.document.defaultView?.localStorage?.getItem('sidebar_hidden') ?? '[]');
         return Array.isArray(parsed) ? (parsed as string[]) : [];
       } catch {
         return [];
@@ -151,7 +153,7 @@ export class WorkspaceShellComponent implements OnInit, OnDestroy {
   toggleSidebar(): void {
     this.sidebarCollapsed.update(v => {
       const next = !v;
-      localStorage.setItem('sidebar_collapsed', String(next));
+      this.document.defaultView?.localStorage?.setItem('sidebar_collapsed', String(next));
       return next;
     });
   }
@@ -159,14 +161,14 @@ export class WorkspaceShellComponent implements OnInit, OnDestroy {
   toggleHideItem(key: string): void {
     this.hiddenSidebarItems.update(items => {
       const next = items.includes(key) ? items.filter(k => k !== key) : [...items, key];
-      localStorage.setItem('sidebar_hidden', JSON.stringify(next));
+      this.document.defaultView?.localStorage?.setItem('sidebar_hidden', JSON.stringify(next));
       return next;
     });
   }
 
   resetHiddenItems(): void {
     this.hiddenSidebarItems.set([]);
-    localStorage.removeItem('sidebar_hidden');
+    this.document.defaultView?.localStorage?.removeItem('sidebar_hidden');
   }
 
   openCreateRoom(): void {

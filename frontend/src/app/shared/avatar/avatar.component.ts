@@ -4,12 +4,10 @@ import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { catchError, of, switchMap } from 'rxjs';
 import { FilesApiService } from '../../core/files/files-api.service';
 
-const PALETTE = ['#7c3aed','#2563eb','#0891b2','#16a34a','#ca8a04','#dc2626','#db2777','#9333ea'];
-
-function hashColor(str: string): string {
+function hashColorIndex(str: string): number {
   let h = 0;
   for (const c of str) h = (h * 31 + c.charCodeAt(0)) & 0x7fffffff;
-  return PALETTE[h % PALETTE.length];
+  return h % 8;
 }
 
 @Component({
@@ -39,7 +37,7 @@ export class AvatarComponent {
 
   readonly iconName = computed(() => this.avatarUrl()?.startsWith('icon:') ? this.avatarUrl()!.slice(5) : '');
   readonly initials = computed(() => (this.username()[0] ?? '?').toUpperCase());
-  readonly bgColor = computed(() => hashColor(this.username()));
+  readonly bgColor = computed(() => `var(--avatar-color-${hashColorIndex(this.username())})`);
   readonly textSizePx = computed(() => Math.max(10, Math.round(this.sizePx() * 0.44)));
 
   constructor() {

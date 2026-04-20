@@ -2,6 +2,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
+import { AvatarComponent } from '../../../shared/avatar/avatar.component';
 import { AuthSessionService } from '../../../core/auth/auth-session.service';
 import { RoomsApiService } from '../../../core/rooms/rooms-api.service';
 import { RoomsAdminApiService } from '../../../core/rooms/rooms-admin-api.service';
@@ -13,7 +14,7 @@ type Tab = 'members' | 'admins' | 'banned' | 'invitations' | 'settings';
 @Component({
   selector: 'app-manage-room',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, AvatarComponent],
   templateUrl: './manage-room.html',
   styleUrl: './manage-room.scss',
 })

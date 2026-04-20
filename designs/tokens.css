@@ -170,4 +170,14 @@
   --status-dot-size:              8px;
   /* "porthole" cutout effect — stroke matches lowest surface */
   --status-dot-border:            2px solid var(--color-surface-container-lowest);
+
+  /* Avatar palette — 8 distinct background colors for initials/icon circles */
+  --avatar-color-0: #7c3aed;
+  --avatar-color-1: #2563eb;
+  --avatar-color-2: #0891b2;
+  --avatar-color-3: #16a34a;
+  --avatar-color-4: #ca8a04;
+  --avatar-color-5: #dc2626;
+  --avatar-color-6: #db2777;
+  --avatar-color-7: #9333ea;
 }

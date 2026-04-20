@@ -57,6 +57,8 @@ export class AuthSessionService {
   private persistSession(session: StoredSession, keepSignedIn: boolean): void {
     const storageKind = keepSignedIn ? 'localStorage' : 'sessionStorage';
     const storageKey = keepSignedIn ? persistentStorageKey : sessionStorageKey;
+    const otherKind: 'localStorage' | 'sessionStorage' = keepSignedIn ? 'sessionStorage' : 'localStorage';
+    const otherKey = keepSignedIn ? sessionStorageKey : persistentStorageKey;
     const payload: PersistedSession = {
       accessToken: session.accessToken,
     };
@@ -64,7 +66,9 @@ export class AuthSessionService {
       payload.user = session.user;
     }
 
-    this.clearSession();
+    // Clear the other storage kind only — do NOT call clearSession() which nulls sessionState.
+    this.windowStorage(otherKind)?.removeItem(otherKey);
+    this.windowStorage(otherKind)?.removeItem(accessTokenStorageKey);
     this.sessionState.set(session);
     this.windowStorage(storageKind)?.setItem(storageKey, JSON.stringify(payload));
     this.windowStorage(storageKind)?.setItem(accessTokenStorageKey, session.accessToken);

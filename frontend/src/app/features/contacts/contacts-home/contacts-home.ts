@@ -1,6 +1,6 @@
-import { NgOptimizedImage } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { AvatarComponent } from '../../../shared/avatar/avatar.component';
 import { Router } from '@angular/router';
 import { finalize, forkJoin } from 'rxjs';
 import { AuthSessionService } from '../../../core/auth/auth-session.service';
@@ -14,7 +14,7 @@ import type { BlockDto } from '../../../core/blocks/blocks.models';
 @Component({
   selector: 'app-contacts-home',
   standalone: true,
-  imports: [FormsModule, NgOptimizedImage],
+  imports: [FormsModule, AvatarComponent],
   templateUrl: './contacts-home.html',
   styleUrl: './contacts-home.scss',
 })

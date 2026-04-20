@@ -12,6 +12,7 @@ import { FilesApiService } from '../../../core/files/files-api.service';
 import { NotificationsApiService } from '../../../core/notifications/notifications-api.service';
 import { UnreadService } from '../../../core/signalr/unread.service';
 import { ReactionsApiService } from '../../../core/reactions/reactions-api.service';
+import { AvatarComponent } from '../../../shared/avatar/avatar.component';
 import { parseInlineMarkdown, serializeToMarkdown } from '../../../shared/utils/inline-markdown';
 import type { RoomDto } from '../../../core/rooms/rooms.models';
 import type { MessageDto, RoomMemberPresence } from '../../../core/signalr/hub.models';
@@ -20,7 +21,7 @@ import type { AttachmentDto } from '../../../core/files/files.models';
 @Component({
   selector: 'app-room-chat',
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, AvatarComponent],
   templateUrl: './room-chat.html',
   styleUrl: './room-chat.scss',
 })
@@ -325,7 +326,8 @@ export class RoomChatComponent implements OnInit, OnDestroy {
       .pipe(finalize(() => this.isUploading.set(false)))
       .subscribe({
         next: dto => this.pendingAttachment.set(dto),
-        error: () => this.errorMessage.set('File upload failed.'),
+        error: (err: { error?: { error?: string } }) =>
+          this.errorMessage.set(err.error?.error ?? 'File upload failed.'),
       });
   }
 
