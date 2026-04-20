@@ -23,6 +23,14 @@ export class AuthApiService {
     return this.http.post<void>('/api/auth/logout', {});
   }
 
+  forgotPassword(email: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>('/api/auth/forgot-password', { email });
+  }
+
+  resetPassword(token: string, newPassword: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>('/api/auth/reset-password', { token, newPassword });
+  }
+
   changePassword(currentPassword: string, newPassword: string): Observable<void> {
     return this.http.post<void>('/api/auth/change-password', { currentPassword, newPassword });
   }
