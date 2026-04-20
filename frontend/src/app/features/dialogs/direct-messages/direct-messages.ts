@@ -10,6 +10,7 @@ import { ChatService } from '../../../core/signalr/chat.service';
 import { FilesApiService } from '../../../core/files/files-api.service';
 import { NotificationsApiService } from '../../../core/notifications/notifications-api.service';
 import { UnreadService } from '../../../core/signalr/unread.service';
+import { AvatarComponent } from '../../../shared/avatar/avatar.component';
 import { parseInlineMarkdown } from '../../../shared/utils/inline-markdown';
 import type { DialogDto } from '../../../core/dialogs/dialogs.models';
 import type { DialogMessageDto } from '../../../core/signalr/hub.models';
@@ -18,9 +19,10 @@ import type { AttachmentDto } from '../../../core/files/files.models';
 @Component({
   selector: 'app-direct-messages',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, AvatarComponent],
   templateUrl: './direct-messages.html',
   styleUrl: './direct-messages.scss',
+  host: { class: 'block flex-1 min-h-0 overflow-hidden' },
 })
 export class DirectMessagesComponent {
   private readonly route = inject(ActivatedRoute);
@@ -152,7 +154,8 @@ export class DirectMessagesComponent {
       .pipe(finalize(() => this.isUploading.set(false)))
       .subscribe({
         next: dto => this.pendingAttachment.set(dto),
-        error: () => this.errorMessage.set('File upload failed.'),
+        error: (err: { error?: { error?: string } }) =>
+          this.errorMessage.set(err.error?.error ?? 'File upload failed.'),
       });
   }
 

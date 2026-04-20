@@ -55,4 +55,28 @@ describe('AuthApiService', () => {
     expect(req.request.method).toBe('DELETE');
     req.flush(null, { status: 204, statusText: 'No Content' });
   });
+
+  it('forgotPassword() POSTs to /api/auth/forgot-password with email', () => {
+    let result: { message: string } | undefined;
+    service.forgotPassword('alice@example.com').subscribe(r => (result = r));
+
+    const req = http.expectOne('/api/auth/forgot-password');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ email: 'alice@example.com' });
+    req.flush({ message: 'If that email exists, a reset link has been sent.' });
+
+    expect(result?.message).toContain('reset link');
+  });
+
+  it('resetPassword() POSTs to /api/auth/reset-password with token and newPassword', () => {
+    let result: { message: string } | undefined;
+    service.resetPassword('raw-token-abc', 'NewPass@1234').subscribe(r => (result = r));
+
+    const req = http.expectOne('/api/auth/reset-password');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ token: 'raw-token-abc', newPassword: 'NewPass@1234' });
+    req.flush({ message: 'Password reset successfully.' });
+
+    expect(result?.message).toContain('reset successfully');
+  });
 });

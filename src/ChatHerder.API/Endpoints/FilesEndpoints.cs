@@ -15,16 +15,12 @@ public static class FilesEndpoints
 
     private static readonly HashSet<string> BlockedMimeTypes = new(StringComparer.OrdinalIgnoreCase)
     {
-        "text/html",
         "text/javascript",
         "application/javascript",
         "application/x-javascript",
         "application/x-php",
         "text/x-php",
         "application/x-httpd-php",
-        "image/svg+xml",
-        "application/xml",
-        "text/xml",
     };
 
     private static readonly (byte[] Magic, int? Offset)[] ImageSignatures =
@@ -70,14 +66,16 @@ public static class FilesEndpoints
         if (BlockedMimeTypes.Contains(file.ContentType))
             return Results.BadRequest(new { error = $"File type '{file.ContentType}' is not permitted." });
 
-        var isImage = file.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase);
-        var limit   = isImage ? MaxImageBytes : MaxFileBytes;
+        var isImage    = file.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase);
+        var isSvg      = file.ContentType.Equals("image/svg+xml", StringComparison.OrdinalIgnoreCase);
+        var limit      = isImage ? MaxImageBytes : MaxFileBytes;
         if (file.Length > limit)
             return Results.StatusCode(StatusCodes.Status413RequestEntityTooLarge);
 
         await using var stream = file.OpenReadStream();
 
-        if (isImage)
+        // SVG is XML-text — skip binary magic-byte check; only apply to raster image types
+        if (isImage && !isSvg)
         {
             var header = new byte[16];
             var read   = await stream.ReadAsync(header.AsMemory(0, header.Length), ct);

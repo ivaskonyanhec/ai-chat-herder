@@ -15,6 +15,7 @@ import { AvatarComponent } from '../../../shared/avatar/avatar.component';
   imports: [FormsModule, AvatarComponent],
   templateUrl: './profile-settings.html',
   styleUrl: './profile-settings.scss',
+  host: { class: 'block flex-1 min-h-0 overflow-hidden' },
 })
 export class ProfileSettingsComponent {
   private readonly authApi = inject(AuthApiService);

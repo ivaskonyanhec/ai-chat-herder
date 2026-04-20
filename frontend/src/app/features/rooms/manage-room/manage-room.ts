@@ -17,6 +17,7 @@ type Tab = 'members' | 'admins' | 'banned' | 'invitations' | 'settings';
   imports: [FormsModule, AvatarComponent],
   templateUrl: './manage-room.html',
   styleUrl: './manage-room.scss',
+  host: { class: 'block flex-1 min-h-0 overflow-hidden' },
 })
 export class ManageRoomComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);

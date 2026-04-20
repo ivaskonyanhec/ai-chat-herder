@@ -20,15 +20,7 @@
         <div class="space-y-3">
           @for (block of blocks(); track block.blockedUserId) {
             <div class="bg-surface-container-lowest rounded-xl p-4 border border-outline-variant/10 flex items-center gap-4">
-              <div class="w-10 h-10 rounded-full bg-surface-container overflow-hidden shrink-0">
-                @if (block.blockedAvatarUrl) {
-                  <img [src]="block.blockedAvatarUrl" class="w-full h-full object-cover" alt="" />
-                } @else {
-                  <div class="w-full h-full flex items-center justify-center">
-                    <span class="material-symbols-outlined text-on-surface-variant" style="font-size:1.25rem">person</span>
-                  </div>
-                }
-              </div>
+              <app-avatar [avatarUrl]="block.blockedAvatarUrl ?? null" [username]="block.blockedUsername" [sizePx]="40" />
               <div class="flex-1 min-w-0">
                 <p class="font-bold text-on-surface text-sm truncate">{{ block.blockedUsername }}</p>
                 <p class="text-[11px] text-on-surface-variant">Blocked {{ block.createdAt | date:'mediumDate' }}</p>

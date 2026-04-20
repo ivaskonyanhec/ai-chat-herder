@@ -32,15 +32,7 @@
             @for (req of incomingRequests(); track req.id) {
               <div class="bg-surface-container-lowest rounded-xl p-5 flex flex-col gap-4">
                 <div class="flex items-start gap-4">
-                  <div class="w-12 h-12 rounded-full bg-surface-container overflow-hidden shrink-0">
-                    @if (req.senderAvatarUrl) {
-                      <img [src]="req.senderAvatarUrl" class="w-full h-full object-cover" alt="" />
-                    } @else {
-                      <div class="w-full h-full flex items-center justify-center">
-                        <span class="material-symbols-outlined text-on-surface-variant">person</span>
-                      </div>
-                    }
-                  </div>
+                  <app-avatar [avatarUrl]="req.senderAvatarUrl ?? null" [username]="req.senderUsername" [sizePx]="48" />
                   <div class="flex-1">
                     <p class="font-bold text-on-surface text-sm">{{ req.senderUsername }}</p>
                     <p class="text-[11px] text-on-surface-variant mt-0.5">{{ formatDate(req.createdAt) }}</p>
@@ -83,11 +75,7 @@
           } @else {
             @for (req of outgoingRequests(); track req.id) {
               <div class="flex items-center gap-3 py-3">
-                <div class="w-8 h-8 rounded-full bg-surface-container overflow-hidden shrink-0">
-                  @if (req.senderAvatarUrl) {
-                    <img [src]="req.senderAvatarUrl" class="w-full h-full object-cover" alt="" />
-                  }
-                </div>
+                <app-avatar [avatarUrl]="req.senderAvatarUrl ?? null" [username]="req.receiverUsername" [sizePx]="32" />
                 <div class="flex-1 min-w-0">
                   <p class="text-sm font-semibold text-on-surface truncate">{{ req.receiverUsername }}</p>
                   <p class="text-[10px] text-on-surface-variant">Pending · {{ formatDate(req.createdAt) }}</p>

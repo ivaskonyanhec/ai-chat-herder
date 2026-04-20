@@ -8,6 +8,7 @@ import type { RoomDto } from '../../../core/rooms/rooms.models';
   standalone: true,
   imports: [RouterLink],
   templateUrl: './private-rooms-home.html',
+  host: { class: 'flex flex-col flex-1 min-h-0 overflow-hidden' },
 })
 export class PrivateRoomsHomeComponent implements OnInit {
   private readonly roomsApi = inject(RoomsApiService);

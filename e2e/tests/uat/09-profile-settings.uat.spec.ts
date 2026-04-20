@@ -29,7 +29,10 @@ test.describe('UAT: Profile Settings page', () => {
     });
 
     await expect(userAPage.locator('[data-testid="avatar-upload-btn"]')).toBeEnabled({ timeout: 10_000 });
-    await expect(userAPage.locator('[data-testid="profile-avatar"]')).toHaveAttribute('src', /^blob:/);
+    // profile-avatar is a <div> wrapper; the actual <img> is rendered inside <app-avatar> as avatar-img
+    // In blob mode, <app-avatar> fetches the file and creates its own object URL — wait for the img to appear
+    await expect(userAPage.locator('[data-testid="profile-avatar"] [data-testid="avatar-img"]'))
+      .toHaveAttribute('src', /^blob:/, { timeout: 10_000 });
 
     const ctx = await api.authContext(userA.accessToken);
     const profile = await ctx.get('/api/users/me');

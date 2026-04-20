@@ -10,6 +10,7 @@ import type { RoomInvitationDto } from '../../../core/invitations/invitations.mo
   imports: [],
   templateUrl: './room-invitations.html',
   styleUrl: './room-invitations.scss',
+  host: { class: 'block flex-1 min-h-0 overflow-hidden' },
 })
 export class RoomInvitationsComponent {
   private readonly invitationsApi = inject(InvitationsApiService);

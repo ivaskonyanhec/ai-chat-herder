@@ -24,6 +24,7 @@ import type { AttachmentDto } from '../../../core/files/files.models';
   imports: [FormsModule, RouterLink, AvatarComponent],
   templateUrl: './room-chat.html',
   styleUrl: './room-chat.scss',
+  host: { class: 'block flex-1 min-h-0 overflow-hidden' },
 })
 export class RoomChatComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);

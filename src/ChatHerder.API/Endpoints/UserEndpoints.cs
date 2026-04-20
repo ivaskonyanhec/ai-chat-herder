@@ -63,7 +63,10 @@ public static class UserEndpoints
             // Allow: https:// absolute URLs (external CDN avatar)
             // Reject: everything else (javascript:, data:, http:, bare strings, etc.)
             var isAllowedRelative = req.AvatarUrl.StartsWith("/api/files/", StringComparison.OrdinalIgnoreCase);
-            var isAllowedIcon = req.AvatarUrl.StartsWith("icon:", StringComparison.Ordinal);
+            var isAllowedIcon = System.Text.RegularExpressions.Regex.IsMatch(
+                req.AvatarUrl,
+                @"^icon:[a-z][a-z0-9_]{0,39}$",
+                System.Text.RegularExpressions.RegexOptions.None);
             var isAllowedAbsolute = Uri.TryCreate(req.AvatarUrl, UriKind.Absolute, out var uri) &&
                                     string.Equals(uri.Scheme, "https", StringComparison.OrdinalIgnoreCase);
 

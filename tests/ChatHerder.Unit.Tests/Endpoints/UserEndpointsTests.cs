@@ -128,6 +128,21 @@ public sealed class UserEndpointsTests
     }
 
     [Fact]
+    public async Task PatchMe_Returns400_WhenAvatarUrlIsIconWithScriptSuffix()
+    {
+        await using var db = BuildContext();
+        var user = new User { Username = "alice", Email = "alice@test.com", PasswordHash = "x" };
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
+
+        var req = new UpdateMeRequest("icon:<script>");
+        var result = await UserEndpointsTestHelper.PatchMe(req, MakePrincipal(user.Id), db, CancellationToken.None);
+
+        var statusCode = result.GetType().GetProperty("StatusCode")?.GetValue(result);
+        Assert.Equal(400, statusCode);
+    }
+
+    [Fact]
     public async Task PatchMe_ReturnsOk_WhenAvatarUrlIsHttpsScheme()
     {
         await using var db = BuildContext();

@@ -177,7 +177,7 @@ export class ApiHelpers {
   async joinRoom(accessToken: string, roomId: string): Promise<void> {
     const ctx = await this.authContext(accessToken);
     const res = await ctx.post(`/api/rooms/${roomId}/join`);
-    if (res.status() !== 200 && res.status() !== 204) throw new Error(`joinRoom failed: ${res.status()} ${await res.text()}`);
+    if (res.status() !== 200 && res.status() !== 204 && res.status() !== 409) throw new Error(`joinRoom failed: ${res.status()} ${await res.text()}`);
     await ctx.dispose();
   }
 

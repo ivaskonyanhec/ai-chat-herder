@@ -17,6 +17,7 @@ import type { BlockDto } from '../../../core/blocks/blocks.models';
   imports: [FormsModule, AvatarComponent],
   templateUrl: './contacts-home.html',
   styleUrl: './contacts-home.scss',
+  host: { class: 'block flex-1 min-h-0 overflow-hidden' },
 })
 export class ContactsHomeComponent {
   private readonly authSession = inject(AuthSessionService);

@@ -70,8 +70,9 @@ test.describe('UAT: Sidebar hide and icon avatar', () => {
     await expect(userAPage.locator('[data-testid="profile-avatar"] [data-testid="avatar-icon"]'))
       .toHaveText('favorite', { timeout: 5_000 });
 
-    // Navigate to a room page — navbar avatar should still show icon (not broken img)
-    await userAPage.goto('/app/rooms');
+    // SPA navigation via nav link — avoids page.goto resetting localStorage via addInitScript
+    await userAPage.click('[data-testid="go-to-rooms"]');
+    await userAPage.waitForURL(/\/app\/rooms/);
     await expect(userAPage.locator('[data-testid="navbar-avatar"] [data-testid="avatar-icon"]'))
       .toHaveText('favorite', { timeout: 5_000 });
   });

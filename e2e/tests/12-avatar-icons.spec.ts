@@ -21,8 +21,9 @@ test.describe('Avatar icons & sidebar hide', () => {
     // Picker closes after selection
     await expect(userAPage.locator('[data-testid="icon-picker"]')).toBeHidden({ timeout: 5_000 });
 
-    // Navigate away (SPA navigation — session state preserved in memory)
-    await userAPage.goto('/app/rooms');
+    // SPA navigation via nav link — avoids page.goto resetting localStorage via addInitScript
+    await userAPage.click('[data-testid="go-to-rooms"]');
+    await userAPage.waitForURL(/\/app\/rooms/);
     await expect(userAPage.locator('[data-testid="navbar-avatar"]')).toBeVisible({ timeout: 5_000 });
 
     // The avatar should render a Material Symbol span (icon mode), not a broken img

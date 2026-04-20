@@ -2,14 +2,16 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { finalize } from 'rxjs';
 import { AuthSessionService } from '../../../core/auth/auth-session.service';
 import { FriendsApiService } from '../../../core/friends/friends-api.service';
+import { AvatarComponent } from '../../../shared/avatar/avatar.component';
 import type { FriendRequestDto } from '../../../core/friends/friends.models';
 
 @Component({
   selector: 'app-friend-requests',
   standalone: true,
-  imports: [],
+  imports: [AvatarComponent],
   templateUrl: './friend-requests.html',
   styleUrl: './friend-requests.scss',
+  host: { class: 'block flex-1 min-h-0 overflow-hidden' },
 })
 export class FriendRequestsComponent {
   private readonly authSession = inject(AuthSessionService);

@@ -7,6 +7,7 @@ import { SessionsApiService, SessionRecord } from '../../core/session/sessions-a
   imports: [],
   templateUrl: './sessions-panel.component.html',
   styleUrl: './sessions-panel.component.scss',
+  host: { class: 'flex flex-col flex-1 min-h-0 overflow-hidden' },
 })
 export class SessionsPanelComponent {
   private readonly sessionsApi = inject(SessionsApiService);

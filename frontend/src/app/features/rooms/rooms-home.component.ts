@@ -9,6 +9,7 @@ import type { RoomCatalogItem } from '../../core/rooms/rooms.models';
   selector: 'app-rooms-home',
   templateUrl: './rooms-home.component.html',
   styleUrl: './rooms-home.component.scss',
+  host: { class: 'flex flex-col flex-1 min-h-0 overflow-hidden' },
 })
 export class RoomsHomeComponent {
   private readonly authSession = inject(AuthSessionService);

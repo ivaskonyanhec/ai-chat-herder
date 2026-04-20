@@ -117,7 +117,7 @@
         @if (!sidebarCollapsed() && publicRoomsExpanded()) {
           <div class="pl-9 space-y-1" data-testid="public-rooms-section">
             @for (room of visiblePublicRooms(); track room.id) {
-              <div class="group relative flex items-center">
+              <div class="group relative flex items-center min-w-0 overflow-hidden">
                 <a [routerLink]="['/app/rooms', room.id]"
                    routerLinkActive="border-l-2 border-primary bg-surface-container-lowest text-on-surface font-bold"
                    class="flex flex-1 items-center justify-between gap-2 p-2 bg-surface-container/40 text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface cursor-pointer text-sm rounded-lg"
@@ -179,7 +179,7 @@
         @if (!sidebarCollapsed() && privateRoomsExpanded()) {
           <div class="pl-9 space-y-1" data-testid="private-rooms-section">
             @for (room of visiblePrivateRooms(); track room.id) {
-              <div class="group relative flex items-center">
+              <div class="group relative flex items-center min-w-0 overflow-hidden">
                 <a [routerLink]="['/app/rooms', room.id]"
                    routerLinkActive="border-l-2 border-primary bg-surface-container-lowest text-on-surface font-bold"
                    class="flex flex-1 items-center justify-between gap-2 p-2 bg-surface-container-high/70 text-on-surface-variant hover:bg-surface-container-lowest hover:text-on-surface cursor-pointer text-sm rounded-lg"
@@ -243,13 +243,7 @@
                    class="flex flex-1 items-center gap-2 p-2 text-on-surface-variant hover:text-on-surface cursor-pointer text-sm rounded-lg"
                    [attr.data-testid]="'contact-' + friend.username">
                   <div class="relative shrink-0">
-                    @if (friend.avatarUrl) {
-                      <img [src]="friend.avatarUrl" [alt]="friend.username" class="w-6 h-6 rounded-full object-cover" />
-                    } @else {
-                      <div class="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center">
-                        <span class="text-[8px] font-bold text-on-surface-variant">{{ friend.username[0].toUpperCase() }}</span>
-                      </div>
-                    }
+                    <app-avatar [avatarUrl]="friend.avatarUrl ?? null" [username]="friend.username" [sizePx]="24" />
                     <span class="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border-2 border-surface-container"
                           [class.bg-status-online]="(presenceMap().get(friend.userId) ?? 'offline') === 'online'"
                           [class.bg-status-afk]="(presenceMap().get(friend.userId) ?? 'offline') === 'afk'"
@@ -279,13 +273,7 @@
                  [title]="friend.username"
                  [attr.data-testid]="'contact-' + friend.username">
                 <div class="relative">
-                  @if (friend.avatarUrl) {
-                    <img [src]="friend.avatarUrl" [alt]="friend.username" class="w-7 h-7 rounded-full object-cover" />
-                  } @else {
-                    <div class="w-7 h-7 rounded-full bg-surface-container-high flex items-center justify-center">
-                      <span class="text-xs font-bold text-on-surface-variant">{{ friend.username[0].toUpperCase() }}</span>
-                    </div>
-                  }
+                  <app-avatar [avatarUrl]="friend.avatarUrl ?? null" [username]="friend.username" [sizePx]="24" />
                   <span class="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border-2 border-surface-container"
                         [class.bg-status-online]="(presenceMap().get(friend.userId) ?? 'offline') === 'online'"
                         [class.bg-status-afk]="(presenceMap().get(friend.userId) ?? 'offline') === 'afk'"
@@ -408,7 +396,7 @@
     </aside>
 
     <!-- Main Content via Router -->
-    <main class="flex-1 overflow-hidden bg-[linear-gradient(120deg,var(--color-slate-200)_0%_33.3%,var(--color-slate-100)_33.3%_66.6%,var(--color-slate-50)_66.6%_100%)]">
+    <main class="flex-1 overflow-hidden flex flex-col bg-[linear-gradient(120deg,var(--color-slate-200)_0%_33.3%,var(--color-slate-100)_33.3%_66.6%,var(--color-slate-50)_66.6%_100%)]">
       <router-outlet />
     </main>
   </div>

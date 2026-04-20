@@ -1,14 +1,16 @@
 import { Component, signal, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { finalize } from 'rxjs';
+import { AvatarComponent } from '../../../shared/avatar/avatar.component';
 import { BlocksApiService } from '../../../core/blocks/blocks-api.service';
 import type { BlockDto } from '../../../core/blocks/blocks.models';
 
 @Component({
   selector: 'app-blocked-users',
   standalone: true,
-  imports: [DatePipe],
+  imports: [DatePipe, AvatarComponent],
   templateUrl: './blocked-users.html',
+  host: { class: 'block flex-1 min-h-0 overflow-hidden' },
 })
 export class BlockedUsersComponent {
   private readonly blocksApi = inject(BlocksApiService);

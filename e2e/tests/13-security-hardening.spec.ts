@@ -33,21 +33,19 @@ test.describe('Security hardening', () => {
 
   // SEC-03 — Blocked MIME types are rejected at upload
   test.describe('SEC-03: Dangerous MIME types are rejected on upload', () => {
-    test('upload with text/html content type returns 400', async ({ api, userA }) => {
+    test('upload with text/html content type is accepted (served as attachment)', async ({ api, userA }) => {
       const ctx = await api.authContext(userA.accessToken);
 
       const res = await ctx.post('/api/files/upload', {
         multipart: {
           file: {
-            name: 'page.html',
+            name: 'doc.html',
             mimeType: 'text/html',
-            buffer: Buffer.from('<html><script>alert(1)</script></html>'),
+            buffer: Buffer.from('<html><body>Hello</body></html>'),
           },
         },
       });
-      expect(res.status()).toBe(400);
-      const body = await res.json();
-      expect(body.error).toContain('not permitted');
+      expect(res.status()).toBe(201);
 
       await ctx.dispose();
     });

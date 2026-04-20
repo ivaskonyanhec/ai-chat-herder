@@ -1,3 +1,9 @@
+/* Stretch every routed component to fill the gradient main area */
+main > *:not(router-outlet) {
+  flex: 1;
+  min-height: 0;
+}
+
 /* Responsive sidebar: hidden on mobile, always visible on md+ */
 .workspace-sidebar {
   display: none;

@@ -1,6 +1,6 @@
 // frontend/src/app/shared/avatar/avatar.component.spec.ts
 import { TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { NEVER, of } from 'rxjs';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { AvatarComponent } from './avatar.component';
 import { FilesApiService } from '../../core/files/files-api.service';
@@ -61,7 +61,7 @@ describe('AvatarComponent', () => {
   });
 
   it('falls back to initials while blob is loading', () => {
-    mockFiles.getFileBlob.mockReturnValue(new Promise(() => {})); // never resolves
+    mockFiles.getFileBlob.mockReturnValue(NEVER);
     const fixture = TestBed.createComponent(AvatarComponent);
     fixture.componentRef.setInput('avatarUrl', '/api/files/xyz');
     fixture.componentRef.setInput('username', 'Eve');

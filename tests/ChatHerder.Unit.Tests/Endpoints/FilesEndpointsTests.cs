@@ -271,11 +271,9 @@ public sealed class FilesEndpointsTests
     }
 
     [Theory]
-    [InlineData("text/html")]
     [InlineData("application/javascript")]
     [InlineData("text/javascript")]
     [InlineData("application/x-php")]
-    [InlineData("image/svg+xml")]
     [InlineData("application/x-httpd-php")]
     public async Task UploadFile_Returns400_WhenMimeTypeIsBlocked(string contentType)
     {
@@ -346,6 +344,48 @@ public sealed class FilesEndpointsTests
         file.FileName.Returns("image.png");
         file.Length.Returns((long)pngMagic.Length);
         file.OpenReadStream().Returns(new MemoryStream(pngMagic));
+
+        var result = await FilesEndpointsHelper.UploadFile(file, null, Principal(Guid.NewGuid()), db, storage, CancellationToken.None);
+
+        var statusCode = result.GetType().GetProperty("StatusCode")?.GetValue(result);
+        Assert.Equal(201, statusCode);
+    }
+
+    [Fact]
+    public async Task UploadFile_Returns201_ForSvgFile_SkippingMagicByteCheck()
+    {
+        await using var db = BuildContext();
+        var storage = Substitute.For<IFileStorage>();
+        storage.SaveAsync(Arg.Any<Stream>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+               .Returns("abc/icon.svg");
+
+        var svgContent = "<svg xmlns='http://www.w3.org/2000/svg'><circle r='5'/></svg>"u8.ToArray();
+        var file = Substitute.For<IFormFile>();
+        file.ContentType.Returns("image/svg+xml");
+        file.FileName.Returns("icon.svg");
+        file.Length.Returns((long)svgContent.Length);
+        file.OpenReadStream().Returns(_ => new MemoryStream(svgContent));
+
+        var result = await FilesEndpointsHelper.UploadFile(file, null, Principal(Guid.NewGuid()), db, storage, CancellationToken.None);
+
+        var statusCode = result.GetType().GetProperty("StatusCode")?.GetValue(result);
+        Assert.Equal(201, statusCode);
+    }
+
+    [Fact]
+    public async Task UploadFile_Returns201_ForHtmlFile()
+    {
+        await using var db = BuildContext();
+        var storage = Substitute.For<IFileStorage>();
+        storage.SaveAsync(Arg.Any<Stream>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+               .Returns("abc/doc.html");
+
+        var htmlContent = "<html><body>Hello</body></html>"u8.ToArray();
+        var file = Substitute.For<IFormFile>();
+        file.ContentType.Returns("text/html");
+        file.FileName.Returns("doc.html");
+        file.Length.Returns((long)htmlContent.Length);
+        file.OpenReadStream().Returns(_ => new MemoryStream(htmlContent));
 
         var result = await FilesEndpointsHelper.UploadFile(file, null, Principal(Guid.NewGuid()), db, storage, CancellationToken.None);
 

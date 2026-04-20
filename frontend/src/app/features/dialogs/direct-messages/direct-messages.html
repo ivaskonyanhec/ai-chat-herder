@@ -24,13 +24,7 @@
             [attr.data-testid]="'dialog-item-' + dialog.id"
             (click)="selectDialog(dialog)"
           >
-            <div class="w-10 h-10 rounded-full bg-surface-container-high overflow-hidden shrink-0 flex items-center justify-center">
-              @if (dialog.otherAvatarUrl) {
-                <img [src]="dialog.otherAvatarUrl" class="w-full h-full object-cover" alt="" />
-              } @else {
-                <span class="material-symbols-outlined text-on-surface-variant" style="font-size:1.25rem">person</span>
-              }
-            </div>
+            <app-avatar [avatarUrl]="dialog.otherAvatarUrl ?? null" [username]="dialog.otherUsername" [sizePx]="40" />
             <div class="flex-1 min-w-0">
               <p class="text-sm font-bold text-on-surface truncate">{{ dialog.otherUsername }}</p>
               @if (dialog.isFrozen) {
@@ -55,16 +49,11 @@
     } @else {
       <!-- Header -->
       <div class="h-16 bg-surface-container flex items-center px-6 gap-3 shrink-0">
-        <div class="w-8 h-8 rounded-full bg-surface-container-high overflow-hidden flex items-center justify-center">
-          @if (selectedDialog()!.otherAvatarUrl) {
-            <img [src]="selectedDialog()!.otherAvatarUrl" class="w-full h-full object-cover" alt="" />
-          } @else {
-            <span class="material-symbols-outlined text-on-surface-variant" style="font-size:1rem">person</span>
-          }
-        </div>
+        <app-avatar [avatarUrl]="selectedDialog()!.otherAvatarUrl ?? null" [username]="selectedDialog()!.otherUsername" [sizePx]="32" />
         <h3 class="font-bold text-on-surface text-sm">{{ selectedDialog()!.otherUsername }}</h3>
         @if (selectedDialog()!.isFrozen) {
-          <span class="ml-auto text-[10px] font-bold uppercase tracking-widest text-error bg-error-container/30 px-2 py-1 rounded-full">Frozen</span>
+          <span
+            class="ml-auto text-[10px] font-bold uppercase tracking-widest text-error bg-error-container/30 px-2 py-1 rounded-full">Frozen</span>
         }
       </div>
 
@@ -93,7 +82,7 @@
                     <div class="border-l-2 border-current/30 pl-2 mb-1 opacity-70"
                          data-testid="reply-quote">
                       <p class="text-[10px] font-bold">{{ msg.replyTo.sender.username }}</p>
-                      <p class="text-xs truncate max-w-[14rem]" [innerHTML]="renderContent(msg.replyTo.content)"></p>
+                      <p class="text-xs truncate max-w-56 px-1" [innerHTML]="renderContent(msg.replyTo.content)"></p>
                     </div>
                   }
                   <p data-testid="dm-message-text" [innerHTML]="renderContent(msg.content)"></p>
@@ -117,11 +106,12 @@
                     <p class="text-[9px] opacity-60 mt-0.5">edited</p>
                   }
                 </div>
-                <div class="absolute top-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 bg-surface-container-high rounded-lg px-1 py-0.5 shadow-sm"
-                     [class.right-full]="msg.sender.id === user()?.id"
-                     [class.left-full]="msg.sender.id !== user()?.id"
-                     [class.mr-1]="msg.sender.id === user()?.id"
-                     [class.ml-1]="msg.sender.id !== user()?.id">
+                <div
+                  class="absolute top-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 bg-surface-container-high rounded-lg px-1 py-0.5 shadow-sm"
+                  [class.right-full]="msg.sender.id === user()?.id"
+                  [class.left-full]="msg.sender.id !== user()?.id"
+                  [class.mr-1]="msg.sender.id === user()?.id"
+                  [class.ml-1]="msg.sender.id !== user()?.id">
                   <button type="button"
                           class="w-7 h-7 flex items-center justify-center rounded hover:bg-surface-container text-on-surface-variant hover:text-on-surface transition-colors"
                           title="Reply"
@@ -146,7 +136,7 @@
         @if (errorMessage()) {
           <p class="text-error text-xs mb-2">{{ errorMessage() }}</p>
         }
-        <input type="file" #dmFileInput hidden (change)="onFileSelected($event)" />
+        <input type="file" #dmFileInput hidden (change)="onFileSelected($event)"/>
         @if (pendingAttachment()) {
           <div class="flex items-center gap-2 px-4 py-2 bg-primary-container/30 rounded-lg mb-2 text-sm">
             <span class="material-symbols-outlined text-sm text-primary">attach_file</span>
@@ -157,10 +147,12 @@
             </button>
           </div>
         }
-        <div class="rounded-xl bg-surface-container-low border border-outline-variant/30 focus-within:ring-1 focus-within:ring-primary/30">
+        <div
+          class="rounded-xl bg-surface-container-low border border-outline-variant/30 focus-within:ring-1 focus-within:ring-primary/30">
           @if (replyingTo()) {
-            <div class="flex items-center justify-between px-4 py-2 bg-primary-container/40 border-l-2 border-primary rounded-t-xl"
-                 data-testid="reply-banner">
+            <div
+              class="flex items-center justify-between px-4 py-2 bg-primary-container/40 border-l-2 border-primary rounded-t-xl"
+              data-testid="reply-banner">
               <div class="min-w-0">
                 <p class="text-xs font-bold text-primary flex items-center gap-1">
                   <span class="material-symbols-outlined text-sm">reply</span>
@@ -213,13 +205,7 @@
   @if (selectedDialog()) {
     <section class="w-72 flex flex-col bg-surface-container shrink-0 overflow-y-auto p-6">
       <div class="flex flex-col items-center gap-4 text-center">
-        <div class="w-20 h-20 rounded-full bg-surface-container-high overflow-hidden flex items-center justify-center">
-          @if (selectedDialog()!.otherAvatarUrl) {
-            <img [src]="selectedDialog()!.otherAvatarUrl" class="w-full h-full object-cover" alt="" />
-          } @else {
-            <span class="material-symbols-outlined text-on-surface-variant text-4xl">person</span>
-          }
-        </div>
+        <app-avatar [avatarUrl]="selectedDialog()!.otherAvatarUrl ?? null" [username]="selectedDialog()!.otherUsername" [sizePx]="80" />
         <div>
           <h3 class="font-bold text-on-surface">{{ selectedDialog()!.otherUsername }}</h3>
           @if (selectedDialog()!.isFrozen) {
