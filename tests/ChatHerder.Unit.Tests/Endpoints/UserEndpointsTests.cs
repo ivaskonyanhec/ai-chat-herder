@@ -68,6 +68,79 @@ public sealed class UserEndpointsTests
     }
 
     [Fact]
+    public async Task PatchMe_Returns400_WhenAvatarUrlIsJavascriptScheme()
+    {
+        await using var db = BuildContext();
+        var user = new User { Username = "alice", Email = "alice@test.com", PasswordHash = "x" };
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
+
+        var req = new UpdateMeRequest("javascript:alert(document.cookie)");
+        var result = await UserEndpointsTestHelper.PatchMe(req, MakePrincipal(user.Id), db, CancellationToken.None);
+
+        var statusCode = result.GetType().GetProperty("StatusCode")?.GetValue(result);
+        Assert.Equal(400, statusCode);
+    }
+
+    [Fact]
+    public async Task PatchMe_Returns400_WhenAvatarUrlIsDataScheme()
+    {
+        await using var db = BuildContext();
+        var user = new User { Username = "alice", Email = "alice@test.com", PasswordHash = "x" };
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
+
+        var req = new UpdateMeRequest("data:text/html,<script>alert(1)</script>");
+        var result = await UserEndpointsTestHelper.PatchMe(req, MakePrincipal(user.Id), db, CancellationToken.None);
+
+        var statusCode = result.GetType().GetProperty("StatusCode")?.GetValue(result);
+        Assert.Equal(400, statusCode);
+    }
+
+    [Fact]
+    public async Task PatchMe_Returns400_WhenAvatarUrlIsHttpScheme()
+    {
+        await using var db = BuildContext();
+        var user = new User { Username = "alice", Email = "alice@test.com", PasswordHash = "x" };
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
+
+        var req = new UpdateMeRequest("http://example.com/avatar.png");
+        var result = await UserEndpointsTestHelper.PatchMe(req, MakePrincipal(user.Id), db, CancellationToken.None);
+
+        var statusCode = result.GetType().GetProperty("StatusCode")?.GetValue(result);
+        Assert.Equal(400, statusCode);
+    }
+
+    [Fact]
+    public async Task PatchMe_ReturnsOk_WhenAvatarUrlIsHttpsScheme()
+    {
+        await using var db = BuildContext();
+        var user = new User { Username = "alice", Email = "alice@test.com", PasswordHash = "x" };
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
+
+        var req = new UpdateMeRequest("https://cdn.example.com/avatar.png");
+        var result = await UserEndpointsTestHelper.PatchMe(req, MakePrincipal(user.Id), db, CancellationToken.None);
+
+        Assert.IsType<Ok<UserDto>>(result);
+    }
+
+    [Fact]
+    public async Task PatchMe_ReturnsOk_WhenAvatarUrlIsNull()
+    {
+        await using var db = BuildContext();
+        var user = new User { Username = "alice", Email = "alice@test.com", PasswordHash = "x" };
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
+
+        var req = new UpdateMeRequest(null);
+        var result = await UserEndpointsTestHelper.PatchMe(req, MakePrincipal(user.Id), db, CancellationToken.None);
+
+        Assert.IsType<Ok<UserDto>>(result);
+    }
+
+    [Fact]
     public async Task SearchUsers_ReturnsMatchingActiveUsers_ExcludingCaller()
     {
         await using var db = BuildContext();

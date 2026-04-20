@@ -57,6 +57,11 @@ public static class UserEndpoints
         {
             if (req.AvatarUrl.Length > 2048)
                 return Results.BadRequest(new { error = "Avatar URL must be ≤ 2048 characters." });
+
+            if (!Uri.TryCreate(req.AvatarUrl, UriKind.Absolute, out var uri) ||
+                !string.Equals(uri.Scheme, "https", StringComparison.OrdinalIgnoreCase))
+                return Results.BadRequest(new { error = "Avatar URL must use the HTTPS scheme." });
+
             user.AvatarUrl = req.AvatarUrl;
         }
 
